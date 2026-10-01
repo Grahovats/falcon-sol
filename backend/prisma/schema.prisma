@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MissionStatus {
+  DRAFT
+  REGISTRATION
+  LOCKED
+  ACTIVE
+  BLACKOUT
+  SETTLING
+  FINALIZED
+  CLOSED
+  CANCELLED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum AuditActorType {
+  ADMIN
+  SYSTEM
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderStatus {
+  PENDING
+  FILLED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id        String         @id @default(cuid())
+  username  String?        @unique
+  role      UserRole       @default(USER)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  wallets   Wallet[]
+  entries   MissionEntry[]
+  sessions  Session[]
+  results   MissionResult[]
+  auditLogs AdminAuditLog[]
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  address   String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AuthChallenge {
+  id            String    @id @default(cuid())
+  walletAddress String
+  message       String
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime
+  consumedAt    DateTime?
+
+  @@index([walletAddress, expiresAt])
+  @@index([expiresAt])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Mission {
+  id              String          @id @default(cuid())
+  name            String
+  slug            String          @unique
+  description     String?
+  status          MissionStatus   @default(DRAFT)
+  startingBalance Decimal         @db.Decimal(20, 6)
+  startsAt        DateTime
+  endsAt          DateTime
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  settledAt       DateTime?
+  lifecycleError  String?
+  markets         MissionMarket[]
+  entries         MissionEntry[]
+  results         MissionResult[]
+  auditLogs       AdminAuditLog[]
+
+  @@index([status, startsAt])
+}
+
+model MissionMarket {
+  id          String     @id @default(cuid())
+  missionId   String
+  symbol      String
+  mintAddress String
+  decimals    Int        @default(6)
+  enabled     Boolean    @default(true)
+  settlementPrice Decimal? @db.Decimal(30, 12)
+  settledAt       DateTime?
+  mission     Mission    @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  orders      Order[]
+  positions   Position[]
+
+  @@unique([missionId, symbol])
+  @@index([missionId])
+}
+
+model MissionEntry {
+  id              String     @id @default(cuid())
+  missionId       String
+  userId          String
+  startingBalance Decimal    @db.Decimal(20, 6)
+  cashBalance     Decimal    @db.Decimal(20, 6)
+  realizedPnl     Decimal    @default(0) @db.Decimal(20, 6)
+  joinedAt        DateTime   @default(now())
+  mission         Mission    @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders          Order[]
+  positions       Position[]
+
+  @@unique([missionId, userId])
+  @@index([userId])
+}
+
+
+model MissionResult {
+  id             String   @id @default(cuid())
+  missionId      String
+  userId         String
+  rank           Int
+  displayName    String
+  walletAddress  String?
+  equity         Decimal  @db.Decimal(20, 6)
+  pnl            Decimal  @db.Decimal(20, 6)
+  returnPercent  Decimal  @db.Decimal(20, 8)
+  settledAt      DateTime
+  mission        Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([missionId, userId])
+  @@unique([missionId, rank])
+  @@index([userId])
+}
+
+model AdminAuditLog {
+  id          String         @id @default(cuid())
+  actorType   AuditActorType
+  actorUserId String?
+  actorWallet String?
+  action      String
+  entityType  String
+  entityId    String
+  missionId   String?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  actor       User?          @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  mission     Mission?       @relation(fields: [missionId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([missionId, createdAt])
+}
+
+model Order {
+  id                String        @id @default(cuid())
+  missionEntryId    String
+  missionMarketId   String
+  side              OrderSide
+  requestedNotional Decimal       @db.Decimal(20, 6)
+  requestedQuantity Decimal?      @db.Decimal(30, 12)
+  status            OrderStatus   @default(PENDING)
+  createdAt         DateTime      @default(now())
+  executedAt        DateTime?
+  missionEntry      MissionEntry  @relation(fields: [missionEntryId], references: [id], onDelete: Cascade)
+  missionMarket     MissionMarket @relation(fields: [missionMarketId], references: [id], onDelete: Restrict)
+  fill              Fill?
+
+  @@index([missionEntryId, createdAt])
+  @@index([missionMarketId])
+  @@index([status])
+}
+
+model Fill {
+  id             String   @id @default(cuid())
+  orderId        String   @unique
+  executionPrice Decimal  @db.Decimal(30, 12)
+  referencePrice Decimal? @db.Decimal(30, 12)
+  quantity       Decimal  @db.Decimal(30, 12)
+  notional       Decimal  @db.Decimal(20, 6)
+  simulatedFee   Decimal  @default(0) @db.Decimal(20, 6)
+  priceImpactPct Decimal? @db.Decimal(12, 8)
+  quoteProvider  String   @default("mock")
+  quoteRequestId String?
+  quoteId        String?
+  quoteRouter    String?
+  inputMint      String?
+  outputMint     String?
+  inputAmount    String?
+  outputAmount   String?
+  routePlan      Json?
+  quotedAt       DateTime?
+  quoteExpiresAt DateTime?
+  createdAt      DateTime @default(now())
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([quoteRequestId])
+}
+
+model Position {
+  id                String        @id @default(cuid())
+  missionEntryId    String
+  missionMarketId   String
+  quantity          Decimal       @default(0) @db.Decimal(30, 12)
+  averageEntryPrice Decimal       @default(0) @db.Decimal(30, 12)
+  realizedPnl       Decimal       @default(0) @db.Decimal(20, 6)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  missionEntry      MissionEntry  @relation(fields: [missionEntryId], references: [id], onDelete: Cascade)
+  missionMarket     MissionMarket @relation(fields: [missionMarketId], references: [id], onDelete: Restrict)
+
+  @@unique([missionEntryId, missionMarketId])
+  @@index([missionMarketId])
+}

@@ -1,0 +1,42 @@
+export const errorCodes = [
+  'MISSION_NOT_FOUND',
+  'MISSION_NOT_ACTIVE',
+  'MISSION_ENTRY_NOT_FOUND',
+  'ALREADY_JOINED',
+  'MARKET_NOT_FOUND',
+  'MARKET_NOT_AVAILABLE',
+  'INVALID_ORDER',
+  'INSUFFICIENT_VIRTUAL_BALANCE',
+  'INSUFFICIENT_POSITION',
+  'POSITION_LIMIT_EXCEEDED',
+  'ORDER_TOO_SMALL',
+  'DEMO_USER_NOT_FOUND',
+  'MARKET_DATA_CONFIGURATION_ERROR',
+  'MARKET_DATA_UNAVAILABLE',
+  'QUOTE_UNAVAILABLE',
+  'PRICE_IMPACT_TOO_HIGH',
+  'VALIDATION_ERROR',
+  'CONFLICT',
+  'AUTHENTICATION_REQUIRED',
+  'INVALID_WALLET_ADDRESS',
+  'INVALID_SIGNATURE',
+  'AUTH_CHALLENGE_NOT_FOUND',
+  'AUTH_CHALLENGE_EXPIRED',
+  'AUTH_CHALLENGE_CONSUMED',
+  'ADMIN_ACCESS_REQUIRED',
+  'INVALID_MISSION_TRANSITION',
+  'MISSION_SETTLEMENT_FAILED',
+] as const
+
+export type ErrorCode = (typeof errorCodes)[number]
+
+export class AppError extends Error {
+  constructor(
+    readonly code: ErrorCode,
+    message: string,
+    readonly statusCode = 400,
+  ) {
+    super(message)
+    this.name = 'AppError'
+  }
+}
