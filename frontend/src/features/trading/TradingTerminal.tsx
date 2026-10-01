@@ -1,5 +1,5 @@
 import { Activity, Clock3, TrendingUp } from 'lucide-react'
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { lazy, Suspense, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { placeOrder } from '../../api/trading'
 import { useCountdown } from '../../hooks/useCountdown'
 import { formatCurrency, formatPercent, formatPrice, formatToken } from '../../lib/format'
@@ -9,6 +9,7 @@ import { StatusBadge } from '../missions/StatusBadge'
 import { CommandBoard } from './CommandBoard'
 import { PositionsTable } from './PositionsTable'
 import { TradeHistory } from './TradeHistory'
+const CandlestickChart = lazy(() => import('./CandlestickChart').then((module) => ({ default: module.CandlestickChart })))
 
 interface TradingTerminalProps {
   mission: Mission
@@ -53,7 +54,7 @@ export function TradingTerminal({ mission, markets, portfolio, leaderboard, lead
         <MarketList markets={markets} positions={portfolio.positions} selectedMarketId={selectedMarket?.marketId ?? ''} onSelect={(id) => { setSelectedMarketId(id); setOrderSide('BUY') }} />
         {selectedMarket ? (
           <main className="min-w-0 space-y-4">
-            <MarketWorkspace market={selectedMarket} quantity={selectedPosition?.quantity ?? '0'} averageEntryPrice={selectedPosition?.averageEntryPrice ?? '0'} unrealizedPnl={selectedPosition?.unrealizedPnl ?? '0'} />
+            <MarketWorkspace missionId={mission.id} market={selectedMarket} quantity={selectedPosition?.quantity ?? '0'} averageEntryPrice={selectedPosition?.averageEntryPrice ?? '0'} unrealizedPnl={selectedPosition?.unrealizedPnl ?? '0'} />
             <OrderTicket key={`${selectedMarket.marketId}:${orderSide}`} mission={mission} marketId={selectedMarket.marketId} symbol={selectedMarket.symbol} price={selectedMarket.currentPrice} enabled={selectedMarket.enabled} side={orderSide} onSideChange={setOrderSide} portfolio={portfolio} onPortfolioUpdate={onPortfolioUpdate} onOrderFilled={onOrderFilled} />
           </main>
         ) : <div className="border border-danger/40 bg-danger/5 p-6 text-sm text-danger" role="alert">No current price is available for this mission.</div>}
@@ -73,16 +74,26 @@ function Metric({ label, value, icon, positive }: { label: string; value: string
 function MarketList({ markets, positions, selectedMarketId, onSelect }: { markets: MarketPrice[]; positions: Portfolio['positions']; selectedMarketId: string; onSelect: (id: string) => void }) {
   return <aside className="border border-line bg-surface" aria-labelledby="markets-title"><div className="border-b border-line px-4 py-3"><h2 id="markets-title" className="text-sm font-semibold uppercase tracking-wider text-ink">Market watch</h2></div><div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3 xl:grid-cols-1">{markets.map((market) => { const selected = market.marketId === selectedMarketId; const held = positions.some((position) => position.marketId === market.marketId); return <button key={market.marketId} type="button" onClick={() => onSelect(market.marketId)} aria-pressed={selected} className={`focus-ring min-h-16 bg-surface px-4 py-3 text-left hover:bg-canvas ${selected ? 'border-l-2 border-primary' : 'border-l-2 border-transparent'}`}><span className="flex items-center gap-2 font-semibold text-ink">{held && <span className="size-1.5 rounded-full bg-primary" aria-label="Open position" />}{market.symbol}</span><span className="mt-1 flex items-center justify-between gap-2 font-mono text-xs"><span className="text-muted">{formatPrice(market.currentPrice)}</span><span className={Number(market.changePercent) >= 0 ? 'text-primary' : 'text-danger'}>{formatPercent(market.changePercent)}</span></span></button> })}</div></aside>
 }
-
-function MarketWorkspace({ market, quantity, averageEntryPrice, unrealizedPnl }: { market: MarketPrice; quantity: string; averageEntryPrice: string; unrealizedPnl: string }) {
-  const points = useMemo(() => chartPoints(market.history), [market.history])
-  return <section className="border border-line bg-surface"><div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line px-5 py-4"><div><h2 className="text-xl font-semibold text-ink">{market.symbol} <span className="font-mono text-xs font-normal text-muted">/ vUSDC</span></h2><div className="mt-1 flex items-baseline gap-3"><p className="font-mono text-2xl text-ink">{formatPrice(market.currentPrice)}</p><span className={`font-mono text-sm ${Number(market.changePercent) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatPercent(market.changePercent)}</span></div></div><dl className="flex gap-6 text-sm"><div><dt className="text-xs uppercase tracking-wider text-muted">Position</dt><dd className="mt-1 font-mono text-ink">{formatToken(quantity)}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted">Avg entry</dt><dd className="mt-1 font-mono text-ink">{formatPrice(averageEntryPrice)}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted">Unrealized</dt><dd className={`mt-1 font-mono ${Number(unrealizedPnl) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatCurrency(unrealizedPnl)}</dd></div></dl></div><div className="relative h-64 overflow-hidden bg-canvas/40" aria-label={`${market.symbol} recent price chart`}><div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(var(--color-line) 1px, transparent 1px), linear-gradient(90deg, var(--color-line) 1px, transparent 1px)', backgroundSize: '40px 40px' }} /><svg className={`absolute inset-5 h-[calc(100%-2.5rem)] w-[calc(100%-2.5rem)] ${Number(market.changePercent) >= 0 ? 'text-primary' : 'text-danger'}`} viewBox="0 0 600 180" preserveAspectRatio="none" role="img" aria-label={`${market.symbol} price movement`}><polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" /></svg><p className="absolute bottom-3 left-5 font-mono text-[10px] uppercase tracking-wider text-muted">{market.history.length} ticks · {market.source === 'jupiter' ? 'Jupiter Price V3' : 'simulated feed'} · {new Date(market.asOf).toLocaleTimeString()}</p></div></section>
-}
-
-function chartPoints(history: MarketPrice['history']) {
-  if (history.length < 2) return '0,90 600,90'
-  const values = history.map((point) => Number(point.price)); const low = Math.min(...values); const high = Math.max(...values); const range = high - low || 1
-  return values.map((value, index) => `${(index / (values.length - 1)) * 600},${165 - ((value - low) / range) * 150}`).join(' ')
+function MarketWorkspace({ missionId, market, quantity, averageEntryPrice, unrealizedPnl }: { missionId: string; market: MarketPrice; quantity: string; averageEntryPrice: string; unrealizedPnl: string }) {
+  return (
+    <section className="border border-line bg-surface">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 px-5 py-4">
+        <div>
+          <h2 className="text-xl font-semibold text-ink">{market.symbol} <span className="font-mono text-xs font-normal text-muted">/ vUSDC</span></h2>
+          <div className="mt-1 flex items-baseline gap-3">
+            <p className="font-mono text-2xl text-ink">{formatPrice(market.currentPrice)}</p>
+            <span className={`font-mono text-sm ${Number(market.changePercent) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatPercent(market.changePercent)}</span>
+          </div>
+        </div>
+        <dl className="flex flex-wrap gap-6 text-sm">
+          <div><dt className="text-xs uppercase tracking-wider text-muted">Position</dt><dd className="mt-1 font-mono text-ink">{formatToken(quantity)}</dd></div>
+          <div><dt className="text-xs uppercase tracking-wider text-muted">Avg entry</dt><dd className="mt-1 font-mono text-ink">{formatPrice(averageEntryPrice)}</dd></div>
+          <div><dt className="text-xs uppercase tracking-wider text-muted">Unrealized</dt><dd className={`mt-1 font-mono ${Number(unrealizedPnl) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatCurrency(unrealizedPnl)}</dd></div>
+        </dl>
+      </div>
+      <Suspense fallback={<div className="h-80 animate-pulse border-t border-line bg-canvas/40 sm:h-96" aria-busy="true" aria-label="Loading candlestick chart" />}><CandlestickChart key={market.marketId} missionId={missionId} marketId={market.marketId} symbol={market.symbol} /></Suspense>
+    </section>
+  )
 }
 
 function OrderTicket({ mission, marketId, symbol, price, enabled, side, onSideChange, portfolio, onPortfolioUpdate, onOrderFilled }: { mission: Mission; marketId: string; symbol: string; price: string; enabled: boolean; side: OrderSide; onSideChange: (side: OrderSide) => void; portfolio: Portfolio; onPortfolioUpdate: (portfolio: Portfolio) => void; onOrderFilled: () => Promise<void> }) {

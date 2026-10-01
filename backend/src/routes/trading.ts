@@ -4,11 +4,15 @@ import { z } from 'zod'
 import { AppError } from '../errors/app-error.js'
 import { prisma } from '../lib/prisma.js'
 import { getAuthenticatedUser } from '../services/auth-service.js'
+import { candleDataService } from '../services/candle-data.js'
+import { candleTimeframes } from '../services/geckoterminal-candle-service.js'
 import { marketDataService } from '../services/market-data.js'
 import { acceptsEntries, deriveMissionStatus, isLeaderboardHidden } from '../services/mission-state-service.js'
 import { TradingService } from '../services/trading-service.js'
 
 const paramsSchema = z.object({ missionId: z.string().min(1) })
+const candleParamsSchema = z.object({ missionId: z.string().min(1), marketId: z.string().min(1) })
+const candleQuerySchema = z.object({ timeframe: z.enum(candleTimeframes).default('5m') })
 const decimalValue = z.number().positive().finite()
 const orderSchema = z.object({
   marketId: z.string().min(1),
@@ -99,6 +103,20 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
     const markets = await prisma.missionMarket.findMany({ where: { missionId, enabled: true }, select: { id: true, symbol: true, mintAddress: true, decimals: true } })
     const prices = await marketDataService.getPrices(markets)
     return { data: prices.map((price) => ({ ...price, price: price.price.toString(), changePercent: price.changePercent.toString(), asOf: price.asOf.toISOString() })) }
+  })
+
+  app.get('/missions/:missionId/markets/:marketId/candles', async (request) => {
+    const { missionId, marketId } = candleParamsSchema.parse(request.params)
+    const { timeframe } = candleQuerySchema.parse(request.query)
+    const market = await prisma.missionMarket.findFirst({
+      where: { id: marketId, missionId, enabled: true },
+      select: { id: true, symbol: true, mintAddress: true, decimals: true },
+    })
+    if (!market) throw new AppError('MARKET_NOT_FOUND', 'This market is not available in the mission.', 404)
+    return {
+      data: await candleDataService.getCandles(market, timeframe),
+      meta: { timeframe, source: 'geckoterminal' as const },
+    }
   })
 
   app.get('/missions/:missionId/portfolio', async (request) => {

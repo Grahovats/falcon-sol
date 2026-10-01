@@ -62,11 +62,16 @@ JUPITER_API_BASE_URL=https://api.jup.ag
 JUPITER_USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
 JUPITER_REQUEST_TIMEOUT_MS=5000
 JUPITER_MAX_PRICE_IMPACT_PERCENT=5
+GECKOTERMINAL_API_BASE_URL=https://api.geckoterminal.com/api/v2
+GECKOTERMINAL_REQUEST_TIMEOUT_MS=8000
+GECKOTERMINAL_CACHE_TTL_MS=60000
 ```
 
 Set `ADMIN_WALLET_ADDRESSES` to a comma-separated list of public Solana wallet addresses. A wallet receives admin access only when it is both allowlisted and stored with the `ADMIN` database role; Falcon synchronizes that role during session verification. Never enter a private key or seed phrase. Restart the backend after changing the allowlist.
 
 Set `MARKET_DATA_PROVIDER=jupiter` and provide a server-side `JUPITER_API_KEY` to enable Jupiter Price V3 and Swap V2 quote-only execution. Never expose that key through Vite or commit it.
+
+Candlestick charts use GeckoTerminal's public Solana OHLC endpoint through the backend. No browser-side key is required; responses are cached to protect provider limits.
 
 `frontend/.env`:
 

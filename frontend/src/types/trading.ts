@@ -1,4 +1,19 @@
 export type OrderSide = 'BUY' | 'SELL'
+export type CandleTimeframe = '5m' | '15m' | '1h' | '4h'
+
+export interface MarketCandle {
+  time: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+export interface CandleResponse {
+  data: MarketCandle[]
+  meta: { timeframe: CandleTimeframe; source: 'geckoterminal' }
+}
 
 export interface MarketPrice {
   marketId: string

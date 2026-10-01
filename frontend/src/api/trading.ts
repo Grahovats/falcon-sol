@@ -1,5 +1,5 @@
 import type { ApiEnvelope } from '../types/mission'
-import type { LeaderboardResponse, MarketPrice, OrderExecution, OrderHistoryItem, OrderRequest, Portfolio } from '../types/trading'
+import type { CandleResponse, CandleTimeframe, LeaderboardResponse, MarketPrice, OrderExecution, OrderHistoryItem, OrderRequest, Portfolio } from '../types/trading'
 import { apiGet, apiPost } from './client'
 
 export function joinMission(missionId: string) {
@@ -8,6 +8,10 @@ export function joinMission(missionId: string) {
 
 export function getMarkets(missionId: string, signal?: AbortSignal) {
   return apiGet<ApiEnvelope<MarketPrice[]>>(`/missions/${encodeURIComponent(missionId)}/markets`, signal)
+}
+
+export function getCandles(missionId: string, marketId: string, timeframe: CandleTimeframe, signal?: AbortSignal) {
+  return apiGet<CandleResponse>(`/missions/${encodeURIComponent(missionId)}/markets/${encodeURIComponent(marketId)}/candles?timeframe=${timeframe}`, signal)
 }
 
 export function getPortfolio(missionId: string, signal?: AbortSignal) {
