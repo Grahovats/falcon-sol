@@ -31,14 +31,25 @@ interface JupiterOptions {
   usdcMint: string
   timeoutMs: number
   maxPriceImpactPercent: number
+  priceCacheTtlMs: number
+  stalePriceMaxAgeMs: number
   fetcher?: typeof fetch
   clock?: () => Date
+}
+
+interface CachedSpot {
+  price: Prisma.Decimal
+  changePercent: Prisma.Decimal
+  asOf: Date
+  fetchedAt: number
 }
 
 export class JupiterMarketDataService implements MarketDataService {
   private readonly fetcher: typeof fetch
   private readonly clock: () => Date
   private readonly history = new Map<string, PricePoint[]>()
+  private readonly priceCache = new Map<string, CachedSpot>()
+  private readonly pendingPrices = new Map<string, Promise<CachedSpot>>()
 
   constructor(private readonly options: JupiterOptions) {
     this.fetcher = options.fetcher ?? fetch
@@ -53,22 +64,35 @@ export class JupiterMarketDataService implements MarketDataService {
 
   async getPrices(markets: PriceMarket[]): Promise<MarketPrice[]> {
     if (markets.length === 0) return []
-    const ids = [...new Set(markets.map((market) => market.mintAddress))]
-    const response = priceResponseSchema.parse(await this.requestJson(`/price/v3?ids=${encodeURIComponent(ids.join(','))}`))
-    const asOf = this.clock()
-    return markets.map((market) => {
-      const result = response[market.mintAddress]
-      if (!result) throw new AppError('MARKET_DATA_UNAVAILABLE', `Jupiter returned no reliable price for ${market.symbol}.`, 503)
-      const price = new Prisma.Decimal(result.usdPrice)
-      this.recordPrice(market.id, { timestamp: asOf, price })
-      return {
-        marketId: market.id,
-        symbol: market.symbol,
-        price,
-        changePercent: new Prisma.Decimal(result.priceChange24h),
-        asOf,
-        source: 'jupiter' as const,
+    const uniqueMarkets = [...new Map(markets.map((market) => [market.mintAddress, market])).values()]
+    const missing = uniqueMarkets.filter((market) => !this.getFreshSpot(market.mintAddress) && !this.pendingPrices.has(market.mintAddress))
+
+    if (missing.length > 0) {
+      const batch = this.fetchPriceBatch(missing)
+      for (const market of missing) {
+        const request = batch.then((spots) => {
+          const spot = spots.get(market.mintAddress)
+          if (!spot) throw new AppError('MARKET_DATA_UNAVAILABLE', `Jupiter returned no reliable price for ${market.symbol}.`, 503)
+          return spot
+        })
+        this.pendingPrices.set(market.mintAddress, request)
+        const cleanup = () => { if (this.pendingPrices.get(market.mintAddress) === request) this.pendingPrices.delete(market.mintAddress) }
+        void request.then(cleanup, cleanup)
       }
+    }
+
+    const spots = new Map(await Promise.all(uniqueMarkets.map(async (market) => {
+      const cached = this.getFreshSpot(market.mintAddress)
+      const spot = cached ?? await this.pendingPrices.get(market.mintAddress)
+      if (!spot) throw new AppError('MARKET_DATA_UNAVAILABLE', `Jupiter returned no reliable price for ${market.symbol}.`, 503)
+      return [market.mintAddress, spot] as const
+    })))
+
+    return markets.map((market) => {
+      const spot = spots.get(market.mintAddress)
+      if (!spot) throw new AppError('MARKET_DATA_UNAVAILABLE', `Jupiter returned no reliable price for ${market.symbol}.`, 503)
+      this.recordPrice(market.id, { timestamp: spot.asOf, price: spot.price })
+      return { marketId: market.id, symbol: market.symbol, price: spot.price, changePercent: spot.changePercent, asOf: spot.asOf, source: 'jupiter' as const }
     })
   }
 
@@ -139,6 +163,38 @@ export class JupiterMarketDataService implements MarketDataService {
       routePlan: response.routePlan,
       quotedAt,
       expiresAt: parseOptionalDate(response.expireAt),
+    }
+  }
+
+  private getFreshSpot(mintAddress: string) {
+    const cached = this.priceCache.get(mintAddress)
+    if (!cached || this.clock().getTime() - cached.fetchedAt > this.options.priceCacheTtlMs) return null
+    return cached
+  }
+
+  private async fetchPriceBatch(markets: PriceMarket[]) {
+    try {
+      const ids = markets.map((market) => market.mintAddress)
+      const response = priceResponseSchema.parse(await this.requestJson(`/price/v3?ids=${encodeURIComponent(ids.join(','))}`))
+      const asOf = this.clock()
+      const spots = new Map<string, CachedSpot>()
+      for (const market of markets) {
+        const result = response[market.mintAddress]
+        if (!result) throw new AppError('MARKET_DATA_UNAVAILABLE', `Jupiter returned no reliable price for ${market.symbol}.`, 503)
+        const spot = { price: new Prisma.Decimal(result.usdPrice), changePercent: new Prisma.Decimal(result.priceChange24h), asOf, fetchedAt: asOf.getTime() }
+        this.priceCache.set(market.mintAddress, spot)
+        spots.set(market.mintAddress, spot)
+      }
+      return spots
+    } catch (error: unknown) {
+      const now = this.clock().getTime()
+      const stale = new Map<string, CachedSpot>()
+      for (const market of markets) {
+        const cached = this.priceCache.get(market.mintAddress)
+        if (!cached || now - cached.fetchedAt > this.options.stalePriceMaxAgeMs) throw error
+        stale.set(market.mintAddress, cached)
+      }
+      return stale
     }
   }
 

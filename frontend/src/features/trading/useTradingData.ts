@@ -20,7 +20,7 @@ export function useTradingData(missionId: string) {
       setMarkets({ status: 'success', data })
     } catch (error: unknown) {
       if (isAbort(error)) return
-      setMarkets({ status: 'error', message: messageFrom(error, 'Could not load market prices.') })
+      setMarkets((current) => current.status === 'success' ? current : { status: 'error', message: messageFrom(error, 'Could not load market prices.') })
     }
   }, [missionId])
 
@@ -39,7 +39,7 @@ export function useTradingData(missionId: string) {
         setPortfolio({ status: 'not-joined' })
         return
       }
-      setPortfolio({ status: 'error', message: messageFrom(error, 'Could not load portfolio.') })
+      setPortfolio((current) => current.status === 'success' ? current : { status: 'error', message: messageFrom(error, 'Could not load portfolio.') })
     }
   }, [auth.status, missionId])
 
@@ -49,7 +49,7 @@ export function useTradingData(missionId: string) {
       setLeaderboard({ status: 'success', data: response })
     } catch (error: unknown) {
       if (isAbort(error)) return
-      setLeaderboard({ status: 'error', message: messageFrom(error, 'Could not load the command board.') })
+      setLeaderboard((current) => current.status === 'success' ? current : { status: 'error', message: messageFrom(error, 'Could not load the command board.') })
     }
   }, [missionId])
 
@@ -64,7 +64,7 @@ export function useTradingData(missionId: string) {
         setOrders({ status: 'success', data: [] })
         return
       }
-      setOrders({ status: 'error', message: messageFrom(error, 'Could not load order history.') })
+      setOrders((current) => current.status === 'success' ? current : { status: 'error', message: messageFrom(error, 'Could not load order history.') })
     }
   }, [auth.status, missionId])
 
@@ -78,10 +78,10 @@ export function useTradingData(missionId: string) {
       void refreshLeaderboard(controller.signal)
       void refreshOrders(controller.signal)
     }, 0)
-    const priceInterval = window.setInterval(() => void refreshMarkets(controller.signal), 2_000)
-    const portfolioInterval = window.setInterval(() => void refreshPortfolio(controller.signal), 2_000)
-    const leaderboardInterval = window.setInterval(() => void refreshLeaderboard(controller.signal), 3_000)
-    const orderInterval = window.setInterval(() => void refreshOrders(controller.signal), 5_000)
+    const priceInterval = window.setInterval(() => void refreshMarkets(controller.signal), 10_000)
+    const portfolioInterval = window.setInterval(() => void refreshPortfolio(controller.signal), 10_000)
+    const leaderboardInterval = window.setInterval(() => void refreshLeaderboard(controller.signal), 10_000)
+    const orderInterval = window.setInterval(() => void refreshOrders(controller.signal), 10_000)
     return () => {
       controller.abort()
       window.clearTimeout(initialLoad)

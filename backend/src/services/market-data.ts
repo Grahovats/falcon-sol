@@ -10,5 +10,7 @@ export const marketDataService: MarketDataService = env.MARKET_DATA_PROVIDER ===
       usdcMint: env.JUPITER_USDC_MINT,
       timeoutMs: env.JUPITER_REQUEST_TIMEOUT_MS,
       maxPriceImpactPercent: env.JUPITER_MAX_PRICE_IMPACT_PERCENT,
+      priceCacheTtlMs: env.JUPITER_PRICE_CACHE_TTL_MS,
+      stalePriceMaxAgeMs: env.JUPITER_STALE_PRICE_MAX_AGE_MS,
     })
   : new MockMarketDataService()

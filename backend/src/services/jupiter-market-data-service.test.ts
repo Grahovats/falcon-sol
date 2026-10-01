@@ -9,15 +9,17 @@ const market = {
   decimals: 5,
 }
 
-function service(fetcher: typeof fetch, maxPriceImpactPercent = 5) {
+function service(fetcher: typeof fetch, maxPriceImpactPercent = 5, clock: () => Date = () => new Date('2026-09-30T10:00:00.000Z'), priceCacheTtlMs = 10_000) {
   return new JupiterMarketDataService({
     apiKey: 'test-key',
     baseUrl: 'https://api.jup.ag',
     usdcMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
     timeoutMs: 1_000,
     maxPriceImpactPercent,
+    priceCacheTtlMs,
+    stalePriceMaxAgeMs: 300_000,
     fetcher,
-    clock: () => new Date('2026-09-30T10:00:00.000Z'),
+    clock,
   })
 }
 
@@ -38,6 +40,36 @@ describe('JupiterMarketDataService', () => {
     expect(price.source).toBe('jupiter')
     expect(await client.getPriceHistory(market)).toHaveLength(1)
     expect(String(fetcher.mock.calls[0]?.[0])).toContain('/price/v3?ids=')
+  })
+
+  it('coalesces concurrent price loads and serves repeated polling from cache', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({
+      [market.mintAddress]: { usdPrice: 0.00001234, blockId: 123, decimals: 5, priceChange24h: 2.5 },
+    }))
+    const client = service(fetcher)
+
+    const [first, second] = await Promise.all([client.getPrice(market), client.getPrice(market)])
+    const third = await client.getPrice(market)
+
+    expect(first.price.toString()).toBe(second.price.toString())
+    expect(third.price.toString()).toBe(first.price.toString())
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps serving the last safe spot price when Jupiter temporarily rate limits refreshes', async () => {
+    let now = new Date('2026-09-30T10:00:00.000Z')
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ [market.mintAddress]: { usdPrice: 0.00001234, blockId: 123, decimals: 5, priceChange24h: 2.5 } }))
+      .mockResolvedValueOnce(jsonResponse({}, 429))
+    const client = service(fetcher, 5, () => now, 1_000)
+
+    const fresh = await client.getPrice(market)
+    now = new Date(now.getTime() + 2_000)
+    const fallback = await client.getPrice(market)
+
+    expect(fallback.price.toString()).toBe(fresh.price.toString())
+    expect(fallback.asOf).toEqual(fresh.asOf)
+    expect(fetcher).toHaveBeenCalledTimes(2)
   })
 
   it('turns a Swap V2 quote-only order into an auditable synthetic BUY fill', async () => {
@@ -103,6 +135,8 @@ describe('JupiterMarketDataService', () => {
       usdcMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
       timeoutMs: 1_000,
       maxPriceImpactPercent: 5,
+      priceCacheTtlMs: 10_000,
+      stalePriceMaxAgeMs: 300_000,
     })
     await expect(client.getPrice(market)).rejects.toMatchObject({
       code: 'MARKET_DATA_CONFIGURATION_ERROR',
