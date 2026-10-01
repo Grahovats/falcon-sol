@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage'
 import { MissionDetailPage } from './pages/MissionDetailPage'
 import { MissionsPage } from './pages/MissionsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { OperatorPage } from './pages/OperatorPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RankingsPage } from './pages/RankingsPage'
 
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="missions" element={<MissionsPage />} />
           <Route path="missions/:id" element={<MissionDetailPage />} />
           <Route path="rankings" element={<RankingsPage />} />
+          <Route path="operators/:userId" element={<OperatorPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
           <Route path="*" element={<NotFoundPage />} />

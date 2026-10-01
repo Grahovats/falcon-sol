@@ -9,7 +9,9 @@ import { adminRoutes } from './routes/admin.js'
 import { authRoutes } from './routes/auth.js'
 import { healthRoutes } from './routes/health.js'
 import { missionRoutes } from './routes/missions.js'
+import { operatorRoutes } from './routes/operators.js'
 import { profileRoutes } from './routes/profile.js'
+import { rankingRoutes } from './routes/rankings.js'
 import { tradingRoutes } from './routes/trading.js'
 
 export async function buildApp() {
@@ -52,8 +54,10 @@ export async function buildApp() {
   await app.register(healthRoutes)
   await app.register(authRoutes, { prefix: '/api/v1' })
   await app.register(missionRoutes, { prefix: '/api/v1' })
+  await app.register(operatorRoutes, { prefix: '/api/v1' })
   await app.register(tradingRoutes, { prefix: '/api/v1' })
   await app.register(profileRoutes, { prefix: '/api/v1' })
+  await app.register(rankingRoutes, { prefix: '/api/v1' })
   await app.register(adminRoutes, { prefix: '/api/v1' })
 
   return app

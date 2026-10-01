@@ -1,5 +1,6 @@
 export const errorCodes = [
   'MISSION_NOT_FOUND',
+  'OPERATOR_NOT_FOUND',
   'MISSION_NOT_ACTIVE',
   'MISSION_ENTRY_NOT_FOUND',
   'ALREADY_JOINED',
