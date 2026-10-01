@@ -27,9 +27,12 @@ export function apiPatch<T>(path: string, body: unknown) {
 }
 
 async function request<T>(method: 'GET' | 'POST' | 'PATCH', path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+
   const options: RequestInit = {
     method,
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    headers,
     credentials: 'include',
   }
   if (body !== undefined) options.body = JSON.stringify(body)
