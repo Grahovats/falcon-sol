@@ -33,8 +33,8 @@ export function MissionDetailPage() {
   if (missionState.status === 'error') return <ErrorPanel title="Mission unavailable" message={missionState.message} />
 
   const { mission } = missionState
-  if (mission.status === 'SETTLING') return <LifecyclePanel icon={<Clock3 />} eyebrow="Settlement running" title="Locking final results" description="Falcon is capturing one final price per market and calculating immutable standings. This page updates automatically." />
-  if (mission.status === 'CANCELLED') return <LifecyclePanel icon={<ShieldX />} eyebrow="Mission cancelled" title="Operation stood down" description="Trading is closed and no final ranking will be awarded for this mission." />
+  if (mission.status === 'SETTLING') return <LifecyclePanel icon={<Clock3 />} title="Locking final results" description="Falcon is capturing one final price per market and calculating immutable standings. This page updates automatically." />
+  if (mission.status === 'CANCELLED') return <LifecyclePanel icon={<ShieldX />} title="Operation stood down" description="Trading is closed and no final ranking will be awarded for this mission." />
   const completed = ['FINALIZED', 'CLOSED'].includes(mission.status)
   if (completed) {
     return <ResultsView mission={mission} portfolio={trading.portfolio.status === 'success' ? trading.portfolio.data : undefined} rows={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []} loading={trading.leaderboard.status === 'loading'} error={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined} />
@@ -66,6 +66,7 @@ export function MissionDetailPage() {
       onOrderFilled={async () => {
         await Promise.all([trading.refreshPortfolio(), trading.refreshLeaderboard(), trading.refreshOrders()])
       }}
+      onMarketsChanged={async () => { await trading.refreshMarkets() }}
     />
   )
 }
@@ -87,6 +88,6 @@ function TerminalSkeleton() {
   return <div className="space-y-4" aria-busy="true" aria-label="Loading trading terminal"><div className="h-24 animate-pulse border border-line bg-surface" /><div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_300px]"><div className="h-96 animate-pulse border border-line bg-surface" /><div className="h-[36rem] animate-pulse border border-line bg-surface" /><div className="h-96 animate-pulse border border-line bg-surface" /></div></div>
 }
 
-function LifecyclePanel({ icon, eyebrow, title, description }: { icon: React.ReactNode; eyebrow: string; title: string; description: string }) {
-  return <div><BackLink /><section className="panel-cut border border-line bg-surface p-6 sm:p-10"><div className="flex size-11 items-center justify-center border border-primary/30 bg-primary/5 text-primary [&>svg]:size-5">{icon}</div><p className="mt-6 font-mono text-xs uppercase tracking-[0.2em] text-primary">{eyebrow}</p><h1 className="mt-3 text-3xl font-semibold text-ink">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></section></div>
+function LifecyclePanel({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return <div><BackLink /><section className="panel-cut border border-line bg-surface p-6 sm:p-10"><div className="flex size-11 items-center justify-center border border-primary/30 bg-primary/5 text-primary [&>svg]:size-5">{icon}</div><h1 className="mt-6 text-3xl font-semibold text-ink">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></section></div>
 }

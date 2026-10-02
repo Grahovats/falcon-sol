@@ -40,7 +40,7 @@ export function RankingsExperience() {
   }
 
   return <div>
-    <PageHeader eyebrow="Command board" title="Rankings" description="Verified operator performance across Falcon paper-trading missions." />
+    <PageHeader title="Rankings" description="Verified operator performance across Falcon paper-trading missions." />
     {state.status === 'loading' && <RankingsLoading />}
     {state.status === 'error' && <ErrorState message={state.message} retry={() => void load()} />}
     {state.status === 'success' && <>

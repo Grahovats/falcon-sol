@@ -14,6 +14,7 @@ const missionSelect = {
   startingBalance: true,
   startsAt: true,
   endsAt: true,
+  allowDynamicMarkets: true,
   markets: {
     where: { enabled: true },
     select: { id: true, symbol: true, mintAddress: true, decimals: true, enabled: true },
@@ -38,6 +39,7 @@ function serializeMission(mission: MissionRecord) {
     startingBalance: mission.startingBalance.toString(),
     startsAt: mission.startsAt.toISOString(),
     endsAt: mission.endsAt.toISOString(),
+    allowDynamicMarkets: mission.allowDynamicMarkets,
     marketCount: mission._count.markets,
     operatorCount: mission._count.entries,
     markets: mission.markets,

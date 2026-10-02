@@ -29,6 +29,33 @@ export interface MarketPrice {
 
 export interface PricePoint { timestamp: string; price: string }
 
+export interface TokenCandidate {
+  mintAddress: string
+  name: string
+  symbol: string
+  decimals: number
+  usdPrice: number | null
+  liquidityUsd: number | null
+  holderCount: number | null
+  firstPoolAt: string | null
+  priceChange5m: number | null
+  priceChange1h: number | null
+  priceChange24h: number | null
+  volume24hUsd: number | null
+  organicScore: number | null
+  organicScoreLabel: string | null
+  isVerified: boolean
+  warnings: string[]
+  eligible: boolean
+  ineligibleReasons: string[]
+}
+
+export interface AdmittedMarket {
+  market: { id: string; symbol: string; mintAddress: string; decimals: number; enabled: boolean }
+  token?: TokenCandidate
+  alreadyAdmitted: boolean
+}
+
 export interface Position {
   marketId: string
   symbol: string

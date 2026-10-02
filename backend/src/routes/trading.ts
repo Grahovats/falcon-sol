@@ -1,6 +1,7 @@
-import { Prisma } from '@prisma/client'
+import { MissionStatus, Prisma } from '@prisma/client'
 import type { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
+import { env } from '../config/env.js'
 import { AppError } from '../errors/app-error.js'
 import { prisma } from '../lib/prisma.js'
 import { getAuthenticatedUser } from '../services/auth-service.js'
@@ -9,10 +10,14 @@ import { candleTimeframes } from '../services/geckoterminal-candle-service.js'
 import { marketDataService } from '../services/market-data.js'
 import { acceptsEntries, deriveMissionStatus, isLeaderboardHidden } from '../services/mission-state-service.js'
 import { TradingService } from '../services/trading-service.js'
+import { tokenDiscoveryService } from '../services/token-discovery.js'
 
 const paramsSchema = z.object({ missionId: z.string().min(1) })
 const candleParamsSchema = z.object({ missionId: z.string().min(1), marketId: z.string().min(1) })
 const candleQuerySchema = z.object({ timeframe: z.enum(candleTimeframes).default('5m') })
+const tokenQuerySchema = z.object({ query: z.string().trim().min(2).max(100).optional(), feed: z.enum(['recent']).optional() })
+  .refine((value) => Boolean(value.query) !== Boolean(value.feed), { message: 'Provide either a search query or the recent feed.' })
+const admitTokenSchema = z.object({ mintAddress: z.string().trim().min(32).max(64) })
 const decimalValue = z.number().positive().finite()
 const orderSchema = z.object({
   marketId: z.string().min(1),
@@ -96,6 +101,52 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
     return { data }
   })
 
+  app.get('/missions/:missionId/token-discovery', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
+    const { missionId } = paramsSchema.parse(request.params)
+    const query = tokenQuerySchema.parse(request.query)
+    const user = await getAuthenticatedUser(prisma, request)
+    await assertOpenArenaAccess(missionId, user.id)
+    const data = query.query ? await tokenDiscoveryService.search(query.query) : await tokenDiscoveryService.recent()
+    return { data: data.slice(0, 30) }
+  })
+
+  app.post('/missions/:missionId/markets/admit', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
+    const { missionId } = paramsSchema.parse(request.params)
+    const { mintAddress } = admitTokenSchema.parse(request.body)
+    const user = await getAuthenticatedUser(prisma, request)
+    await assertOpenArenaAccess(missionId, user.id)
+    if (env.MARKET_DATA_PROVIDER !== 'jupiter') {
+      throw new AppError('MARKET_DATA_CONFIGURATION_ERROR', 'Open Arena admission requires MARKET_DATA_PROVIDER=jupiter.', 503)
+    }
+
+    const current = await prisma.missionMarket.findUnique({ where: { missionId_mintAddress: { missionId, mintAddress } } })
+    if (current) {
+      if (!current.enabled) throw new AppError('MARKET_NOT_AVAILABLE', 'This token was disabled by mission control.', 409)
+      return reply.send({ data: { market: current, alreadyAdmitted: true } })
+    }
+
+    const token = await tokenDiscoveryService.resolveMint(mintAddress)
+    if (!token.eligible) {
+      throw new AppError('TOKEN_NOT_ELIGIBLE', `Token blocked: ${token.ineligibleReasons.join('; ')}.`, 422)
+    }
+    const candidate = { id: 'candidate', symbol: token.symbol, mintAddress: token.mintAddress, decimals: token.decimals }
+    const buyQuote = await marketDataService.getBuyQuote(candidate, new Prisma.Decimal(100))
+    await marketDataService.getSellQuote(candidate, buyQuote.quantity)
+
+    try {
+      const market = await prisma.missionMarket.create({
+        data: { missionId, symbol: token.symbol, mintAddress: token.mintAddress, decimals: token.decimals, enabled: true },
+      })
+      return reply.code(201).send({ data: { market, token, alreadyAdmitted: false } })
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const market = await prisma.missionMarket.findUnique({ where: { missionId_mintAddress: { missionId, mintAddress } } })
+        if (market) return reply.send({ data: { market, token, alreadyAdmitted: true } })
+      }
+      throw error
+    }
+  })
+
   app.get('/missions/:missionId/prices', async (request) => {
     const { missionId } = paramsSchema.parse(request.params)
     const mission = await prisma.mission.findUnique({ where: { id: missionId }, select: { id: true } })
@@ -177,6 +228,20 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
         : await tradingService.placeSellOrder({ missionId, userId: user.id, marketId: order.marketId, notional: order.notional as number })
     return reply.code(201).send({ data: result })
   })
+}
+
+async function assertOpenArenaAccess(missionId: string, userId: string) {
+  const mission = await prisma.mission.findUnique({
+    where: { id: missionId },
+    select: { status: true, startsAt: true, endsAt: true, allowDynamicMarkets: true, entries: { where: { userId }, select: { id: true }, take: 1 } },
+  })
+  if (!mission) throw new AppError('MISSION_NOT_FOUND', 'Mission not found.', 404)
+  if (!mission.allowDynamicMarkets) throw new AppError('DYNAMIC_MARKETS_DISABLED', 'This mission uses a fixed market list.', 403)
+  if (mission.entries.length === 0) throw new AppError('MISSION_ENTRY_NOT_FOUND', 'Deploy into this mission before discovering tokens.', 404)
+  const status = deriveMissionStatus(mission)
+  if (!([MissionStatus.REGISTRATION, MissionStatus.LOCKED, MissionStatus.ACTIVE, MissionStatus.BLACKOUT] as MissionStatus[]).includes(status)) {
+    throw new AppError('MISSION_NOT_ACTIVE', 'Token discovery is closed for this mission.', 409)
+  }
 }
 
 function serializeEntry(entry: {

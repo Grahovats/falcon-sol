@@ -32,6 +32,7 @@ async function main() {
       startingBalance: '10000',
       startsAt,
       endsAt,
+      allowDynamicMarkets: false,
     },
     update: {
       name: 'Operation Nightfall',
@@ -40,13 +41,14 @@ async function main() {
       startingBalance: '10000',
       startsAt,
       endsAt,
+      allowDynamicMarkets: false,
     },
   })
 
   const seededMarkets = await Promise.all(
     markets.map((market) =>
       prisma.missionMarket.upsert({
-        where: { missionId_symbol: { missionId: mission.id, symbol: market.symbol } },
+        where: { missionId_mintAddress: { missionId: mission.id, mintAddress: market.mintAddress } },
         update: { mintAddress: market.mintAddress, decimals: market.decimals, enabled: true },
         create: {
           missionId: mission.id,
@@ -101,10 +103,41 @@ async function main() {
       },
     })
   }
+
+  const openArena = await prisma.mission.upsert({
+    where: { slug: 'open-arena' },
+    create: {
+      name: 'Open Arena',
+      slug: 'open-arena',
+      description: 'Scout and paper-trade new Jupiter-routable Solana tokens after automated liquidity and route checks.',
+      status: MissionStatus.ACTIVE,
+      startingBalance: '10000',
+      startsAt,
+      endsAt,
+      allowDynamicMarkets: true,
+    },
+    update: {
+      name: 'Open Arena',
+      description: 'Scout and paper-trade new Jupiter-routable Solana tokens after automated liquidity and route checks.',
+      status: MissionStatus.ACTIVE,
+      startingBalance: '10000',
+      startsAt,
+      endsAt,
+      allowDynamicMarkets: true,
+    },
+  })
+
+  await Promise.all(
+    markets.map((market) => prisma.missionMarket.upsert({
+      where: { missionId_mintAddress: { missionId: openArena.id, mintAddress: market.mintAddress } },
+      update: { symbol: market.symbol, decimals: market.decimals, enabled: true },
+      create: { missionId: openArena.id, ...market, enabled: true },
+    })),
+  )
 }
 
 main()
-  .then(() => console.log('Seeded Operation Nightfall and five ranked demo operators.'))
+  .then(() => console.log('Seeded fixed Operation Nightfall rankings and the dynamic Open Arena.'))
   .catch((error: unknown) => {
     console.error(error)
     process.exitCode = 1

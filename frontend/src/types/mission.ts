@@ -10,6 +10,7 @@ export interface Mission {
   startingBalance: string
   startsAt: string
   endsAt: string
+  allowDynamicMarkets: boolean
   marketCount: number
   operatorCount: number
   markets: MissionMarket[]

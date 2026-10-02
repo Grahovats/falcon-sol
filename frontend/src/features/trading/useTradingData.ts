@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '../../api/client'
 import { getLeaderboard, getMarkets, getOrders, getPortfolio } from '../../api/trading'
 import { useAuth } from '../../providers/auth-context'
@@ -13,6 +13,9 @@ export function useTradingData(missionId: string) {
   const [portfolio, setPortfolio] = useState<PortfolioResource>({ status: 'loading' })
   const [leaderboard, setLeaderboard] = useState<Resource<LeaderboardResponse>>({ status: 'loading' })
   const [orders, setOrders] = useState<Resource<OrderHistoryItem[]>>({ status: 'loading' })
+  const portfolioMutation = useRef(0)
+  const portfolioRequest = useRef(0)
+  const lastAppliedPortfolioRequest = useRef(0)
 
   const refreshMarkets = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -26,8 +29,12 @@ export function useTradingData(missionId: string) {
 
   const refreshPortfolio = useCallback(async (signal?: AbortSignal) => {
     if (auth.status !== 'authenticated') { setPortfolio({ status: 'authentication-required' }); return }
+    const requestId = ++portfolioRequest.current
+    const mutationAtRequest = portfolioMutation.current
     try {
       const { data } = await getPortfolio(missionId, signal)
+      if (mutationAtRequest !== portfolioMutation.current || requestId < lastAppliedPortfolioRequest.current) return
+      lastAppliedPortfolioRequest.current = requestId
       setPortfolio({ status: 'success', data })
     } catch (error: unknown) {
       if (isAbort(error)) return
@@ -68,7 +75,13 @@ export function useTradingData(missionId: string) {
     }
   }, [auth.status, missionId])
 
-  const updatePortfolio = useCallback((data: Portfolio) => setPortfolio({ status: 'success', data }), [])
+  const updatePortfolio = useCallback((data: Portfolio) => {
+    // A polling request may have read the old balance before an order committed and
+    // finish after this update. Invalidate those responses so they cannot restore
+    // already-spent cash in the order ticket.
+    portfolioMutation.current += 1
+    setPortfolio({ status: 'success', data })
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()

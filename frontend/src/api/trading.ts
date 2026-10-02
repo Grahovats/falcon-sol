@@ -1,5 +1,5 @@
 import type { ApiEnvelope } from '../types/mission'
-import type { CandleResponse, CandleTimeframe, LeaderboardResponse, MarketPrice, OrderExecution, OrderHistoryItem, OrderRequest, Portfolio } from '../types/trading'
+import type { AdmittedMarket, CandleResponse, CandleTimeframe, LeaderboardResponse, MarketPrice, OrderExecution, OrderHistoryItem, OrderRequest, Portfolio, TokenCandidate } from '../types/trading'
 import { apiGet, apiPost } from './client'
 
 export function joinMission(missionId: string) {
@@ -8,6 +8,15 @@ export function joinMission(missionId: string) {
 
 export function getMarkets(missionId: string, signal?: AbortSignal) {
   return apiGet<ApiEnvelope<MarketPrice[]>>(`/missions/${encodeURIComponent(missionId)}/markets`, signal)
+}
+
+export function discoverTokens(missionId: string, input: { query: string } | { feed: 'recent' }, signal?: AbortSignal) {
+  const params = new URLSearchParams(input)
+  return apiGet<ApiEnvelope<TokenCandidate[]>>(`/missions/${encodeURIComponent(missionId)}/token-discovery?${params.toString()}`, signal)
+}
+
+export function admitToken(missionId: string, mintAddress: string) {
+  return apiPost<ApiEnvelope<AdmittedMarket>>(`/missions/${encodeURIComponent(missionId)}/markets/admit`, { mintAddress })
 }
 
 export function getCandles(missionId: string, marketId: string, timeframe: CandleTimeframe, signal?: AbortSignal) {

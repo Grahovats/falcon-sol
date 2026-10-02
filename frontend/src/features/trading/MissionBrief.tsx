@@ -17,7 +17,6 @@ export function MissionBrief({ mission, deploying, error, onDeploy }: MissionBri
     <section className="panel-cut border border-line bg-surface p-6 sm:p-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <StatusBadge status={mission.status} />
-        <span className="font-mono text-xs uppercase tracking-wider text-muted">Mission brief · {mission.slug}</span>
       </div>
       <h1 className="mt-8 text-3xl font-semibold tracking-tight text-ink sm:text-5xl">{mission.name}</h1>
       <p className="mt-4 max-w-2xl leading-7 text-muted">{mission.description ?? 'Full mission briefing pending.'}</p>

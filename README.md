@@ -64,6 +64,7 @@ JUPITER_REQUEST_TIMEOUT_MS=5000
 JUPITER_MAX_PRICE_IMPACT_PERCENT=5
 JUPITER_PRICE_CACHE_TTL_MS=10000
 JUPITER_STALE_PRICE_MAX_AGE_MS=300000
+JUPITER_MIN_TOKEN_LIQUIDITY_USD=10000
 GECKOTERMINAL_API_BASE_URL=https://api.geckoterminal.com/api/v2
 GECKOTERMINAL_REQUEST_TIMEOUT_MS=8000
 GECKOTERMINAL_CACHE_TTL_MS=60000
@@ -71,7 +72,7 @@ GECKOTERMINAL_CACHE_TTL_MS=60000
 
 Set `ADMIN_WALLET_ADDRESSES` to a comma-separated list of public Solana wallet addresses. A wallet receives admin access only when it is both allowlisted and stored with the `ADMIN` database role; Falcon synchronizes that role during session verification. Never enter a private key or seed phrase. Restart the backend after changing the allowlist.
 
-Set `MARKET_DATA_PROVIDER=jupiter` and provide a server-side `JUPITER_API_KEY` to enable Jupiter Price V3 and Swap V2 quote-only execution. Never expose that key through Vite or commit it.
+Set `MARKET_DATA_PROVIDER=jupiter` and provide a server-side `JUPITER_API_KEY` to enable Jupiter Price V3, Swap V2 quote-only execution, and Open Arena token discovery. `JUPITER_MIN_TOKEN_LIQUIDITY_USD` is the admission floor; every new market must also return usable $100 buy and sell routes below the configured price-impact ceiling. Never expose the key through Vite or commit it.
 
 Candlestick charts use GeckoTerminal's public Solana OHLC endpoint through the backend. No browser-side key is required; responses are cached to protect provider limits.
 
@@ -101,7 +102,7 @@ To destructively reset only the Falcon database and reseed it, run `npm run db:r
 
 ## Seed data
 
-The seed creates Operation Nightfall, five ranked demo competitors, and the BONK, WIF, POPCAT, PENGU, and FARTCOIN markets. Its mission window resets around the current time so the operation remains active. Real users are created only after a valid wallet signature.
+The seed creates fixed-list Operation Nightfall with five ranked demo competitors, plus a separate Open Arena where operators can discover and admit eligible tokens. Both start with BONK, WIF, POPCAT, PENGU, and FARTCOIN, and their windows reset around the current time. Real users are created only after a valid wallet signature.
 
 Local development defaults to deterministic market data. Jupiter mode uses real prices and quote routes but remains paper trading: no swap is submitted.
 
@@ -113,6 +114,7 @@ Local development defaults to deterministic market data. Jupiter mode uses real 
 - Server-authoritative BUY/SELL paper execution
 - 100 vUSDC minimum BUY, 30% total exposure per market, long-only positions, no leverage or negative cash
 - Deterministic local prices or Jupiter Price V3 valuation and Swap V2 quote-only fills
+- Opt-in Open Arenas with name/symbol/mint search, recent-launch discovery, token risk metadata, minimum liquidity, and two-way Jupiter route checks
 - Live portfolio, positions, allocation, quick sell, trade history, and equity-ranked Command Board
 - Three-minute BLACKOUT that keeps trading open while concealing rankings
 - Automatic registration → active → blackout → settling → finalized lifecycle
@@ -136,6 +138,8 @@ Session-protected routes:
 - `POST /missions/:missionId/join`
 - `GET /missions/:missionId/portfolio`
 - `GET|POST /missions/:missionId/orders`
+- `GET /missions/:missionId/token-discovery`
+- `POST /missions/:missionId/markets/admit`
 - `GET /profile`
 
 Administration routes under `/api/v1/admin` require an authenticated `ADMIN` role and a wallet currently present in `ADMIN_WALLET_ADDRESSES`. Mission mutations and automatic lifecycle transitions are recorded in `AdminAuditLog`; `GET /admin/audit-logs` returns the latest 100 records.
@@ -151,6 +155,7 @@ Committed migrations are applied in order:
 - `20260930103000_add_jupiter_execution_metadata`
 - `20260930110159_add_wallet_auth`
 - `20260930115046_add_admin_security_and_mission_settlement`
+- `20261001183000_add_open_market_missions`
 
 The schema includes role-bearing users, wallets, one-time auth challenges, hashed sessions, missions, markets, entries, orders, quote-audited fills, positions, locked mission results, and admin/system audit logs.
 
@@ -160,7 +165,7 @@ The schema includes role-bearing users, wallets, one-time auth challenges, hashe
 npm run check
 ```
 
-The suite covers trading calculations and limits, mission states, deterministic pricing, Jupiter response handling, wallet authentication, dual admin authorization, safe status transitions, cancellation behavior, deterministic settlement, and locked-result calculations. For a local smoke test, verify <http://localhost:4000/health>, open the UI, connect an installed Solana wallet, and approve the sign-in message.
+The suite covers trading calculations and limits, mission states, deterministic pricing, Jupiter price/quote/token response handling, wallet authentication, dual admin authorization, safe status transitions, cancellation behavior, deterministic settlement, and locked-result calculations. For a local smoke test, verify <http://localhost:4000/health>, open the UI, connect an installed Solana wallet, and approve the sign-in message.
 
 ## Troubleshooting
 

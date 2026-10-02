@@ -15,6 +15,7 @@ const missionFields = {
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date(),
   status: z.enum(missionStatuses),
+  allowDynamicMarkets: z.boolean().optional(),
 }
 const createMissionSchema = z.object({ ...missionFields, slug: z.string().trim().min(3).max(140).optional() })
   .refine((value) => value.endsAt > value.startsAt, { message: 'End time must be after start time.' })
@@ -49,7 +50,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     try {
       const mission = await prisma.$transaction(async (transaction) => {
         const created = await transaction.mission.create({
-          data: { name: input.name, slug: input.slug ?? slugify(input.name), description: input.description ?? null, startingBalance: input.startingBalance, startsAt: input.startsAt, endsAt: input.endsAt, status: input.status },
+          data: { name: input.name, slug: input.slug ?? slugify(input.name), description: input.description ?? null, startingBalance: input.startingBalance, startsAt: input.startsAt, endsAt: input.endsAt, status: input.status, allowDynamicMarkets: input.allowDynamicMarkets ?? false },
           include: { markets: true, _count: { select: { entries: true, results: true } } },
         })
         await writeAdminAudit(transaction, actor, 'MISSION_CREATED', 'Mission', created.id, created.id, { name: created.name, status: created.status, startsAt: created.startsAt.toISOString(), endsAt: created.endsAt.toISOString() })
@@ -79,6 +80,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       if (input.startsAt !== undefined) data.startsAt = input.startsAt
       if (input.endsAt !== undefined) data.endsAt = input.endsAt
       if (input.status !== undefined) data.status = input.status
+      if (input.allowDynamicMarkets !== undefined) data.allowDynamicMarkets = input.allowDynamicMarkets
       if (input.status === MissionStatus.CANCELLED) data.lifecycleError = null
       const updated = await transaction.mission.update({ where: { id }, data, include: { markets: { orderBy: { symbol: 'asc' } }, _count: { select: { entries: true, results: true } } } })
       await writeAdminAudit(transaction, actor, 'MISSION_UPDATED', 'Mission', id, id, {
@@ -143,12 +145,13 @@ export function assertAdminStatusTransition(current: MissionStatus, next: Missio
 }
 
 
-function assertMissionRulesMutable(current: { status: MissionStatus; startingBalance: Prisma.Decimal; startsAt: Date; endsAt: Date }, input: { startingBalance?: number | undefined; startsAt?: Date | undefined; endsAt?: Date | undefined }) {
+function assertMissionRulesMutable(current: { status: MissionStatus; startingBalance: Prisma.Decimal; startsAt: Date; endsAt: Date; allowDynamicMarkets: boolean }, input: { startingBalance?: number | undefined; startsAt?: Date | undefined; endsAt?: Date | undefined; allowDynamicMarkets?: boolean | undefined }) {
   if (([MissionStatus.DRAFT, MissionStatus.REGISTRATION, MissionStatus.LOCKED] as MissionStatus[]).includes(current.status)) return
   const balanceChanged = input.startingBalance !== undefined && !current.startingBalance.equals(input.startingBalance)
   const startChanged = input.startsAt !== undefined && current.startsAt.getTime() !== input.startsAt.getTime()
   const endChanged = input.endsAt !== undefined && current.endsAt.getTime() !== input.endsAt.getTime()
-  if (balanceChanged || startChanged || endChanged) throw new AppError('INVALID_MISSION_TRANSITION', 'Capital and schedule rules are locked once trading begins.', 409)
+  const marketModeChanged = input.allowDynamicMarkets !== undefined && current.allowDynamicMarkets !== input.allowDynamicMarkets
+  if (balanceChanged || startChanged || endChanged || marketModeChanged) throw new AppError('INVALID_MISSION_TRANSITION', 'Capital, schedule, and market-universe rules are locked once trading begins.', 409)
 }
 
 function assertMissionConfigurationOpen(status: MissionStatus) {
@@ -168,14 +171,14 @@ function handleUniqueConflict(error: unknown, message: string): never {
 }
 
 function serializeAdminMission(mission: {
-  id: string; name: string; slug: string; description: string | null; status: MissionStatus; startingBalance: Prisma.Decimal; startsAt: Date; endsAt: Date; settledAt: Date | null; lifecycleError: string | null
+  id: string; name: string; slug: string; description: string | null; status: MissionStatus; startingBalance: Prisma.Decimal; startsAt: Date; endsAt: Date; settledAt: Date | null; lifecycleError: string | null; allowDynamicMarkets: boolean
   markets: Array<{ id: string; symbol: string; mintAddress: string; decimals: number; enabled: boolean; settlementPrice: Prisma.Decimal | null; settledAt: Date | null }>
   _count: { entries: number; results: number }
 }) {
   return {
     id: mission.id, name: mission.name, slug: mission.slug, description: mission.description, status: mission.status,
     startingBalance: mission.startingBalance.toString(), startsAt: mission.startsAt.toISOString(), endsAt: mission.endsAt.toISOString(),
-    settledAt: mission.settledAt?.toISOString() ?? null, lifecycleError: mission.lifecycleError,
+    settledAt: mission.settledAt?.toISOString() ?? null, lifecycleError: mission.lifecycleError, allowDynamicMarkets: mission.allowDynamicMarkets,
     markets: mission.markets.map((market) => ({ ...market, settlementPrice: market.settlementPrice?.toString() ?? null, settledAt: market.settledAt?.toISOString() ?? null })),
     operatorCount: mission._count.entries, resultCount: mission._count.results,
   }

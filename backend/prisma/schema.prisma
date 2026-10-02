@@ -101,6 +101,7 @@ model Mission {
   updatedAt       DateTime        @updatedAt
   settledAt       DateTime?
   lifecycleError  String?
+  allowDynamicMarkets Boolean       @default(false)
   markets         MissionMarket[]
   entries         MissionEntry[]
   results         MissionResult[]
@@ -122,7 +123,7 @@ model MissionMarket {
   orders      Order[]
   positions   Position[]
 
-  @@unique([missionId, symbol])
+  @@unique([missionId, mintAddress])
   @@index([missionId])
 }
 

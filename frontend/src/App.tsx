@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AdminRoute } from './components/AdminRoute'
 import { AppShell } from './layouts/AppShell'
 import { AdminPage } from './pages/AdminPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { HomePage } from './pages/HomePage'
 import { MissionDetailPage } from './pages/MissionDetailPage'
 import { MissionsPage } from './pages/MissionsPage'
@@ -16,6 +17,7 @@ export default function App() {
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<HomePage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="missions" element={<MissionsPage />} />
           <Route path="missions/:id" element={<MissionDetailPage />} />
           <Route path="rankings" element={<RankingsPage />} />

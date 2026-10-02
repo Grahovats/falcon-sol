@@ -35,11 +35,13 @@ export function WalletAuthButton() {
   if (authenticated && address) {
     return (
       <div ref={rootRef} className="relative">
-        <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-haspopup="menu" className="focus-ring flex min-h-11 items-center gap-2 border border-primary/40 bg-primary/5 px-4 font-mono text-xs uppercase tracking-wider text-ink hover:border-primary">
-          <span className="size-2 rounded-full bg-primary" aria-hidden="true" />{truncateAddress(address)}
+        <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-haspopup="menu" className="focus-ring flex min-h-11 items-center gap-2 whitespace-nowrap border border-primary/40 bg-primary/5 px-4 font-mono text-xs text-ink hover:border-primary">
+          <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+          <span className="uppercase tracking-wider xl:hidden">{truncateAddress(address)}</span>
+          <span className="hidden xl:inline">{address}</span>
         </button>
-        {open && <div role="menu" className="absolute right-0 z-50 mt-2 w-56 border border-line bg-surface p-1 shadow-2xl shadow-black/40">
-          <div className="border-b border-line px-3 py-2"><p className="text-xs uppercase tracking-wider text-muted">Authenticated operator</p><p className="mt-1 truncate font-mono text-xs text-ink" title={address}>{address}</p></div>
+        {open && <div role="menu" className="absolute right-0 z-50 mt-2 w-64 max-w-[calc(100vw-2rem)] border border-line bg-surface p-1 shadow-2xl shadow-black/40 xl:w-full">
+          <div className="border-b border-line px-3 py-2"><p className="text-xs uppercase tracking-wider text-muted">Authenticated operator</p><p className="mt-1 break-all font-mono text-xs leading-5 text-ink">{address}</p></div>
           <button type="button" role="menuitem" onClick={() => void copyAddress()} className="focus-ring flex min-h-10 w-full items-center gap-3 px-3 text-left text-sm text-ink hover:bg-primary/5">{copied ? <Check className="size-4 text-primary" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}{copied ? 'Copied' : 'Copy address'}</button>
           <a role="menuitem" href={`https://explorer.solana.com/address/${address}`} target="_blank" rel="noreferrer" className="focus-ring flex min-h-10 items-center gap-3 px-3 text-sm text-ink hover:bg-primary/5"><ExternalLink className="size-4" aria-hidden="true" />View on explorer</a>
           <button type="button" role="menuitem" onClick={() => void auth.signOut()} className="focus-ring flex min-h-10 w-full items-center gap-3 border-t border-line px-3 text-left text-sm text-danger hover:bg-danger/5"><LogOut className="size-4" aria-hidden="true" />Sign out</button>

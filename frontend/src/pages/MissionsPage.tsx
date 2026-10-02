@@ -1,6 +1,5 @@
-import { PageHeader } from '../components/PageHeader'
 import { MissionsGrid } from '../features/missions/MissionsGrid'
 
 export function MissionsPage() {
-  return <div><PageHeader eyebrow="Command / Missions" title="Mission board" description="Review open operations, their market roster, and the virtual capital assigned to every operator." /><div className="mt-10"><MissionsGrid /></div></div>
+  return <div><header><h1 className="text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl">Active missions</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Choose an operation, review the market roster, and deploy with equal virtual capital.</p></header><div className="mt-7"><MissionsGrid /></div></div>
 }

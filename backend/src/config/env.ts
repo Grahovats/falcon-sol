@@ -21,6 +21,7 @@ const environmentSchema = z.object({
   JUPITER_MAX_PRICE_IMPACT_PERCENT: z.coerce.number().positive().max(100).default(5),
   JUPITER_PRICE_CACHE_TTL_MS: z.coerce.number().int().min(1_000).max(60_000).default(10_000),
   JUPITER_STALE_PRICE_MAX_AGE_MS: z.coerce.number().int().min(10_000).max(900_000).default(300_000),
+  JUPITER_MIN_TOKEN_LIQUIDITY_USD: z.coerce.number().nonnegative().max(1_000_000_000).default(10_000),
   GECKOTERMINAL_API_BASE_URL: z.string().url().default('https://api.geckoterminal.com/api/v2'),
   GECKOTERMINAL_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(500).max(30_000).default(8_000),
   GECKOTERMINAL_CACHE_TTL_MS: z.coerce.number().int().min(10_000).max(300_000).default(60_000),

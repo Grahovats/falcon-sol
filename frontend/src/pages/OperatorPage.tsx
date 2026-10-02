@@ -27,13 +27,13 @@ export function OperatorPage() {
     return () => { window.clearTimeout(timer); controller.abort() }
   }, [load])
 
-  if (state.status === 'loading') return <div aria-busy="true"><PageHeader eyebrow="Operator dossier" title="Loading record" description="Retrieving verified mission performance…" /><div className="mt-10 h-80 animate-pulse border border-line bg-surface" /></div>
-  if (state.status === 'error') return <div><Link to="/rankings" className="focus-ring mb-6 inline-flex min-h-11 items-center gap-2 text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" /> Back to rankings</Link><PageHeader eyebrow="Operator dossier" title="Record unavailable" description={state.message} /><button type="button" onClick={() => void load()} className="focus-ring mt-8 inline-flex min-h-11 items-center gap-2 border border-line px-4 text-sm font-semibold text-ink hover:border-primary"><RotateCw className="size-4" /> Retry</button></div>
+  if (state.status === 'loading') return <div aria-busy="true"><PageHeader title="Loading record" description="Retrieving verified mission performance…" /><div className="mt-10 h-80 animate-pulse border border-line bg-surface" /></div>
+  if (state.status === 'error') return <div><Link to="/rankings" className="focus-ring mb-6 inline-flex min-h-11 items-center gap-2 text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" /> Back to rankings</Link><PageHeader title="Record unavailable" description={state.message} /><button type="button" onClick={() => void load()} className="focus-ring mt-8 inline-flex min-h-11 items-center gap-2 border border-line px-4 text-sm font-semibold text-ink hover:border-primary"><RotateCw className="size-4" /> Retry</button></div>
 
   const profile = state.data
   return <div>
     <Link to="/rankings" className="focus-ring mb-6 inline-flex min-h-11 items-center gap-2 text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" /> Back to rankings</Link>
-    <PageHeader eyebrow="Public operator dossier" title={profile.username} description={profile.wallet ? `Linked wallet: ${profile.wallet.slice(0, 4)}...${profile.wallet.slice(-4)}` : 'Falcon operator'} />
+    <PageHeader title={profile.username} description={profile.wallet ? `Linked wallet: ${profile.wallet.slice(0, 4)}...${profile.wallet.slice(-4)}` : 'Falcon operator'} />
     <dl className="mt-10 grid gap-px bg-line sm:grid-cols-2 lg:grid-cols-5">
       <Metric icon={<Crosshair />} label="Finalized missions" value={String(profile.missionsEntered)} />
       <Metric icon={<Award />} label="Wins" value={String(profile.wins)} />
