@@ -106,6 +106,8 @@ The seed creates fixed-list Operation Nightfall with five ranked demo competitor
 
 Local development defaults to deterministic market data. Jupiter mode uses real prices and quote routes but remains paper trading: no swap is submitted.
 
+Run `npm run mission:test` to create a fresh **Terminal Test Flight** mission that is immediately live for seven days, with 10,000 virtual USDC per operator and the five default markets. The command prints its terminal URL. Connect your wallet and deploy to start testing. Each run creates a separate mission and preserves existing portfolios and results.
+
 ## Product flows
 
 - Wallet Standard discovery, explicit message signing, persistent server session, and sign-out

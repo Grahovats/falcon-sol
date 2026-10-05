@@ -1,11 +1,10 @@
-interface PageHeaderProps { title: string; description: string }
+interface PageHeaderProps { title: string }
 
-export function PageHeader({ title, description }: PageHeaderProps) {
+export function PageHeader({ title }: PageHeaderProps) {
   return (
-    <header className="border-b border-line pb-7">
+    <header className="border-b border-line pb-5">
       <div className="max-w-3xl">
         <h1 className="text-3xl font-semibold tracking-[-0.03em] text-ink sm:text-4xl">{title}</h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-muted">{description}</p>
       </div>
     </header>
   )

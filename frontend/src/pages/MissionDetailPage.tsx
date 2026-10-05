@@ -85,7 +85,7 @@ function ErrorPanel({ title, message, onRetry }: { title: string; message: strin
 }
 
 function TerminalSkeleton() {
-  return <div className="space-y-4" aria-busy="true" aria-label="Loading trading terminal"><div className="h-24 animate-pulse border border-line bg-surface" /><div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_300px]"><div className="h-96 animate-pulse border border-line bg-surface" /><div className="h-[36rem] animate-pulse border border-line bg-surface" /><div className="h-96 animate-pulse border border-line bg-surface" /></div></div>
+  return <div className="space-y-3" aria-busy="true" aria-label="Loading trading terminal"><div className="h-24 animate-pulse border border-line bg-surface" /><div className="terminal-grid"><div className="terminal-watch min-h-40 animate-pulse xl:min-h-96" /><div className="terminal-chart min-w-0"><div className="h-40 animate-pulse border-b border-line" /><div className="terminal-chart-canvas animate-pulse" /></div><div className="terminal-order min-h-96 animate-pulse" /></div></div>
 }
 
 function LifecyclePanel({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {

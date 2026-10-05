@@ -19,6 +19,7 @@
 }
 
 :root {
+  --app-header-height: 10.375rem;
   color: var(--color-ink);
   background: var(--color-canvas);
   font-family: var(--font-sans);
@@ -34,11 +35,11 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background:
-    linear-gradient(rgba(184, 242, 61, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(184, 242, 61, 0.025) 1px, transparent 1px),
-    var(--color-canvas);
-  background-size: 48px 48px;
+  background: var(--color-canvas);
+}
+#root {
+  min-height: 100vh;
+  background: var(--color-canvas);
 }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
@@ -82,15 +83,265 @@ button:disabled { cursor: not-allowed; }
   background-size: 100% 25%, 12.5% 100%;
 }
 
+/* Dashboard geometry is explicit so it remains stable during Vite/Tailwind HMR. */
+.dashboard-primary-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) !important;
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+.dashboard-primary-grid > div,
+.dashboard-primary-grid > div > * {
+  height: 100%;
+}
+
+.dashboard-equity-chart {
+  display: block;
+  width: 100%;
+  height: 14rem !important;
+  min-height: 14rem;
+}
+
+.dashboard-metric {
+  position: relative;
+}
+
+.dashboard-metric:not(:last-child)::after {
+  position: absolute;
+  top: 1.5rem;
+  right: 0;
+  bottom: 1.5rem;
+  width: 1px;
+  content: "";
+  background: var(--color-line);
+}
+
+.dashboard-metric:nth-child(2n)::after { display: none; }
+
+@media (min-width: 768px) {
+  .dashboard-metric:nth-child(2n)::after { display: block; }
+  .dashboard-metric:nth-child(3n)::after { display: none; }
+}
+
+@media (min-width: 1280px) {
+  .dashboard-metric:nth-child(3n)::after { display: block; }
+}
+
+@media (max-width: 639px) {
+  .dashboard-primary-grid { gap: 1rem; }
+}
+
+.falcon-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+  gap: 2rem;
+  min-height: calc(100vh - var(--app-header-height));
+  min-height: calc(100dvh - var(--app-header-height));
+  padding-top: 1rem;
+  padding-bottom: 3rem;
+  background: var(--color-canvas);
+}
+.falcon-hero-copy { min-width: 0; }
+.falcon-hero-visual {
+  position: relative;
+  min-width: 0;
+  pointer-events: none;
+}
+/* A transparent WebGL surface blends the lit sculpture into Falcon's canvas. */
+.signal-scene {
+  height: clamp(300px, 36vw, 460px);
+}
+.signal-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.signal-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.signal-scene:has(.signal-canvas[data-ready]) .signal-fallback { visibility: hidden; }
+.signal-shadow {
+  position: absolute;
+  width: 65%;
+  height: 20%;
+  left: 17.5%;
+  bottom: 3%;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 70%);
+}
+
+@media (min-width: 1024px) {
+  :root { --app-header-height: 7.125rem; }
+  .falcon-hero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: max(30rem, calc(100vh - var(--app-header-height)));
+    min-height: max(30rem, calc(100dvh - var(--app-header-height)));
+    gap: 2rem;
+    padding-top: 0.5rem;
+    padding-bottom: 3rem;
+  }
+  .falcon-hero-visual {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.primary-nav {
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.primary-nav::-webkit-scrollbar { display: none; }
+
+.nav-link { position: relative; }
+.nav-link::after {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.25rem;
+  left: 0.75rem;
+  height: 1px;
+  content: "";
+  background: var(--color-primary);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: center;
+}
+.nav-link-active::after { opacity: 0.9; transform: scaleX(1); }
+
 @media (prefers-reduced-motion: no-preference) {
-  .interactive-lift { transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 150ms ease-out; }
-  .interactive-lift:hover { transform: translateY(-2px); }
+  :where(button, a) {
+    transition-property: color, background-color, border-color, opacity, transform, filter;
+    transition-duration: 100ms;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  :where(button:not(:disabled), a):active {
+    transform: translateY(1px) scale(0.985);
+    transition-duration: 50ms;
+  }
+  .nav-link:active {
+    transform: none;
+  }
+  :where(input, select, textarea) {
+    transition: border-color 100ms ease-out, background-color 100ms ease-out, box-shadow 100ms ease-out;
+  }
+  .nav-link::after {
+    transition: opacity 100ms ease-out, transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .state-content { animation: state-content-in 200ms cubic-bezier(0, 0, 0.2, 1) both; }
+  .stagger-item {
+    animation: stagger-item-in 300ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+    animation-delay: var(--stagger-delay, 0ms);
+  }
+  .interactive-lift {
+    transition: border-color 150ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out, transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .wallet-menu {
+    animation: wallet-menu-in 150ms cubic-bezier(0.23, 1, 0.32, 1) both;
+    transform-origin: top right;
+  }
+  .wallet-dialog[open] { animation: wallet-dialog-in 250ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+  .wallet-dialog[open]::backdrop { animation: wallet-backdrop-in 200ms ease-out both; }
+  .animate-pulse {
+    background-image: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.055) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite, skeleton-enter 200ms cubic-bezier(0, 0, 0.2, 1) both;
+  }
+  .preview-row {
+    animation: preview-row-in 300ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+    animation-delay: var(--preview-row-delay, 0ms);
+  }
+  .preview-chart-line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: preview-chart-draw var(--preview-chart-duration) cubic-bezier(0.23, 1, 0.32, 1) var(--preview-chart-delay) forwards;
+  }
+  .preview-chart-area {
+    opacity: 0;
+    animation: preview-chart-area-in 400ms ease-out var(--preview-area-delay) forwards;
+  }
+  .preview-price-tag {
+    animation: preview-price-in 300ms cubic-bezier(0.23, 1, 0.32, 1) var(--preview-price-delay) both;
+  }
   .market-tape-track { animation: market-tape 110s linear infinite; }
 }
 
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .brand-mark:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .nav-link:hover::after { opacity: 0.9; transform: scaleX(1); }
+  .interactive-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 0.16);
+  }
+  .directional-action .action-icon { transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1); }
+  .directional-action:hover .action-icon { transform: translateX(3px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  :where(button, a) { transition: none; }
+  :where(input, select, textarea) { transition: none; }
   .animate-pulse { animation: none; }
   .market-tape-track > :nth-child(n + 7) { display: none; }
+}
+
+@keyframes state-content-in {
+  from { opacity: 0.55; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skeleton-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes stagger-item-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes preview-row-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes preview-chart-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes preview-chart-area-in {
+  to { opacity: 1; }
+}
+
+@keyframes preview-price-in {
+  from { opacity: 0; transform: translateX(6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes wallet-menu-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes wallet-dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes wallet-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
 
 @keyframes market-tape {
@@ -100,3 +351,61 @@ button:disabled { cursor: not-allowed; }
 
 .wallet-dialog::backdrop { background: rgb(0 0 0 / 0.8); }
 .wallet-dialog { box-shadow: 0 24px 80px rgb(0 0 0 / 0.55); }
+
+/* The terminal uses one connected workspace, with fixed utility rails. */
+.terminal-grid {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+  border: 1px solid var(--color-line);
+  background: var(--color-line);
+}
+.terminal-grid > * { background: var(--color-surface); }
+.terminal-panel-heading {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--color-line);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.terminal-market-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.terminal-market-row {
+  min-width: 0;
+  border-bottom: 1px solid var(--color-line);
+  border-left: 2px solid transparent;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+}
+.terminal-market-row:hover { background: var(--color-surface-raised); }
+.terminal-market-row.is-selected {
+  border-left-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+.terminal-order > section + section { border-width: 1px 0 0; }
+.terminal-order ol { max-height: 24rem; overflow-y: auto; }
+.terminal-order li { grid-template-columns: 1.5rem auto minmax(0, 1fr) auto; padding-inline: 1rem; }
+.terminal-order li > span { overflow-wrap: anywhere; }
+.terminal-order h2 { text-transform: none; letter-spacing: normal; }
+.terminal-chart-canvas { height: 22rem; }
+.trading-terminal > section h2 { text-transform: none; letter-spacing: normal; }
+.trading-terminal tbody tr:hover { background: var(--color-surface-raised); }
+#order-ticket { scroll-margin-top: 8rem; }
+@media (min-width: 768px) {
+  .terminal-grid { grid-template-columns: minmax(0, 1fr) 320px; }
+  .terminal-watch { grid-column: 1 / -1; }
+  .terminal-market-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .terminal-chart-canvas { height: clamp(26rem, 52vh, 44rem); }
+}
+@media (min-width: 1280px) {
+  .terminal-grid { grid-template-columns: 208px minmax(0, 1fr) 336px; }
+  .terminal-watch { grid-column: auto; }
+  .terminal-market-list { grid-template-columns: minmax(0, 1fr); max-height: 65vh; overflow-y: auto; }
+}
+@media (min-width: 1600px) {
+  .terminal-grid { grid-template-columns: 232px minmax(0, 1fr) 360px; }
+}

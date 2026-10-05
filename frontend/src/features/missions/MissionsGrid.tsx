@@ -39,14 +39,14 @@ export function MissionsGrid() {
         <p className="flex items-center gap-2 font-mono text-xs text-muted"><span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />{liveCount} live {liveCount === 1 ? 'operation' : 'operations'}</p>
       </div>
 
-      <div className="mt-8 space-y-12">
+      <div key={filter} className="state-content mt-8 space-y-12">
         {visibleGroups.map((group) => {
           const missions = state.missions.filter((mission) => isInGroup(mission, group.statuses))
           const id = group.title.replaceAll(' ', '-').toLowerCase()
           return (
             <section key={group.title} aria-labelledby={id}>
               <div className="mb-4 flex items-center gap-3"><h2 id={id} className="text-sm font-semibold text-ink">{group.title}</h2><span className="font-mono text-xs text-muted">{missions.length.toString().padStart(2, '0')}</span></div>
-              {missions.length === 0 ? <div className="rounded-lg border border-dashed border-line p-6 text-sm text-muted">No missions in this sector.</div> : <div className={`grid gap-4 md:grid-cols-2 ${group.title === 'Live operations' ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`}>{missions.map((mission) => <MissionCard key={mission.id} mission={mission} />)}</div>}
+              {missions.length === 0 ? <div className="rounded-lg border border-dashed border-line p-6 text-sm text-muted">No missions in this sector.</div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{missions.map((mission, index) => <MissionCard key={mission.id} mission={mission} entranceIndex={index} />)}</div>}
             </section>
           )
         })}

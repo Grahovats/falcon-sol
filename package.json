@@ -13,6 +13,7 @@
     "db:down": "docker compose down",
     "db:migrate": "npm --prefix backend run db:migrate",
     "db:seed": "npm --prefix backend run db:seed",
+    "mission:test": "npm --prefix backend run mission:test",
     "db:generate": "npm --prefix backend run db:generate",
     "db:reset": "npm --prefix backend run db:reset"
   },

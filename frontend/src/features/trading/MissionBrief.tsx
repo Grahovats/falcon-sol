@@ -24,7 +24,7 @@ export function MissionBrief({ mission, deploying, error, onDeploy }: MissionBri
       <dl className="mt-10 grid gap-6 border-y border-line py-8 sm:grid-cols-4">
         <div><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted"><Coins className="size-4" aria-hidden="true" /> Virtual capital</dt><dd className="mt-2 font-mono text-lg text-ink">{formatVirtualBalance(mission.startingBalance)}</dd></div>
         <div><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted"><Crosshair className="size-4" aria-hidden="true" /> Approved markets</dt><dd className="mt-2 font-mono text-lg text-ink">{mission.marketCount}</dd></div>
-        <div><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted"><Users className="size-4" aria-hidden="true" /> Operators</dt><dd className="mt-2 font-mono text-lg text-ink">{mission.operatorCount}</dd></div>
+        <div><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted"><Users className="size-4" aria-hidden="true" /> Participants</dt><dd className="mt-2 font-mono text-lg text-ink">{mission.operatorCount}</dd></div>
         <div><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted"><CalendarDays className="size-4" aria-hidden="true" /> Window</dt><dd className="mt-2 text-sm leading-6 text-ink">{formatDate(mission.startsAt)}<br />{formatDate(mission.endsAt)}</dd></div>
       </dl>
 

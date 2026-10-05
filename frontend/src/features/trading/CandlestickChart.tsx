@@ -50,14 +50,14 @@ export function CandlestickChart({ missionId, marketId, symbol }: CandlestickCha
               key={value}
               type="button"
               aria-pressed={timeframe === value}
-              onClick={() => { setState({ status: 'loading' }); setTimeframe(value) }}
-              className={`focus-ring min-h-10 min-w-11 px-3 font-mono text-xs transition-colors ${timeframe === value ? 'bg-primary text-primary-ink' : 'text-muted hover:bg-surface hover:text-ink'}`}
+              onClick={() => { if (value !== timeframe) { setState({ status: 'loading' }); setTimeframe(value) } }}
+              className={`focus-ring min-h-10 min-w-11 px-3 font-mono text-xs transition-colors ${timeframe === value ? 'bg-surface-raised text-primary' : 'text-muted hover:bg-surface hover:text-ink'}`}
             >
               {value}
             </button>
           ))}
         </div>
-        <p className="font-mono text-xs uppercase tracking-wider text-muted">USD · GeckoTerminal OHLC</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-muted">USD · Candlesticks</p>
       </div>
 
       {state.status === 'loading' && <ChartSkeleton symbol={symbol} />}
@@ -160,7 +160,7 @@ function ChartCanvas({ candles, symbol, timeframe }: { candles: MarketCandle[]; 
         <span className={positive ? 'text-primary' : 'text-danger'}>{positive ? '+' : ''}{formatPrice(change)}</span>
         <span className="text-muted">Vol {formatVolume(active.volume)}</span>
       </div>
-      <div ref={containerRef} className="h-80 w-full sm:h-96" aria-label={`${symbol} ${timeframe} candlestick chart with ${candles.length} candles`} />
+      <div ref={containerRef} className="terminal-chart-canvas w-full" aria-label={`${symbol} ${timeframe} candlestick chart with ${candles.length} candles`} />
       <p className="sr-only">Latest {symbol} candle opened at {formatPrice(latest.open)}, reached a high of {formatPrice(latest.high)}, a low of {formatPrice(latest.low)}, and closed at {formatPrice(latest.close)}.</p>
     </div>
   )
@@ -171,7 +171,7 @@ function CandleMetric({ label, value }: { label: string; value: number }) {
 }
 
 function ChartSkeleton({ symbol }: { symbol: string }) {
-  return <div className="min-h-80 animate-pulse p-4 sm:min-h-96" aria-busy="true" aria-label={`Loading ${symbol} candlestick chart`}><div className="h-8 w-2/3 bg-line" /><div className="mt-4 h-64 bg-surface sm:h-72" /></div>
+  return <div className="terminal-chart-canvas animate-pulse p-4" aria-busy="true" aria-label={`Loading ${symbol} candlestick chart`}><div className="h-8 w-2/3 bg-line" /><div className="mt-4 h-64 bg-surface sm:h-72" /></div>
 }
 
 function chartPriceFormat(price: number) {

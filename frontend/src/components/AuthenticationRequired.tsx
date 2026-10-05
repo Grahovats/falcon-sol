@@ -1,7 +1,7 @@
 import { ShieldCheck } from 'lucide-react'
 import { WalletAuthButton } from './WalletAuthButton'
 
-export function AuthenticationRequired({ title = 'Authenticate your operator' }: { title?: string }) {
+export function AuthenticationRequired({ title = 'Authenticate your participant' }: { title?: string }) {
   return (
     <section className="mx-auto max-w-2xl border border-line bg-surface p-6 sm:p-8" aria-labelledby="auth-required-title">
       <div className="flex size-11 items-center justify-center border border-primary/30 bg-primary/5 text-primary"><ShieldCheck className="size-5" aria-hidden="true" /></div>
