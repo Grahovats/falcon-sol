@@ -1,4 +1,4 @@
-import { ArrowRight, ChartNoAxesColumnIncreasing, ShieldCheck, Users } from 'lucide-react'
+import { ArrowRight, ChartNoAxesColumnIncreasing, Clock3, Coins, Users } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useCountdown } from '../../hooks/useCountdown'
@@ -20,56 +20,62 @@ export function MissionCard({ mission, entranceIndex = 0 }: { mission: Mission; 
   const entranceStyle = {
     '--stagger-delay': `${entranceIndex * MISSION_CARD_TIMING.staggerMs}ms`,
   } as CSSProperties
-  const progress = getMissionProgress(mission)
   const timeLabel = live ? 'Time remaining' : upcoming ? 'Starts in' : 'Mission status'
   const timeValue = live || upcoming ? countdown : mission.status.toLowerCase()
+  const visibleMarkets = mission.markets.slice(0, 3)
 
   return (
     <article
       style={entranceStyle}
-      className="stagger-item interactive-lift flex h-full min-h-[25rem] flex-col rounded-xl border border-line bg-surface p-5 hover:border-primary/35 sm:p-6"
+      className="mission-card-modern stagger-item interactive-lift group relative flex h-full min-h-72 flex-col overflow-hidden rounded-xl border border-line bg-surface p-4 hover:border-primary/55"
     >
-      <div className="flex items-center justify-between gap-4">
-        <StatusBadge status={mission.status} />
-        <span className="font-mono text-xs uppercase tracking-wider text-muted">{formatDuration(mission.startsAt, mission.endsAt)}</span>
+      <img className="mission-card-backdrop" src="/mision baground.png" alt="" />
+      <div className="mission-card-shadow" aria-hidden="true" />
+
+      <div className="absolute right-4 top-4 z-10 flex w-24 flex-col gap-1.5">
+        <span className="flex min-h-7 w-full items-center justify-center rounded-md border border-line bg-canvas/75 px-1.5 font-mono text-[9px] uppercase tracking-[0.08em] text-muted backdrop-blur-sm">
+          {formatDuration(mission.startsAt, mission.endsAt)}
+        </span>
+        <span className="flex min-h-7 w-full items-center justify-center rounded-md border border-primary/25 bg-canvas/75 px-1.5 backdrop-blur-sm [&>span]:gap-1.5 [&>span]:text-[10px]">
+          <StatusBadge status={mission.status} />
+        </span>
       </div>
 
-      <div className="mt-6 min-h-16">
-        <h3 className="text-lg font-semibold tracking-[-0.02em] text-ink">{mission.name}</h3>
-        <p className="mt-2 line-clamp-2 text-sm leading-5 text-muted">{mission.description ?? 'Trade the roster. Protect your downside.'}</p>
-      </div>
-
-      <div className="mt-5">
-        <p className="font-mono text-3xl font-semibold tabular-nums tracking-[-0.06em] text-ink sm:text-4xl">{formatVirtualBalance(mission.startingBalance)}</p>
-        <p className="mt-2 text-xs text-muted">Virtual starting capital</p>
-      </div>
-
-      <div className="mt-5 flex items-center justify-between gap-4 text-xs">
-        <span className="flex items-center gap-2 font-medium text-ink"><ShieldCheck className="size-4 text-primary" aria-hidden="true" />Free entry</span>
-        <span className="text-muted">No risk. All skill.</span>
-      </div>
-
-      <dl className="mt-5 flex items-center justify-between gap-4 border-t border-line pt-4 text-xs">
-        <CardMetric icon={<Users />} value={`${mission.operatorCount} ${mission.operatorCount === 1 ? 'participant' : 'participants'}`} />
-        <CardMetric icon={<ChartNoAxesColumnIncreasing />} value={`${mission.marketCount} markets`} />
-      </dl>
-
-      <div className="mt-5">
-        <div className="flex items-center justify-between gap-4 text-xs">
-          <span className="text-muted">{timeLabel}</span>
-          <span className="font-mono font-semibold tabular-nums text-ink">{timeValue}</span>
-        </div>
-        <div className="mt-3 h-1 overflow-hidden rounded-full bg-line" aria-hidden="true">
-          <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
+      <div className="relative min-h-16 pr-28">
+        <h3 className="line-clamp-2 text-xl font-semibold tracking-[-0.035em] text-ink">{mission.name}</h3>
+        <div className="mt-2 flex items-center gap-2">
+          <Clock3 className="size-3.5 text-primary" aria-hidden="true" />
+          <span className="text-xs text-muted">{timeLabel}</span>
+          <span className="font-mono text-xs font-semibold tabular-nums text-ink">{timeValue}</span>
         </div>
       </div>
+      <p className="relative mt-2 line-clamp-2 max-w-md text-xs leading-5 text-muted">{mission.description ?? 'Trade the roster. Protect your downside.'}</p>
 
-      <div className="mt-auto pt-5">
+      <div className="relative mt-3 flex flex-wrap items-center gap-1.5" aria-label="Mission markets">
+          {visibleMarkets.map((market) => (
+            <span key={market.id} className="rounded-full border border-line bg-canvas/75 px-2.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-wide text-ink backdrop-blur-sm">
+              {market.symbol}
+            </span>
+          ))}
+          {mission.marketCount > visibleMarkets.length && (
+            <span className="rounded-full border border-line bg-canvas/75 px-2.5 py-1 font-mono text-[9px] text-muted backdrop-blur-sm">
+              +{mission.marketCount - visibleMarkets.length}
+            </span>
+          )}
+          {visibleMarkets.length === 0 && <span className="font-mono text-[10px] uppercase tracking-wider text-muted">Roster pending</span>}
+      </div>
+
+      <div className="relative mt-auto pt-4">
+        <dl className="grid grid-cols-3 divide-x divide-line border-t border-line bg-canvas/55 py-3 backdrop-blur-sm">
+          <MissionMetric icon={<Coins />} label="Virtual capital" value={formatVirtualBalance(mission.startingBalance)} />
+          <MissionMetric icon={<Users />} label="Operators" value={String(mission.operatorCount)} />
+          <MissionMetric icon={<ChartNoAxesColumnIncreasing />} label="Markets" value={String(mission.marketCount)} />
+        </dl>
         <Link
           to={`/missions/${mission.id}`}
-          className="directional-action focus-ring flex min-h-11 w-full items-center justify-between rounded-md border border-line-strong bg-surface-raised px-4 text-sm font-semibold text-ink hover:border-primary/60 hover:text-primary"
+          className="directional-action focus-ring mt-3 flex min-h-10 w-full items-center justify-center gap-3 rounded-md bg-primary px-4 text-xs font-semibold text-primary-ink hover:bg-primary-strong"
         >
-          {live ? 'Open terminal' : upcoming ? 'View mission' : 'View results'}
+          {live ? 'Join mission' : upcoming ? 'View mission' : 'View results'}
           <ArrowRight className="action-icon size-4" aria-hidden="true" />
         </Link>
       </div>
@@ -77,8 +83,13 @@ export function MissionCard({ mission, entranceIndex = 0 }: { mission: Mission; 
   )
 }
 
-function CardMetric({ icon, value }: { icon: React.ReactNode; value: string }) {
-  return <div><dt className="sr-only">Mission metric</dt><dd className="flex items-center gap-2 text-muted [&>svg]:size-4 [&>svg]:shrink-0">{icon}{value}</dd></div>
+function MissionMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="min-w-0 px-2.5 first:pl-0 last:pr-0">
+      <dt className="flex items-center gap-1 truncate text-[8px] uppercase tracking-wider text-muted [&>svg]:size-3 [&>svg]:shrink-0 [&>svg]:text-primary">{icon}{label}</dt>
+      <dd className="mt-1.5 truncate font-mono text-xs font-semibold tabular-nums text-ink">{value}</dd>
+    </div>
+  )
 }
 
 function formatDuration(startsAt: string, endsAt: string) {
@@ -89,15 +100,4 @@ function formatDuration(startsAt: string, endsAt: string) {
     return `${days} ${days === 1 ? 'day' : 'days'}`
   }
   return `${durationHours} hours`
-}
-
-function getMissionProgress(mission: Mission) {
-  if (UPCOMING_STATUSES.has(mission.status)) return 0
-  if (!LIVE_STATUSES.has(mission.status)) return 100
-
-  const startsAt = new Date(mission.startsAt).getTime()
-  const endsAt = new Date(mission.endsAt).getTime()
-  const duration = endsAt - startsAt
-  if (duration <= 0) return 100
-  return Math.min(100, Math.max(0, ((Date.now() - startsAt) / duration) * 100))
 }
