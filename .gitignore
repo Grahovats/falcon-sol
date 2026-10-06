@@ -7,3 +7,5 @@ backend/.env
 frontend/.env
 *.log
 *.orig
+.neon
+.env.local
