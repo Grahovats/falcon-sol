@@ -1,4 +1,4 @@
-import { Activity, Clock3, TrendingUp, WalletCards } from 'lucide-react'
+import { Activity, Clock3, Search, TrendingUp, WalletCards, X } from 'lucide-react'
 import { Component, lazy, Suspense, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { placeOrder } from '../../api/trading'
 import { useCountdown } from '../../hooks/useCountdown'
@@ -10,7 +10,15 @@ import { CommandBoard } from './CommandBoard'
 import { PositionsTable } from './PositionsTable'
 import { TradeHistory } from './TradeHistory'
 import { TokenDiscovery } from './TokenDiscovery'
-const CandlestickChart = lazy(() => import('./CandlestickChart').then((module) => ({ default: module.CandlestickChart })))
+// A distinct module URL lets retry recover from a cached failed dynamic import.
+const retryChartModules = import.meta.glob<typeof import('./CandlestickChart')['CandlestickChart']>(
+  './CandlestickChart.tsx', { query: '?retry', import: 'CandlestickChart' },
+)
+function loadCandlestickChart(retry = false) {
+  return lazy(() => retry
+    ? retryChartModules['./CandlestickChart.tsx']().then((Chart) => ({ default: Chart }))
+    : import('./CandlestickChart').then((module) => ({ default: module.CandlestickChart })))
+}
 const POSITION_LIMIT_PERCENT = 30
 
 interface TradingTerminalProps {
@@ -30,6 +38,7 @@ interface TradingTerminalProps {
 export function TradingTerminal({ mission, markets, portfolio, leaderboard, leaderboardHidden, leaderboardError, orders, ordersError, onPortfolioUpdate, onOrderFilled, onMarketsChanged }: TradingTerminalProps) {
   const [selectedMarketId, setSelectedMarketId] = useState(() => mission.markets[0]?.id ?? '')
   const [orderSide, setOrderSide] = useState<OrderSide>('BUY')
+  const [discoveryOpen, setDiscoveryOpen] = useState(false)
   const selectedMarket = markets.find((market) => market.marketId === selectedMarketId) ?? markets[0]
   const selectedPosition = portfolio.positions.find((position) => position.marketId === selectedMarket?.marketId)
   const countdown = useCountdown(mission.endsAt)
@@ -55,10 +64,10 @@ export function TradingTerminal({ mission, markets, portfolio, leaderboard, lead
         </div>
       </section>
 
-      {mission.allowDynamicMarkets && <TokenDiscovery missionId={mission.id} admittedMints={admittedMints} onAdmitted={async (marketId) => { await onMarketsChanged(); setSelectedMarketId(marketId); setOrderSide('BUY'); document.getElementById('order-ticket')?.scrollIntoView({ block: 'center' }) }} />}
+      {mission.allowDynamicMarkets && discoveryOpen && <div id="token-discovery-panel" className="relative"><button type="button" aria-label="Close coin search" onClick={() => setDiscoveryOpen(false)} className="focus-ring absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-md text-muted hover:bg-surface-raised hover:text-ink"><X className="size-4" aria-hidden="true" /></button><TokenDiscovery missionId={mission.id} admittedMints={admittedMints} onAdmitted={async (marketId) => { await onMarketsChanged(); setSelectedMarketId(marketId); setOrderSide('BUY'); setDiscoveryOpen(false); document.getElementById('order-ticket')?.scrollIntoView({ block: 'center' }) }} /></div>}
 
       <div className="terminal-grid">
-        <MarketList markets={markets} positions={portfolio.positions} selectedMarketId={selectedMarket?.marketId ?? ''} onSelect={(id) => { setSelectedMarketId(id); setOrderSide('BUY') }} />
+        <MarketList onDiscover={mission.allowDynamicMarkets ? () => setDiscoveryOpen((open) => !open) : undefined} discoveryOpen={discoveryOpen} markets={markets} positions={portfolio.positions} selectedMarketId={selectedMarket?.marketId ?? ''} onSelect={(id) => { setSelectedMarketId(id); setOrderSide('BUY') }} />
         <div className="terminal-chart min-w-0">
           {selectedMarket ? <MarketWorkspace key={selectedMarket.marketId} missionId={mission.id} market={selectedMarket} quantity={selectedPosition?.quantity ?? '0'} averageEntryPrice={selectedPosition?.averageEntryPrice ?? '0'} unrealizedPnl={selectedPosition?.unrealizedPnl ?? '0'} /> : <div className="p-6 text-sm text-danger" role="alert">No current price is available for this mission.</div>}
         </div>
@@ -78,10 +87,11 @@ function Metric({ label, value, icon, positive }: { label: string; value: string
   return <dl className="min-w-28 border-l border-line pl-4"><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">{icon}{label}</dt><dd className={`mt-1 font-mono text-sm tabular-nums ${positive === undefined ? 'text-ink' : positive ? 'text-primary' : 'text-danger'}`}>{value}</dd></dl>
 }
 
-function MarketList({ markets, positions, selectedMarketId, onSelect }: { markets: MarketPrice[]; positions: Portfolio['positions']; selectedMarketId: string; onSelect: (id: string) => void }) {
+function MarketList({ markets, positions, selectedMarketId, onSelect, onDiscover, discoveryOpen }: { onDiscover?: () => void; discoveryOpen: boolean; markets: MarketPrice[]; positions: Portfolio['positions']; selectedMarketId: string; onSelect: (id: string) => void }) {
   return (
     <aside className="terminal-watch min-w-0" aria-labelledby="markets-title">
-      <div className="terminal-panel-heading"><h2 id="markets-title">Market watch</h2><span className="font-mono text-xs text-muted">{markets.length}</span></div>
+      <div className="terminal-panel-heading"><h2 id="markets-title">Market watch <span className="ml-1 font-mono text-xs font-normal text-muted">{markets.length}</span></h2></div>
+      {onDiscover && <div className="border-b border-line p-3"><button type="button" onClick={onDiscover} aria-expanded={discoveryOpen} aria-controls={discoveryOpen ? 'token-discovery-panel' : undefined} className="focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 text-xs font-semibold text-primary hover:border-primary hover:bg-primary/10"><Search className="size-4" aria-hidden="true" />Find &amp; add coin</button></div>}
       <div className="flex justify-between border-b border-line px-4 py-2 font-mono text-xs text-muted"><span>Asset / Price</span><span>Change</span></div>
       <div className="terminal-market-list">
         {markets.map((market) => {
@@ -115,15 +125,13 @@ function MarketWorkspace({ missionId, market, quantity, averageEntryPrice, unrea
           <div><dt className="text-xs uppercase tracking-wider text-muted">Unrealized</dt><dd className={`mt-1 font-mono ${Number(unrealizedPnl) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatCurrency(unrealizedPnl)}</dd></div>
         </dl>
       </div>
-      <ChartErrorBoundary key={market.marketId}>
-        <Suspense fallback={<div className="terminal-chart-canvas animate-pulse border-t border-line bg-canvas/40" aria-busy="true" aria-label="Loading candlestick chart" />}><CandlestickChart missionId={missionId} marketId={market.marketId} symbol={market.symbol} /></Suspense>
-      </ChartErrorBoundary>
+      <ChartErrorBoundary key={market.marketId} missionId={missionId} marketId={market.marketId} symbol={market.symbol} />
     </section>
   )
 }
 
-class ChartErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false }
+class ChartErrorBoundary extends Component<{ missionId: string; marketId: string; symbol: string }, { failed: boolean; Chart: ReturnType<typeof loadCandlestickChart> }> {
+  state = { failed: false, Chart: loadCandlestickChart() }
 
   static getDerivedStateFromError() {
     return { failed: true }
@@ -133,11 +141,14 @@ class ChartErrorBoundary extends Component<{ children: ReactNode }, { failed: bo
     if (this.state.failed) {
       return <div className="flex min-h-80 flex-col items-center justify-center gap-3 border-t border-line px-6 text-center" role="alert">
         <p className="text-sm font-medium text-ink">Chart unavailable</p>
-        <p className="max-w-md text-sm text-muted">The chart could not start. You can continue using the terminal or reload the page to try again.</p>
-        <button type="button" onClick={() => window.location.reload()} className="focus-ring min-h-10 border border-line px-4 text-sm text-ink hover:border-primary">Reload page</button>
+        <p className="max-w-md text-sm text-muted">The chart could not start. Retry to reconnect without leaving the terminal.</p>
+        <button type="button" onClick={() => this.setState({ failed: false, Chart: loadCandlestickChart(true) })} className="focus-ring min-h-10 border border-line px-4 text-sm text-ink hover:border-primary">Retry chart</button>
       </div>
     }
-    return this.props.children
+    const { Chart } = this.state
+    return <Suspense fallback={<div className="terminal-chart-canvas animate-pulse border-t border-line bg-canvas/40" aria-busy="true" aria-label="Loading candlestick chart" />}>
+      <Chart missionId={this.props.missionId} marketId={this.props.marketId} symbol={this.props.symbol} />
+    </Suspense>
   }
 }
 

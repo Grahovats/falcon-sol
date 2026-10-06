@@ -148,6 +148,57 @@ Administration routes under `/api/v1/admin` require an authenticated `ADMIN` rol
 
 `GET /health` is outside the version prefix. It returns HTTP 200 only when PostgreSQL is reachable; otherwise it returns HTTP 503.
 
+## Vercel deployment
+
+Import the repository with root directory `./`. The root `vercel.json` builds two services:
+`backend` (Fastify) receives `/api` and `/api/*`; `frontend` (Vite) receives all other paths.
+The frontend service falls back to `index.html` for React Router deep links. Existing static
+files are served normally. API paths retain their `/api/v1` prefix; the public database health
+check is `/api/health`. `/health` remains available when running the backend directly.
+
+No service bindings are needed: the frontend is a static browser application that calls
+the public same-origin API, and the backend calls only PostgreSQL and external market-data
+providers. Runtime binding variables must not be used as `VITE_*` build variables.
+Keep `VITE_API_URL` unset or set it to `/api/v1`.
+
+Configure these environment variables in Vercel before building:
+
+- `DATABASE_URL`: a managed PostgreSQL connection URL reachable from Vercel. Use the
+  provider's connection pooling and TLS settings; the local Docker database is not deployed.
+- `NODE_ENV=production`.
+- `CORS_ORIGIN`: the exact public frontend origin, such as `https://falcon.example.com`.
+- `AUTH_URI`: that same frontend origin; `AUTH_DOMAIN`: its hostname.
+- `ADMIN_WALLET_ADDRESSES`: public wallet addresses allowed to administer missions.
+- `MARKET_DATA_PROVIDER`: `mock` for deterministic demo prices or `jupiter` for live data.
+  For `jupiter`, also configure `JUPITER_API_KEY` on the backend.
+
+Use each deployment environment's actual origin for auth settings, including previews.
+Do not upload local `.env` files. Prisma Client is generated during the backend build;
+database migrations and seeding are deliberately separate from preview builds. With the
+target database configured in your shell, apply committed migrations once per release:
+
+```bash
+npm --prefix backend run db:migrate:deploy
+```
+
+Seed only a new demo database if desired (`npm --prefix backend run db:seed`); seeding resets
+mission windows and should not run automatically on redeploys.
+
+The Vercel entrypoint does not start the in-process mission scheduler. **Automatic mission
+transitions and settlement require a persistent worker** using the same `DATABASE_URL` and
+market-data environment variables as the API. On the chosen worker host, install backend
+dependencies, generate Prisma Client, build the backend, then run:
+
+```bash
+npm --prefix backend run start:worker
+```
+
+Run one worker instance; do not also run the standalone API's scheduler against the same
+production database. Choosing and deploying that worker host remains a deployment prerequisite.
+For local routing checks, use a current Vercel CLI and run `vercel dev -L` from the repo root.
+The worker must run separately for this mode; `npm run dev` continues to run the original local
+API with its scheduler.
+
 ## Database migrations
 
 Committed migrations are applied in order:

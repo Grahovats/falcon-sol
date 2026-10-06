@@ -10,12 +10,12 @@ async function main() {
     data: {
       name: 'Terminal Test Flight',
       slug: `terminal-test-flight-${randomUUID()}`,
-      description: 'A seven-day paper-trading mission for testing the trading terminal. Deploy with 10,000 virtual USDC and practice buying and selling across five markets.',
+      description: 'A seven-day paper-trading mission for testing the trading terminal. Deploy with 10,000 virtual USDC and practice buying and selling across five starting markets, or find and add new Solana coins.',
       status: MissionStatus.ACTIVE,
       startingBalance: '10000',
       startsAt: new Date(now - 60_000),
       endsAt: new Date(now + 7 * 24 * 60 * 60 * 1_000),
-      allowDynamicMarkets: false,
+      allowDynamicMarkets: true,
       markets: {
         create: [
           { symbol: 'BONK', mintAddress: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', decimals: 5 },
