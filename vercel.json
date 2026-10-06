@@ -5,6 +5,7 @@
       "root": "backend",
       "framework": "fastify",
       "entrypoint": "src/vercel.ts",
+      "outputDirectory": ".",
       "buildCommand": "npm run db:generate && npm run build"
     },
     "frontend": {

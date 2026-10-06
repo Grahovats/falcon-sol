@@ -156,6 +156,11 @@ The frontend service falls back to `index.html` for React Router deep links. Exi
 files are served normally. API paths retain their `/api/v1` prefix; the public database health
 check is `/api/health`. `/health` remains available when running the backend directly.
 
+The backend sets `outputDirectory: "."` so Vercel bundles the source entrypoint rather
+than repackaging TypeScript's `dist` directory. Reusing `dist` can separate the compiled
+ES modules from their `package.json` and crash the function with
+`Cannot use import statement outside a module`.
+
 No service bindings are needed: the frontend is a static browser application that calls
 the public same-origin API, and the backend calls only PostgreSQL and external market-data
 providers. Runtime binding variables must not be used as `VITE_*` build variables.
