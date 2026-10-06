@@ -11,7 +11,9 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getCandles } from '../../api/trading'
 import { formatPrice } from '../../lib/format'
-import type { CandleTimeframe, MarketCandle } from '../../types/trading'
+import type { CandleTimeframe, ExitLevels, MarketCandle, Position } from '../../types/trading'
+
+import { attachPositionLines } from './position-chart-lines'
 
 const timeframes: CandleTimeframe[] = ['5m', '15m', '1h', '4h']
 type CandleState =
@@ -23,9 +25,11 @@ interface CandlestickChartProps {
   missionId: string
   marketId: string
   symbol: string
+  position?: Position
+  onExitChange?: (levels: ExitLevels) => Promise<void>
 }
 
-export function CandlestickChart({ missionId, marketId, symbol }: CandlestickChartProps) {
+export function CandlestickChart({ missionId, marketId, symbol, position, onExitChange }: CandlestickChartProps) {
   const [timeframe, setTimeframe] = useState<CandleTimeframe>('5m')
   const [state, setState] = useState<CandleState>({ status: 'loading' })
   const [reloadKey, setReloadKey] = useState(0)
@@ -70,13 +74,16 @@ export function CandlestickChart({ missionId, marketId, symbol }: CandlestickCha
           </button>
         </div>
       )}
-      {state.status === 'success' && <ChartCanvas key={`${marketId}:${timeframe}`} candles={state.candles} symbol={symbol} timeframe={timeframe} />}
+      {state.status === 'success' && <ChartCanvas key={`${marketId}:${timeframe}`} candles={state.candles} symbol={symbol} timeframe={timeframe} position={position} onExitChange={onExitChange} />}
     </div>
   )
 }
 
-function ChartCanvas({ candles, symbol, timeframe }: { candles: MarketCandle[]; symbol: string; timeframe: CandleTimeframe }) {
+function ChartCanvas({ candles, symbol, timeframe, position, onExitChange }: { candles: MarketCandle[]; symbol: string; timeframe: CandleTimeframe; position?: Position; onExitChange?: (levels: ExitLevels) => Promise<void> }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const positionLinesRef = useRef<ReturnType<typeof attachPositionLines> | null>(null)
+  const [exitError, setExitError] = useState<string | null>(null)
   const [active, setActive] = useState(() => candles.at(-1) as MarketCandle)
   const latest = candles.at(-1) as MarketCandle
   const change = active.close - active.open
@@ -90,7 +97,7 @@ function ChartCanvas({ candles, symbol, timeframe }: { candles: MarketCandle[]; 
     const chart = createChart(container, {
       width: container.clientWidth,
       height: container.clientHeight,
-      layout: { background: { type: ColorType.Solid, color: color('--color-canvas') }, textColor: color('--color-muted'), fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' },
+      layout: { background: { type: ColorType.Solid, color: color('--color-canvas') }, textColor: color('--color-muted'), fontFamily: styles.fontFamily },
       grid: { vertLines: { color: color('--color-line') }, horzLines: { color: color('--color-line') } },
       rightPriceScale: { borderColor: color('--color-line'), scaleMargins: { top: 0.08, bottom: 0.24 } },
       timeScale: { borderColor: color('--color-line'), timeVisible: true, secondsVisible: false, rightOffset: 3, barSpacing: 8, minBarSpacing: 3 },
@@ -124,6 +131,7 @@ function ChartCanvas({ candles, symbol, timeframe }: { candles: MarketCandle[]; 
       color: candle.close >= candle.open ? color('--color-primary') : color('--color-danger'),
     })))
 
+    if (overlayRef.current) positionLinesRef.current = attachPositionLines(chart, candleSeries, container, overlayRef.current, setExitError)
     chart.timeScale().fitContent()
     const crosshairHandler = (parameter: { seriesData: Map<unknown, unknown> }) => {
       const datum = parameter.seriesData.get(candleSeries) as CandlestickData | undefined
@@ -142,12 +150,15 @@ function ChartCanvas({ candles, symbol, timeframe }: { candles: MarketCandle[]; 
 
     return () => {
       observer.disconnect()
+      positionLinesRef.current?.dispose()
+      positionLinesRef.current = null
       chart.unsubscribeCrosshairMove(crosshairHandler)
       chart.remove()
     }
   }, [candles, latest])
 
   useEffect(() => renderChart(), [renderChart])
+  useEffect(() => { positionLinesRef.current?.update(position, onExitChange) }, [position, onExitChange, renderChart])
 
   return (
     <div>
@@ -160,7 +171,12 @@ function ChartCanvas({ candles, symbol, timeframe }: { candles: MarketCandle[]; 
         <span className={positive ? 'text-primary' : 'text-danger'}>{positive ? '+' : ''}{formatPrice(change)}</span>
         <span className="text-muted">Vol {formatVolume(active.volume)}</span>
       </div>
-      <div ref={containerRef} className="terminal-chart-canvas w-full" aria-label={`${symbol} ${timeframe} candlestick chart with ${candles.length} candles`} />
+      {exitError && <p className="border-b border-line px-4 py-3 text-sm text-danger" role="alert">{exitError}</p>}
+      <div className="relative isolate">
+        <div ref={containerRef} className="terminal-chart-canvas w-full" aria-label={`${symbol} ${timeframe} candlestick chart with ${candles.length} candles`} />
+        <div ref={overlayRef} className="pointer-events-none absolute inset-0 z-10 overflow-hidden" />
+      </div>
+      {position && <p className="border-t border-line px-4 py-2 text-xs text-muted">Entry marks your average fill.{onExitChange && ' Drag TP/SL labels to adjust, or edit prices in Position exits.'}</p>}
       <p className="sr-only">Latest {symbol} candle opened at {formatPrice(latest.open)}, reached a high of {formatPrice(latest.high)}, a low of {formatPrice(latest.low)}, and closed at {formatPrice(latest.close)}.</p>
     </div>
   )

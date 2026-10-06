@@ -1,6 +1,6 @@
 import type { ApiEnvelope } from '../types/mission'
-import type { AdmittedMarket, CandleResponse, CandleTimeframe, LeaderboardResponse, MarketPrice, OrderExecution, OrderHistoryItem, OrderRequest, Portfolio, TokenCandidate } from '../types/trading'
-import { apiGet, apiPost } from './client'
+import type { AdmittedMarket, CandleResponse, CandleTimeframe, LeaderboardResponse, MarketPrice, OrderExecution, OrderHistoryItem, OrderRequest, ExitLevels, Portfolio, TokenCandidate } from '../types/trading'
+import { apiGet, apiPatch, apiPost } from './client'
 
 export function joinMission(missionId: string) {
   return apiPost<ApiEnvelope<{ id: string }>>(`/missions/${encodeURIComponent(missionId)}/join`)
@@ -37,4 +37,8 @@ export function getOrders(missionId: string, signal?: AbortSignal) {
 
 export function placeOrder(missionId: string, order: OrderRequest) {
   return apiPost<ApiEnvelope<OrderExecution>>(`/missions/${encodeURIComponent(missionId)}/orders`, order)
+}
+
+export function updatePositionExits(missionId: string, marketId: string, levels: ExitLevels) {
+  return apiPatch<ApiEnvelope<Portfolio>>(`/missions/${encodeURIComponent(missionId)}/markets/${encodeURIComponent(marketId)}/exits`, levels)
 }

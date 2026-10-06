@@ -1,14 +1,15 @@
-import { Activity, Clock3, Search, TrendingUp, WalletCards, X } from 'lucide-react'
-import { Component, lazy, Suspense, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { placeOrder } from '../../api/trading'
+import { Activity, Clock3, Plus, Search, TrendingUp, WalletCards, X } from 'lucide-react'
+import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { placeOrder, updatePositionExits } from '../../api/trading'
 import { useCountdown } from '../../hooks/useCountdown'
 import { formatCurrency, formatPercent, formatPrice, formatToken } from '../../lib/format'
 import type { Mission } from '../../types/mission'
-import type { LeaderboardRow, MarketPrice, OrderHistoryItem, OrderSide, Portfolio } from '../../types/trading'
-import { StatusBadge } from '../missions/StatusBadge'
+import type { ExitLevels, LeaderboardRow, MarketPrice, OrderHistoryItem, OrderSide, Portfolio, Position } from '../../types/trading'
 import { CommandBoard } from './CommandBoard'
 import { PositionsTable } from './PositionsTable'
 import { TradeHistory } from './TradeHistory'
+import { ExitPriceInputs, PositionExitControls } from './PositionExitControls'
+import { parseExitPrices } from './exit-prices'
 import { TokenDiscovery } from './TokenDiscovery'
 // A distinct module URL lets retry recover from a cached failed dynamic import.
 const retryChartModules = import.meta.glob<typeof import('./CandlestickChart')['CandlestickChart']>(
@@ -55,7 +56,7 @@ export function TradingTerminal({ mission, markets, portfolio, leaderboard, lead
     <div className="trading-terminal space-y-3">
       <section className="border border-line bg-surface px-4 py-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-          <div className="min-w-52 flex-1"><p className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Trading terminal</p><div className="flex items-center gap-3"><h1 className="text-base font-semibold text-ink">{mission.name}</h1><StatusBadge status={mission.status} /></div></div>
+          <div className="min-w-52 flex-1"><p className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Trading terminal</p><div className="flex items-center gap-3"><h1 className="text-base font-semibold text-ink">{mission.name}</h1></div></div>
           <Metric label="Time remaining" value={countdown} icon={<Clock3 className="size-4" aria-hidden="true" />} />
           <Metric label="Virtual equity" value={formatCurrency(portfolio.totalEquity)} icon={<Activity className="size-4" aria-hidden="true" />} />
           <Metric label="Buying power" value={`${formatCurrency(portfolio.cashBalance)} vUSDC`} icon={<WalletCards className="size-4" aria-hidden="true" />} />
@@ -64,20 +65,29 @@ export function TradingTerminal({ mission, markets, portfolio, leaderboard, lead
         </div>
       </section>
 
-      {mission.allowDynamicMarkets && discoveryOpen && <div id="token-discovery-panel" className="relative"><button type="button" aria-label="Close coin search" onClick={() => setDiscoveryOpen(false)} className="focus-ring absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-md text-muted hover:bg-surface-raised hover:text-ink"><X className="size-4" aria-hidden="true" /></button><TokenDiscovery missionId={mission.id} admittedMints={admittedMints} onAdmitted={async (marketId) => { await onMarketsChanged(); setSelectedMarketId(marketId); setOrderSide('BUY'); setDiscoveryOpen(false); document.getElementById('order-ticket')?.scrollIntoView({ block: 'center' }) }} /></div>}
-
       <div className="terminal-grid">
-        <MarketList onDiscover={mission.allowDynamicMarkets ? () => setDiscoveryOpen((open) => !open) : undefined} discoveryOpen={discoveryOpen} markets={markets} positions={portfolio.positions} selectedMarketId={selectedMarket?.marketId ?? ''} onSelect={(id) => { setSelectedMarketId(id); setOrderSide('BUY') }} />
+        <MarketList onDiscover={mission.allowDynamicMarkets ? () => setDiscoveryOpen(true) : undefined} markets={markets} positions={portfolio.positions} selectedMarketId={selectedMarket?.marketId ?? ''} onSelect={(id) => { setSelectedMarketId(id); setOrderSide('BUY') }} />
         <div className="terminal-chart min-w-0">
-          {selectedMarket ? <MarketWorkspace key={selectedMarket.marketId} missionId={mission.id} market={selectedMarket} quantity={selectedPosition?.quantity ?? '0'} averageEntryPrice={selectedPosition?.averageEntryPrice ?? '0'} unrealizedPnl={selectedPosition?.unrealizedPnl ?? '0'} /> : <div className="p-6 text-sm text-danger" role="alert">No current price is available for this mission.</div>}
+          {selectedMarket ? <MarketWorkspace key={selectedMarket.marketId} missionId={mission.id} market={selectedMarket} quantity={selectedPosition?.quantity ?? '0'} averageEntryPrice={selectedPosition?.averageEntryPrice ?? '0'} unrealizedPnl={selectedPosition?.unrealizedPnl ?? '0'} position={selectedPosition} onExitChange={selectedMarket.enabled && ['ACTIVE', 'BLACKOUT'].includes(mission.status) ? async (levels) => { const { data } = await updatePositionExits(mission.id, selectedMarket.marketId, levels); onPortfolioUpdate(data) } : undefined} /> : <div className="p-6 text-sm text-danger" role="alert">No current price is available for this mission.</div>}
+          <PositionsTable missionId={mission.id} positions={portfolio.positions} enabledMarketIds={new Set(['ACTIVE', 'BLACKOUT'].includes(mission.status) ? markets.filter((market) => market.enabled).map((market) => market.marketId) : [])} onSell={quickSell} onPortfolioUpdate={onPortfolioUpdate} />
         </div>
         <aside className="terminal-order min-w-0" aria-label="Order entry and rankings">
           {selectedMarket && <OrderTicket key={`${selectedMarket.marketId}:${orderSide}`} mission={mission} marketId={selectedMarket.marketId} symbol={selectedMarket.symbol} price={selectedMarket.currentPrice} enabled={selectedMarket.enabled} side={orderSide} onSideChange={setOrderSide} portfolio={portfolio} onPortfolioUpdate={onPortfolioUpdate} onOrderFilled={onOrderFilled} />}
+          {selectedPosition && <PositionExitControls key={`${selectedPosition.marketId}:${selectedPosition.takeProfitPrice}:${selectedPosition.stopLossPrice}`} missionId={mission.id} position={selectedPosition} enabled={Boolean(selectedMarket?.enabled) && ['ACTIVE', 'BLACKOUT'].includes(mission.status)} onPortfolioUpdate={onPortfolioUpdate} />}
           <CommandBoard rows={leaderboard} currentUserId={portfolio.userId} hidden={leaderboardHidden} error={leaderboardError} />
         </aside>
       </div>
 
-      <PositionsTable positions={portfolio.positions} onSell={quickSell} />
+      {mission.allowDynamicMarkets && discoveryOpen && <TokenDiscoveryModal onDismiss={() => setDiscoveryOpen(false)}>
+        <TokenDiscovery missionId={mission.id} admittedMints={admittedMints} onAdmitted={async (marketId) => {
+          await onMarketsChanged()
+          setSelectedMarketId(marketId)
+          setOrderSide('BUY')
+          setDiscoveryOpen(false)
+          document.getElementById('order-ticket')?.scrollIntoView({ block: 'center' })
+        }} />
+      </TokenDiscoveryModal>}
+
       <TradeHistory orders={orders} error={ordersError} />
     </div>
   )
@@ -87,11 +97,11 @@ function Metric({ label, value, icon, positive }: { label: string; value: string
   return <dl className="min-w-28 border-l border-line pl-4"><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">{icon}{label}</dt><dd className={`mt-1 font-mono text-sm tabular-nums ${positive === undefined ? 'text-ink' : positive ? 'text-primary' : 'text-danger'}`}>{value}</dd></dl>
 }
 
-function MarketList({ markets, positions, selectedMarketId, onSelect, onDiscover, discoveryOpen }: { onDiscover?: () => void; discoveryOpen: boolean; markets: MarketPrice[]; positions: Portfolio['positions']; selectedMarketId: string; onSelect: (id: string) => void }) {
+function MarketList({ markets, positions, selectedMarketId, onSelect, onDiscover }: { onDiscover?: () => void; markets: MarketPrice[]; positions: Portfolio['positions']; selectedMarketId: string; onSelect: (id: string) => void }) {
   return (
     <aside className="terminal-watch min-w-0" aria-labelledby="markets-title">
       <div className="terminal-panel-heading"><h2 id="markets-title">Market watch <span className="ml-1 font-mono text-xs font-normal text-muted">{markets.length}</span></h2></div>
-      {onDiscover && <div className="border-b border-line p-3"><button type="button" onClick={onDiscover} aria-expanded={discoveryOpen} aria-controls={discoveryOpen ? 'token-discovery-panel' : undefined} className="focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 text-xs font-semibold text-primary hover:border-primary hover:bg-primary/10"><Search className="size-4" aria-hidden="true" />Find &amp; add coin</button></div>}
+      {onDiscover && <div className="border-b border-line px-3 py-2"><button type="button" onClick={onDiscover} aria-haspopup="dialog" className="focus-ring flex min-h-10 w-full items-center justify-center gap-2 rounded-sm border border-primary/30 bg-primary/10 px-3 text-xs font-semibold text-primary hover:border-primary/60 hover:bg-primary/15"><Plus className="size-4" aria-hidden="true" />Add coin</button></div>}
       <div className="flex justify-between border-b border-line px-4 py-2 font-mono text-xs text-muted"><span>Asset / Price</span><span>Change</span></div>
       <div className="terminal-market-list">
         {markets.map((market) => {
@@ -108,7 +118,39 @@ function MarketList({ markets, positions, selectedMarketId, onSelect, onDiscover
   )
 }
 
-function MarketWorkspace({ missionId, market, quantity, averageEntryPrice, unrealizedPnl }: { missionId: string; market: MarketPrice; quantity: string; averageEntryPrice: string; unrealizedPnl: string }) {
+function TokenDiscoveryModal({ children, onDismiss }: { children: ReactNode; onDismiss: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    dialog.showModal()
+    dialog.querySelector<HTMLInputElement>('input[type="search"]')?.focus()
+    return () => {
+      dialog.close()
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
+
+  return <dialog ref={dialogRef} aria-labelledby="token-discovery-title" aria-describedby="token-discovery-description" onCancel={(event) => { event.preventDefault(); onDismiss() }} onClick={(event) => {
+    if (event.target !== event.currentTarget) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onDismiss()
+  }} className="token-discovery-dialog m-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-3xl overflow-y-auto overscroll-contain rounded-lg bg-surface p-0 text-ink">
+    <div className="flex items-start justify-between gap-4 border-b border-line p-4 sm:px-5">
+      <div>
+        <h2 id="token-discovery-title" className="flex items-center gap-2 text-base font-semibold"><Search className="size-4 text-primary" aria-hidden="true" />Add coin</h2>
+        <p id="token-discovery-description" className="mt-1 text-sm text-muted">Find a token to add to your market watch.</p>
+      </div>
+      <button type="button" onClick={onDismiss} aria-label="Close coin search" className="focus-ring grid size-10 shrink-0 place-items-center rounded-sm text-muted hover:bg-surface-raised hover:text-ink"><X className="size-4" aria-hidden="true" /></button>
+    </div>
+    {children}
+  </dialog>
+}
+
+function MarketWorkspace({ missionId, market, quantity, averageEntryPrice, unrealizedPnl, position, onExitChange }: { missionId: string; market: MarketPrice; quantity: string; averageEntryPrice: string; unrealizedPnl: string; position?: Position; onExitChange?: (levels: ExitLevels) => Promise<void> }) {
   return (
     <section className="overflow-hidden bg-surface">
       <div className="flex flex-wrap items-baseline justify-between gap-3 px-5 py-4">
@@ -125,12 +167,12 @@ function MarketWorkspace({ missionId, market, quantity, averageEntryPrice, unrea
           <div><dt className="text-xs uppercase tracking-wider text-muted">Unrealized</dt><dd className={`mt-1 font-mono ${Number(unrealizedPnl) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatCurrency(unrealizedPnl)}</dd></div>
         </dl>
       </div>
-      <ChartErrorBoundary key={market.marketId} missionId={missionId} marketId={market.marketId} symbol={market.symbol} />
+      <ChartErrorBoundary key={market.marketId} missionId={missionId} marketId={market.marketId} symbol={market.symbol} position={position} onExitChange={onExitChange} />
     </section>
   )
 }
 
-class ChartErrorBoundary extends Component<{ missionId: string; marketId: string; symbol: string }, { failed: boolean; Chart: ReturnType<typeof loadCandlestickChart> }> {
+class ChartErrorBoundary extends Component<{ missionId: string; marketId: string; symbol: string; position?: Position; onExitChange?: (levels: ExitLevels) => Promise<void> }, { failed: boolean; Chart: ReturnType<typeof loadCandlestickChart> }> {
   state = { failed: false, Chart: loadCandlestickChart() }
 
   static getDerivedStateFromError() {
@@ -147,18 +189,19 @@ class ChartErrorBoundary extends Component<{ missionId: string; marketId: string
     }
     const { Chart } = this.state
     return <Suspense fallback={<div className="terminal-chart-canvas animate-pulse border-t border-line bg-canvas/40" aria-busy="true" aria-label="Loading candlestick chart" />}>
-      <Chart missionId={this.props.missionId} marketId={this.props.marketId} symbol={this.props.symbol} />
+      <Chart missionId={this.props.missionId} marketId={this.props.marketId} symbol={this.props.symbol} position={this.props.position} onExitChange={this.props.onExitChange} />
     </Suspense>
   }
 }
 
 function OrderTicket({ mission, marketId, symbol, price, enabled, side, onSideChange, portfolio, onPortfolioUpdate, onOrderFilled }: { mission: Mission; marketId: string; symbol: string; price: string; enabled: boolean; side: OrderSide; onSideChange: (side: OrderSide) => void; portfolio: Portfolio; onPortfolioUpdate: (portfolio: Portfolio) => void; onOrderFilled: () => Promise<void> }) {
+  const [exitLevels, setExitLevels] = useState({ takeProfitPrice: '', stopLossPrice: '' })
   const [amount, setAmount] = useState(''); const [submitting, setSubmitting] = useState(false); const [error, setError] = useState<string | null>(null); const [success, setSuccess] = useState<string | null>(null)
   const position = portfolio.positions.find((item) => item.marketId === marketId)
   const maximum = useMemo(() => { if (side === 'SELL') return Number(position?.quantity ?? 0); const cap = Number(portfolio.startingBalance) * (POSITION_LIMIT_PERCENT / 100); const exposure = Number(position?.quantity ?? 0) * Number(price); return Math.max(0, Math.min(Number(portfolio.cashBalance), cap - exposure)) }, [portfolio.cashBalance, portfolio.startingBalance, position?.quantity, price, side])
   const tradingOpen = (mission.status === 'ACTIVE' || mission.status === 'BLACKOUT') && enabled
   function selectSide(value: OrderSide) { onSideChange(value); setAmount(''); setError(null); setSuccess(null) }
   function applyQuickValue(ratio: number) { setAmount((maximum * ratio).toFixed(side === 'BUY' ? 2 : 8).replace(/\.?0+$/, '')) }
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(null); setSuccess(null); const numericAmount = Number(amount); if (!Number.isFinite(numericAmount) || numericAmount <= 0) { setError(`Enter a valid ${side === 'BUY' ? 'virtual USDC amount' : `${symbol} quantity`}.`); return } if (numericAmount > maximum) { setError(side === 'BUY' ? `Only ${formatCurrency(maximum)} is currently available to buy.` : `Only ${formatToken(maximum)} ${symbol} is currently available to sell.`); return } setSubmitting(true); try { const { data } = await placeOrder(mission.id, side === 'BUY' ? { marketId, side, notional: numericAmount } : { marketId, side, quantity: numericAmount }); onPortfolioUpdate(data.portfolio); setSuccess(`${side} filled via ${data.fill.quoteProvider}${data.fill.quoteRouter ? `/${data.fill.quoteRouter}` : ''}: ${formatToken(data.fill.quantity)} ${symbol} at ${formatPrice(data.fill.executionPrice)}${data.fill.priceImpactPercent ? ` · ${Number(data.fill.priceImpactPercent).toFixed(3)}% impact` : ''}.`); setAmount(''); await onOrderFilled() } catch (orderError: unknown) { setError(orderError instanceof Error ? orderError.message : 'Order could not be executed.') } finally { setSubmitting(false) } }
-  return <section id="order-ticket" className="bg-surface p-4"><div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold text-ink">Place order</h2><span className="font-mono text-xs text-muted">{symbol} / vUSDC</span></div><div className="grid grid-cols-2 gap-1 rounded-sm bg-canvas p-1" aria-label="Order side">{(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => selectSide(value)} aria-pressed={side === value} className={`focus-ring min-h-11 border text-sm font-semibold ${side === value ? value === 'BUY' ? 'border-primary/40 bg-primary/15 text-primary' : 'border-danger/40 bg-danger/15 text-danger' : 'border-line text-muted hover:text-ink'}`}>{value}</button>)}</div><form className="mt-5" onSubmit={submit}><div className="mb-5 flex items-center justify-between border-b border-line pb-3 text-xs"><span className="font-medium text-ink">Market order</span><span className="text-muted">Paper trading</span></div><label htmlFor="order-amount" className="text-sm font-medium text-ink">{side === 'BUY' ? 'Amount (virtual USDC)' : `Quantity (${symbol})`}</label><div className="mt-2 flex border border-line bg-canvas focus-within:border-primary"><input id="order-amount" type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? 'order-error' : 'order-help'} placeholder="0.00" className="min-h-12 min-w-0 flex-1 bg-transparent px-3 font-mono text-xl text-ink focus:outline-none" /><span className="grid place-items-center px-3 font-mono text-xs text-muted">{side === 'BUY' ? 'vUSDC' : symbol}</span></div><p id="order-help" className="mt-2 text-xs text-muted">{side === 'BUY' ? `Max per coin: ${POSITION_LIMIT_PERCENT}% of starting capital · Available for ${symbol}: ${formatCurrency(maximum)} · Minimum $100` : `Available to sell: ${formatToken(maximum)} ${symbol}`}</p><div className="mt-4 grid grid-cols-4 gap-2">{[0.1, 0.25, 0.5, 1].map((ratio) => <button key={ratio} type="button" onClick={() => applyQuickValue(ratio)} className="focus-ring min-h-10 border border-line font-mono text-xs text-muted hover:border-primary hover:text-ink">{ratio === 1 ? 'MAX' : `${ratio * 100}%`}</button>)}</div><dl className="mt-5 space-y-3 border-y border-line py-4 text-xs"><div className="flex justify-between gap-3"><dt className="text-muted">Market price</dt><dd className="font-mono text-ink">{formatPrice(price)}</dd></div><div className="flex justify-between gap-3"><dt className="text-muted">{side === 'BUY' ? 'Estimated quantity' : 'Estimated proceeds'}</dt><dd className="font-mono text-ink">{Number(amount) > 0 && Number.isFinite(Number(amount)) && Number(price) > 0 ? side === 'BUY' ? `${formatToken(Number(amount) / Number(price))} ${symbol}` : formatCurrency(Number(amount) * Number(price)) : '—'}</dd></div></dl>{error && <p id="order-error" className="mt-4 text-sm text-danger" role="alert">{error}</p>}{success && <p className="mt-4 text-sm text-primary" role="status">{success}</p>}<button type="submit" disabled={submitting || !tradingOpen} aria-busy={submitting} className={`focus-ring mt-5 min-h-12 w-full text-sm font-semibold ${side === 'BUY' ? 'bg-primary text-primary-ink hover:bg-primary-strong' : 'bg-danger text-canvas'} disabled:cursor-not-allowed disabled:bg-line disabled:text-muted`}>{submitting ? 'Executing…' : !enabled ? 'Market disabled' : !tradingOpen ? 'Trading locked' : `${side === 'BUY' ? 'Buy' : 'Sell'} ${symbol}`}</button><p className="mt-3 text-center text-xs leading-5 text-muted">Executed at the available quote. Final fill may vary.</p></form></section>
+  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(null); setSuccess(null); const exits = side === 'BUY' ? (() => { try { return parseExitPrices(exitLevels, Number(price)) } catch (failure: unknown) { setError(failure instanceof Error ? failure.message : 'Invalid exit prices.'); return undefined } })() : undefined; if (side === 'BUY' && !exits) return; const numericAmount = Number(amount); if (!Number.isFinite(numericAmount) || numericAmount <= 0) { setError(`Enter a valid ${side === 'BUY' ? 'virtual USDC amount' : `${symbol} quantity`}.`); return } if (numericAmount > maximum) { setError(side === 'BUY' ? `Only ${formatCurrency(maximum)} is currently available to buy.` : `Only ${formatToken(maximum)} ${symbol} is currently available to sell.`); return } setSubmitting(true); try { const { data } = await placeOrder(mission.id, side === 'BUY' ? { marketId, side, notional: numericAmount, ...(exitLevels.takeProfitPrice.trim() ? { takeProfitPrice: exits?.takeProfitPrice } : {}), ...(exitLevels.stopLossPrice.trim() ? { stopLossPrice: exits?.stopLossPrice } : {}) } : { marketId, side, quantity: numericAmount }); onPortfolioUpdate(data.portfolio); setSuccess(`${side} filled via ${data.fill.quoteProvider}${data.fill.quoteRouter ? `/${data.fill.quoteRouter}` : ''}: ${formatToken(data.fill.quantity)} ${symbol} at ${formatPrice(data.fill.executionPrice)}${data.fill.priceImpactPercent ? ` · ${Number(data.fill.priceImpactPercent).toFixed(3)}% impact` : ''}.`); setAmount(''); setExitLevels({ takeProfitPrice: '', stopLossPrice: '' }); await onOrderFilled() } catch (orderError: unknown) { setError(orderError instanceof Error ? orderError.message : 'Order could not be executed.') } finally { setSubmitting(false) } }
+  return <section id="order-ticket" className="bg-surface p-4"><div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold text-ink">Place order</h2><span className="font-mono text-xs text-muted">{symbol} / vUSDC</span></div><div className="grid grid-cols-2 gap-1 rounded-sm bg-canvas p-1" aria-label="Order side">{(['BUY', 'SELL'] as const).map((value) => <button key={value} type="button" onClick={() => selectSide(value)} aria-pressed={side === value} className={`focus-ring min-h-11 border text-sm font-semibold ${side === value ? value === 'BUY' ? 'border-primary/40 bg-primary/15 text-primary' : 'border-danger/40 bg-danger/15 text-danger' : 'border-line text-muted hover:text-ink'}`}>{value}</button>)}</div><form className="mt-5" onSubmit={submit}><div className="mb-5 flex items-center justify-between border-b border-line pb-3 text-xs"><span className="font-medium text-ink">Market order</span><span className="text-muted">Paper trading</span></div><label htmlFor="order-amount" className="text-sm font-medium text-ink">{side === 'BUY' ? 'Amount (virtual USDC)' : `Quantity (${symbol})`}</label><div className="mt-2 flex border border-line bg-canvas"><input id="order-amount" type="text" inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? 'order-error' : 'order-help'} placeholder="0.00" className="min-h-12 min-w-0 flex-1 bg-transparent px-3 font-mono text-xl text-ink focus:outline-none" /><span className="grid place-items-center px-3 font-mono text-xs text-muted">{side === 'BUY' ? 'vUSDC' : symbol}</span></div><p id="order-help" className="mt-2 text-xs text-muted">{side === 'BUY' ? `Max per coin: ${POSITION_LIMIT_PERCENT}% of starting capital · Available for ${symbol}: ${formatCurrency(maximum)} · Minimum $100` : `Available to sell: ${formatToken(maximum)} ${symbol}`}</p><div className="mt-4 grid grid-cols-4 gap-2">{[0.1, 0.25, 0.5, 1].map((ratio) => <button key={ratio} type="button" onClick={() => applyQuickValue(ratio)} className="focus-ring min-h-10 border border-line font-mono text-xs text-muted hover:border-primary hover:text-ink">{ratio === 1 ? 'MAX' : `${ratio * 100}%`}</button>)}</div>{side === 'BUY' && <div className="mt-5"><ExitPriceInputs levels={exitLevels} onChange={setExitLevels} disabled={submitting || !tradingOpen} /><p className="mt-2 text-xs leading-5 text-muted">Optional exits apply to your entire {symbol} position.</p></div>}<dl className="mt-5 space-y-3 border-y border-line py-4 text-xs"><div className="flex justify-between gap-3"><dt className="text-muted">Market price</dt><dd className="font-mono text-ink">{formatPrice(price)}</dd></div><div className="flex justify-between gap-3"><dt className="text-muted">{side === 'BUY' ? 'Estimated quantity' : 'Estimated proceeds'}</dt><dd className="font-mono text-ink">{Number(amount) > 0 && Number.isFinite(Number(amount)) && Number(price) > 0 ? side === 'BUY' ? `${formatToken(Number(amount) / Number(price))} ${symbol}` : formatCurrency(Number(amount) * Number(price)) : '—'}</dd></div></dl>{error && <p id="order-error" className="mt-4 text-sm text-danger" role="alert">{error}</p>}{success && <p className="mt-4 text-sm text-primary" role="status">{success}</p>}<button type="submit" disabled={submitting || !tradingOpen} aria-busy={submitting} className={`focus-ring mt-5 min-h-12 w-full text-sm font-semibold ${side === 'BUY' ? 'bg-primary text-primary-ink hover:bg-primary-strong' : 'bg-danger text-canvas'} disabled:cursor-not-allowed disabled:bg-line disabled:text-muted`}>{submitting ? 'Executing…' : !enabled ? 'Market disabled' : !tradingOpen ? 'Trading locked' : `${side === 'BUY' ? 'Buy' : 'Sell'} ${symbol}`}</button><p className="mt-3 text-center text-xs leading-5 text-muted">Executed at the available quote. Final fill may vary.</p></form></section>
 }

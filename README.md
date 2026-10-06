@@ -216,6 +216,7 @@ Committed migrations are applied in order:
 - `20260930110159_add_wallet_auth`
 - `20260930115046_add_admin_security_and_mission_settlement`
 - `20261001183000_add_open_market_missions`
+- `20261006120000_add_position_exits`
 
 The schema includes role-bearing users, wallets, one-time auth challenges, hashed sessions, missions, markets, entries, orders, quote-audited fills, positions, locked mission results, and admin/system audit logs.
 
@@ -241,3 +242,26 @@ The suite covers trading calculations and limits, mission states, deterministic 
 ## Remaining production work
 
 Falcon is still paper trading. Before public deployment, add production hosting and managed PostgreSQL, Redis-backed rate limiting/session coordination for horizontal scaling, observability and alerting, browser end-to-end tests with wallet fixtures, and a formal security review. Entry fees, prizes, KYC, smart contracts, leverage, shorting, referrals, tokens, and NFTs are not implemented.
+
+## Position exits and chart levels
+
+The selected position shows its average entry, take-profit, and stop-loss prices on the
+candlestick chart. Optional TP/SL prices can be attached to a buy order or edited and
+removed in Position exits. Drag a chart label to save a new exit price; keyboard users
+can adjust a focused label with the arrow keys and press Enter to save or Escape to cancel.
+
+TP must be above the current reference price and SL below it when saved. The levels
+apply to the entire remaining position, including subsequent buys. Manual partial sells
+retain exits; a full sell or an automatic exit clears both levels.
+
+The existing persistent mission worker checks protected positions each lifecycle cycle
+(default five seconds), using observed spot prices and executing an ordinary sell quote.
+An exit fills at the available quote, not a guaranteed target price. Missing or stale
+prices and failed quotes leave exits armed for a later cycle. No exits execute after
+mission expiry or on disabled markets. Serializable transactions and a position version
+guard prevent stale worker snapshots from closing an edited or already sold position.
+Trade history marks automatic sells as TP or SL.
+
+Apply the position-exit migration before starting the updated API/worker. On Vercel,
+`npm --prefix backend run start:worker` on a persistent host remains necessary for
+automatic exits when no browser is open.

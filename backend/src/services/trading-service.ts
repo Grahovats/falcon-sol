@@ -1,6 +1,7 @@
 import { MissionStatus, OrderSide, OrderStatus, Prisma, type PrismaClient } from '@prisma/client'
 import type { Decimal } from '@prisma/client/runtime/library'
 import { AppError } from '../errors/app-error.js'
+import { triggeredExit, validateExitLevels, type ExitReason } from './position-exits.js'
 import { deriveMissionStatus } from './mission-state-service.js'
 import type { ExecutionQuote, MarketDataService } from './price-service.js'
 import {
@@ -28,11 +29,14 @@ interface OrderInput {
 
 interface BuyOrderInput extends OrderInput {
   notional: DecimalInput
+  takeProfitPrice?: DecimalInput | null
+  stopLossPrice?: DecimalInput | null
 }
 
 interface SellOrderInput extends OrderInput {
   notional?: DecimalInput
   quantity?: DecimalInput
+  trigger?: { version: number; reason: ExitReason; price: DecimalInput }
 }
 
 interface PositionCalculationInput {
@@ -68,6 +72,7 @@ export class TradingService {
     this.validateOrder({ side: OrderSide.BUY, notional })
     const quoteContext = await this.getTradingContext(this.database, input)
     const quote = await this.prices.getBuyQuote(quoteContext.market, notional)
+    validateExitLevels({ takeProfitPrice: input.takeProfitPrice ?? null, stopLossPrice: input.stopLossPrice ?? null }, quote.referencePrice)
 
     const execution = await this.database.$transaction(async (transaction) => {
       const context = await this.getTradingContext(transaction, input)
@@ -77,6 +82,9 @@ export class TradingService {
         where: { missionEntryId_missionMarketId: { missionEntryId: context.entry.id, missionMarketId: context.market.id } },
       })
       const currentQuantity = position?.quantity ?? zero()
+      const takeProfit = input.takeProfitPrice === undefined ? position?.takeProfitPrice ?? null : input.takeProfitPrice
+      const stopLoss = input.stopLossPrice === undefined ? position?.stopLossPrice ?? null : input.stopLossPrice
+      if (takeProfit !== null && stopLoss !== null && decimal(takeProfit).lessThanOrEqualTo(stopLoss)) throw new AppError('INVALID_ORDER', 'Take profit must be above stop loss.')
 
       assertSufficientBalance(context.entry.cashBalance, quote.notional)
       assertPositionLimit(context.entry.startingBalance, currentQuantity, quote.referencePrice, quote.notional)
@@ -108,8 +116,15 @@ export class TradingService {
           quantity,
           averageEntryPrice: updatedPosition.averageEntryPrice,
           realizedPnl: 0,
+          takeProfitPrice: input.takeProfitPrice == null ? null : decimal(input.takeProfitPrice),
+          stopLossPrice: input.stopLossPrice == null ? null : decimal(input.stopLossPrice),
         },
-        update: { quantity: updatedPosition.quantity, averageEntryPrice: updatedPosition.averageEntryPrice },
+        update: {
+          quantity: updatedPosition.quantity, averageEntryPrice: updatedPosition.averageEntryPrice,
+          protectionVersion: { increment: 1 },
+          ...(input.takeProfitPrice === undefined ? {} : { takeProfitPrice: input.takeProfitPrice === null ? null : decimal(input.takeProfitPrice) }),
+          ...(input.stopLossPrice === undefined ? {} : { stopLossPrice: input.stopLossPrice === null ? null : decimal(input.stopLossPrice) }),
+        },
       })
       const filledOrder = await transaction.order.update({
         where: { id: order.id },
@@ -134,10 +149,13 @@ export class TradingService {
       const position = await transaction.position.findUnique({
         where: { missionEntryId_missionMarketId: { missionEntryId: context.entry.id, missionMarketId: context.market.id } },
       })
-      if (!position || !position.quantity.isPositive()) {
+      if (!position || !position.quantity.greaterThan(0)) {
         throw new AppError('INSUFFICIENT_POSITION', 'No open position is available to sell.')
       }
 
+      if (input.trigger && (position.protectionVersion !== input.trigger.version || triggeredExit(position, input.trigger.price) !== input.trigger.reason)) {
+        throw new AppError('CONFLICT', 'Position exits changed before execution.', 409)
+      }
       const { quantity, notional, executionPrice: price } = quote
       assertSufficientPosition(position.quantity, quantity)
       const updatedPosition = calculateSellPosition(position.quantity, position.averageEntryPrice, position.realizedPnl, quantity, price)
@@ -146,6 +164,7 @@ export class TradingService {
           missionEntryId: context.entry.id,
           missionMarketId: context.market.id,
           side: OrderSide.SELL,
+          exitReason: input.trigger?.reason ?? null,
           requestedNotional: notional,
           requestedQuantity: quantity,
         },
@@ -167,6 +186,8 @@ export class TradingService {
           quantity: updatedPosition.quantity,
           averageEntryPrice: updatedPosition.averageEntryPrice,
           realizedPnl: updatedPosition.realizedPnl,
+          protectionVersion: { increment: 1 },
+          ...(!updatedPosition.quantity.greaterThan(0) || input.trigger ? { takeProfitPrice: null, stopLossPrice: null } : {}),
         },
       })
       const filledOrder = await transaction.order.update({
@@ -177,6 +198,63 @@ export class TradingService {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
 
     return { ...serializeExecution(execution), portfolio: await this.calculatePortfolio(input.missionId, input.userId) }
+  }
+
+  async updatePositionExits(input: OrderInput & { takeProfitPrice: DecimalInput | null; stopLossPrice: DecimalInput | null }) {
+    const context = await this.getTradingContext(this.database, input)
+    const price = await this.prices.getPrice(context.market)
+    validateExitLevels(input, price.price)
+    await this.database.$transaction(async (transaction) => {
+      const current = await this.getTradingContext(transaction, input)
+      const position = await transaction.position.findUnique({ where: { missionEntryId_missionMarketId: { missionEntryId: current.entry.id, missionMarketId: current.market.id } } })
+      if (!position?.quantity.greaterThan(0)) throw new AppError('INSUFFICIENT_POSITION', 'Open a position before setting exits.')
+      await transaction.position.update({ where: { id: position.id }, data: {
+        takeProfitPrice: input.takeProfitPrice === null ? null : decimal(input.takeProfitPrice),
+        stopLossPrice: input.stopLossPrice === null ? null : decimal(input.stopLossPrice),
+        protectionVersion: { increment: 1 },
+      } })
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+    return this.calculatePortfolio(input.missionId, input.userId)
+  }
+
+  async processPositionExits(now = new Date(), onError: (error: unknown) => void = (error) => console.error('Position exit failed; retrying next cycle', error)) {
+    const positions = await this.database.position.findMany({
+      where: {
+        quantity: { gt: 0 },
+        OR: [{ takeProfitPrice: { not: null } }, { stopLossPrice: { not: null } }],
+        missionMarket: { enabled: true },
+        missionEntry: { mission: { status: { in: [MissionStatus.ACTIVE, MissionStatus.BLACKOUT] }, startsAt: { lte: now }, endsAt: { gt: now } } },
+      },
+      include: { missionMarket: true, missionEntry: { select: { missionId: true, userId: true } } },
+    })
+    // A failed quote for one market must not prevent exits in the other markets.
+    const groups = new Map<string, typeof positions>()
+    for (const position of positions) {
+      const group = groups.get(position.missionMarketId) ?? []
+      group.push(position)
+      groups.set(position.missionMarketId, group)
+    }
+    for (const group of groups.values()) {
+      const first = group[0]
+      if (!first) continue
+      try {
+        const spot = await this.prices.getPrice(first.missionMarket)
+        if (now.getTime() - spot.asOf.getTime() > 30_000) continue
+        for (const position of group) {
+          const reason = triggeredExit(position, spot.price)
+          if (!reason) continue
+          try {
+            await this.placeSellOrder({
+              missionId: position.missionEntry.missionId, userId: position.missionEntry.userId,
+              marketId: position.missionMarketId, quantity: position.quantity,
+              trigger: { version: position.protectionVersion, reason, price: spot.price },
+            })
+          } catch (error: unknown) {
+            if (!(error instanceof AppError && ['CONFLICT', 'INSUFFICIENT_POSITION', 'MISSION_NOT_ACTIVE', 'MARKET_NOT_AVAILABLE'].includes(error.code))) onError(error)
+          }
+        }
+      } catch (error: unknown) { onError(error) }
+    }
   }
 
   calculatePositionMetrics(input: PositionCalculationInput) {
@@ -197,7 +275,7 @@ export class TradingService {
     })
     if (!entry) throw new AppError('MISSION_ENTRY_NOT_FOUND', 'Deploy into this mission before trading.', 404)
 
-    const openPositions = entry.positions.filter((position) => position.quantity.isPositive())
+    const openPositions = entry.positions.filter((position) => position.quantity.greaterThan(0))
     const settled = entry.mission.status === MissionStatus.FINALIZED || entry.mission.status === MissionStatus.CLOSED
     const pricesByMarket = settled
       ? new Map(openPositions.map((position) => {
@@ -218,6 +296,8 @@ export class TradingService {
         symbol: position.missionMarket.symbol,
         quantity: position.quantity.toString(),
         averageEntryPrice: position.averageEntryPrice.toString(),
+        takeProfitPrice: position.takeProfitPrice?.toString() ?? null,
+        stopLossPrice: position.stopLossPrice?.toString() ?? null,
         currentPrice: currentPrice.toString(),
         marketValue: calculated.marketValue.toString(),
         realizedPnl: position.realizedPnl.toString(),
@@ -341,6 +421,9 @@ function serializeExecution(execution: {
 }
 
 function assertQuoteUsable(quote: ExecutionQuote, market: { mintAddress: string }, side: OrderSide) {
+  if ([quote.quantity, quote.notional, quote.executionPrice, quote.referencePrice].some((value) => !value.isFinite() || !value.greaterThan(0))) {
+    throw new AppError('QUOTE_UNAVAILABLE', 'No positive execution quote is available for this amount.', 409)
+  }
   const quotedMarketMint = side === OrderSide.BUY ? quote.outputMint : quote.inputMint
   const expired = quote.expiresAt !== null && quote.expiresAt.getTime() <= Date.now()
   const stale = Date.now() - quote.quotedAt.getTime() > 10_000

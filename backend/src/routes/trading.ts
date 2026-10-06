@@ -24,10 +24,13 @@ const orderSchema = z.object({
   side: z.enum(['BUY', 'SELL']),
   notional: decimalValue.optional(),
   quantity: decimalValue.optional(),
+  takeProfitPrice: decimalValue.nullable().optional(),
+  stopLossPrice: decimalValue.nullable().optional(),
 }).superRefine((order, context) => {
   if (order.side === 'BUY' && (order.notional === undefined || order.quantity !== undefined)) {
     context.addIssue({ code: 'custom', message: 'BUY orders require notional only.' })
   }
+  if (order.side === 'SELL' && (order.takeProfitPrice !== undefined || order.stopLossPrice !== undefined)) context.addIssue({ code: 'custom', message: 'Set exit prices on BUY orders or update the open position.' })
   if (order.side === 'SELL' && (order.notional === undefined) === (order.quantity === undefined)) {
     context.addIssue({ code: 'custom', message: 'SELL orders require either notional or quantity.' })
   }
@@ -208,6 +211,7 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
         executionPrice: order.fill?.executionPrice.toString() ?? null,
         notional: order.fill?.notional.toString() ?? order.requestedNotional.toString(),
         status: order.status,
+        exitReason: order.exitReason,
         quoteProvider: order.fill?.quoteProvider ?? null,
         quoteRouter: order.fill?.quoteRouter ?? null,
         priceImpactPercent: order.fill?.priceImpactPct?.toString() ?? null,
@@ -217,12 +221,22 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
     }
   })
 
+  app.patch('/missions/:missionId/markets/:marketId/exits', async (request) => {
+    const { missionId, marketId } = candleParamsSchema.parse(request.params)
+    const levels = z.object({ takeProfitPrice: decimalValue.nullable(), stopLossPrice: decimalValue.nullable() }).strict().parse(request.body)
+    const user = await getAuthenticatedUser(prisma, request)
+    return { data: await tradingService.updatePositionExits({ missionId, marketId, userId: user.id, ...levels }) }
+  })
+
   app.post('/missions/:missionId/orders', async (request, reply) => {
     const { missionId } = paramsSchema.parse(request.params)
     const order = orderSchema.parse(request.body)
     const user = await getAuthenticatedUser(prisma, request)
     const result = order.side === 'BUY'
-      ? await tradingService.placeBuyOrder({ missionId, userId: user.id, marketId: order.marketId, notional: order.notional as number })
+      ? await tradingService.placeBuyOrder({ missionId, userId: user.id, marketId: order.marketId, notional: order.notional as number,
+          ...(order.takeProfitPrice === undefined ? {} : { takeProfitPrice: order.takeProfitPrice }),
+          ...(order.stopLossPrice === undefined ? {} : { stopLossPrice: order.stopLossPrice }),
+        })
       : order.quantity !== undefined
         ? await tradingService.placeSellOrder({ missionId, userId: user.id, marketId: order.marketId, quantity: order.quantity })
         : await tradingService.placeSellOrder({ missionId, userId: user.id, marketId: order.marketId, notional: order.notional as number })

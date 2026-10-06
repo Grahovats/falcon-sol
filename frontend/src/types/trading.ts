@@ -61,6 +61,8 @@ export interface Position {
   symbol: string
   quantity: string
   averageEntryPrice: string
+  takeProfitPrice: string | null
+  stopLossPrice: string | null
   currentPrice: string
   marketValue: string
   realizedPnl: string
@@ -107,6 +109,7 @@ export interface OrderHistoryItem {
   executionPrice: string | null
   notional: string
   status: string
+  exitReason: 'TAKE_PROFIT' | 'STOP_LOSS' | null
   quoteProvider: string | null
   quoteRouter: string | null
   priceImpactPercent: string | null
@@ -119,6 +122,8 @@ export interface OrderRequest {
   side: OrderSide
   notional?: number
   quantity?: number
+  takeProfitPrice?: number | null
+  stopLossPrice?: number | null
 }
 
 export interface OrderExecution {
@@ -126,3 +131,5 @@ export interface OrderExecution {
   fill: { executionPrice: string; referencePrice: string | null; quantity: string; notional: string; simulatedFee: string; priceImpactPercent: string | null; quoteProvider: string; quoteRequestId: string | null; quoteId: string | null; quoteRouter: string | null }
   portfolio: Portfolio
 }
+
+export interface ExitLevels { takeProfitPrice: number | null; stopLossPrice: number | null }

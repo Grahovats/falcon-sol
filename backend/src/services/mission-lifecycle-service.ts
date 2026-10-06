@@ -1,6 +1,7 @@
 import { AuditActorType, MissionStatus, Prisma, type PrismaClient } from '@prisma/client'
 import type { Decimal } from '@prisma/client/runtime/library'
 import { calculateEquity, calculateMarketValue, calculateReturnPercent, decimal } from './trading-calculations.js'
+import { TradingService } from './trading-service.js'
 import type { MarketDataService } from './price-service.js'
 import { BLACKOUT_DURATION_MS, nextAutomatedMissionStatus } from './mission-state-service.js'
 
@@ -18,6 +19,7 @@ export class MissionLifecycleService {
       if (nextStatus && nextStatus !== mission.status) await this.transition(mission.id, mission.status, nextStatus, now)
       if (nextStatus === MissionStatus.SETTLING || mission.status === MissionStatus.SETTLING) await this.settle(mission.id, now)
     }
+    await new TradingService(this.database, this.prices).processPositionExits(now)
   }
 
   private async transition(missionId: string, from: MissionStatus, to: MissionStatus, now: Date) {

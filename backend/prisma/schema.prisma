@@ -190,6 +190,7 @@ model Order {
   side              OrderSide
   requestedNotional Decimal       @db.Decimal(20, 6)
   requestedQuantity Decimal?      @db.Decimal(30, 12)
+  exitReason        String?
   status            OrderStatus   @default(PENDING)
   createdAt         DateTime      @default(now())
   executedAt        DateTime?
@@ -235,6 +236,9 @@ model Position {
   missionMarketId   String
   quantity          Decimal       @default(0) @db.Decimal(30, 12)
   averageEntryPrice Decimal       @default(0) @db.Decimal(30, 12)
+  takeProfitPrice   Decimal?      @db.Decimal(30, 12)
+  stopLossPrice     Decimal?      @db.Decimal(30, 12)
+  protectionVersion Int           @default(0)
   realizedPnl       Decimal       @default(0) @db.Decimal(20, 6)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
