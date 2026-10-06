@@ -189,7 +189,9 @@ npm --prefix backend run db:migrate:deploy
 Seed only a new demo database if desired (`npm --prefix backend run db:seed`); seeding resets
 mission windows and should not run automatically on redeploys.
 
-The Vercel entrypoint does not start the in-process mission scheduler. **Automatic mission
+The Vercel entrypoint exports a Node request handler, initializes Fastify on the first
+request, and reuses it across requests. Vercel owns the listener; this entrypoint does
+not call `listen()` or start the in-process mission scheduler. **Automatic mission
 transitions and settlement require a persistent worker** using the same `DATABASE_URL` and
 market-data environment variables as the API. On the chosen worker host, install backend
 dependencies, generate Prisma Client, build the backend, then run:

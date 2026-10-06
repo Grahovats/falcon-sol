@@ -1,6 +1,12 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { buildApp } from './app.js'
-import { env } from './config/env.js'
 
-// Vercel manages this server's lifetime. The mission scheduler runs separately.
-const app = await buildApp()
-await app.listen({ host: env.HOST, port: env.PORT })
+// Vercel owns the HTTP listener. Reuse one Fastify instance across requests.
+let appPromise: ReturnType<typeof buildApp> | undefined
+
+export default async function handler(request: IncomingMessage, response: ServerResponse) {
+  appPromise ??= buildApp()
+  const app = await appPromise
+  await app.ready()
+  app.server.emit('request', request, response)
+}
