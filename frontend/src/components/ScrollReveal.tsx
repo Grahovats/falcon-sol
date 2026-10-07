@@ -8,6 +8,7 @@ const SCROLL_REVEAL_OBSERVER = {
 type ScrollRevealProps = {
   children: ReactNode;
   direction?: "up" | "left" | "right";
+  edge?: boolean;
 };
 
 /*
@@ -20,6 +21,7 @@ type ScrollRevealProps = {
 export function ScrollReveal({
   children,
   direction = "up",
+  edge = true,
 }: ScrollRevealProps) {
   const elementRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(
@@ -46,7 +48,7 @@ export function ScrollReveal({
   return (
     <div
       ref={elementRef}
-      className={`scroll-reveal scroll-reveal-${direction}${visible ? " scroll-reveal-visible" : ""}`}
+      className={`scroll-reveal scroll-reveal-${direction}${edge ? "" : " scroll-reveal-no-edge"}${visible ? " scroll-reveal-visible" : ""}`}
     >
       {children}
     </div>

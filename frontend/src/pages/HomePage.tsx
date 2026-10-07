@@ -1,19 +1,15 @@
 import {
   ArrowRight,
-  BarChart3,
   Crosshair,
   Radio,
-  RotateCw,
-  ShieldCheck,
-  Swords,
   Trophy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { HowItWorks } from "../components/HowItWorks";
 import { HeroSignalField } from "../components/HeroSignalField";
+import { ScrollChargeDivider } from "../components/ScrollChargeDivider";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { SectionSignalField } from "../components/SectionSignalField";
-import { MissionCard } from "../features/missions/MissionCard";
-import { useMissions } from "../features/missions/useMissions";
 
 export function HomePage() {
   return (
@@ -53,42 +49,9 @@ export function HomePage() {
         </div>
       </section>
 
-      <ScrollReveal direction="up">
-        <section
-          className="border-t border-line py-16 sm:py-20"
-          aria-labelledby="how-it-works-title"
-        >
-          <h2
-            id="how-it-works-title"
-            className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl"
-          >
-            A trading arena, not a casino.
-          </h2>
-          <div className="mt-10 grid gap-10 md:mt-12 md:grid-cols-3 md:gap-8 xl:gap-16">
-            <ProcessStep
-              number="01"
-              icon={<Swords />}
-              title="Choose a mission"
-              description="Review the schedule, market roster, participant field, and starting capital before you deploy."
-            />
-            <ProcessStep
-              number="02"
-              icon={<BarChart3 />}
-              title="Trade the market"
-              description="Build positions from a compact workstation with charts, buying power, exposure limits, and fill history in one view."
-            />
-            <ProcessStep
-              number="03"
-              icon={<ShieldCheck />}
-              title="Lock the result"
-              description="When the clock expires, Falcon settles every portfolio against the same final market snapshot."
-            />
-          </div>
-        </section>
-      </ScrollReveal>
-
-      <ScrollReveal direction="left">
-        <HomeMissions />
+      <ScrollChargeDivider />
+      <ScrollReveal direction="up" edge={false}>
+        <HowItWorks />
       </ScrollReveal>
 
       <ScrollReveal direction="right">
@@ -179,127 +142,6 @@ export function HomePage() {
   );
 }
 
-function HomeMissions() {
-  const { state, retry } = useMissions();
-
-  const content = (() => {
-    if (state.status === "loading") {
-      return (
-        <div
-          className="grid gap-4 md:grid-cols-3"
-          aria-busy="true"
-          aria-label="Loading live missions"
-        >
-          {[0, 1, 2].map((item) => (
-            <div
-              key={item}
-              className="h-80 animate-pulse rounded-lg border border-line bg-surface"
-            />
-          ))}
-        </div>
-      );
-    }
-    if (state.status === "error") {
-      return (
-        <div
-          className="flex flex-col items-start justify-between gap-4 border border-danger/40 bg-danger/5 p-6 sm:flex-row sm:items-center"
-          role="alert"
-        >
-          <div>
-            <h3 className="font-semibold text-ink">Mission feed unavailable</h3>
-            <p className="mt-1 text-sm text-muted">
-              Live operations could not be loaded.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={retry}
-            className="focus-ring inline-flex min-h-10 items-center gap-2 border border-line px-4 text-sm text-ink hover:border-primary"
-          >
-            <RotateCw className="size-4" aria-hidden="true" />
-            Retry
-          </button>
-        </div>
-      );
-    }
-
-    const featured = [...state.missions]
-      .sort(
-        (left, right) =>
-          missionPriority(left.status) - missionPriority(right.status),
-      )
-      .slice(0, 3);
-
-    if (featured.length === 0) {
-      return (
-        <div className="border border-dashed border-line px-6 py-10 text-center">
-          <p className="text-sm text-muted">
-            No missions are currently on radar.
-          </p>
-          <Link
-            to="/missions"
-            className="focus-ring mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-primary"
-          >
-            View mission control
-          </Link>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {featured.map((mission, index) => (
-          <MissionCard
-            key={mission.id}
-            mission={mission}
-            entranceIndex={index}
-          />
-        ))}
-      </div>
-    );
-  })();
-
-  return (
-    <section
-      className="section-signal-host relative isolate border-t border-line py-16 sm:py-20"
-      aria-labelledby="live-missions-title"
-    >
-      <SectionSignalField />
-      <div className="relative z-10">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <span
-              className="mb-4 block h-0.5 w-7 bg-primary"
-              aria-hidden="true"
-            />
-            <h2
-              id="live-missions-title"
-              className="text-2xl font-semibold tracking-tight text-ink"
-            >
-              Live missions
-            </h2>
-          </div>
-          <Link
-            to="/missions"
-            className="directional-action focus-ring inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-muted hover:text-primary"
-          >
-            View all missions{" "}
-            <ArrowRight className="action-icon size-4" aria-hidden="true" />
-          </Link>
-        </div>
-        {content}
-      </div>
-    </section>
-  );
-}
-
-function missionPriority(status: string) {
-  if (status === "ACTIVE" || status === "BLACKOUT") return 0;
-  if (status === "REGISTRATION" || status === "LOCKED" || status === "DRAFT")
-    return 1;
-  return 2;
-}
-
 function HeroMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-4 first:pl-0 last:pr-0 sm:px-8">
@@ -344,36 +186,6 @@ function PlatformStat({
         <p className="mt-3 max-w-xs text-sm leading-6 text-muted">{detail}</p>
       </div>
       <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-primary motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-x-100" aria-hidden="true" />
-    </article>
-  );
-}
-
-function ProcessStep({
-  number,
-  icon,
-  title,
-  description,
-}: {
-  number: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <article className="min-w-0">
-      <div className="flex items-center justify-between border-b border-line pb-6">
-        <span className="font-mono text-3xl font-normal tabular-nums tracking-tight text-primary">
-          {number}
-        </span>
-        <span
-          className="text-muted [&>svg]:size-5 [&>svg]:stroke-[1.5]"
-          aria-hidden="true"
-        >
-          {icon}
-        </span>
-      </div>
-      <h3 className="mt-5 text-base font-semibold text-ink">{title}</h3>
-      <p className="mt-3 text-sm leading-6 text-muted">{description}</p>
     </article>
   );
 }

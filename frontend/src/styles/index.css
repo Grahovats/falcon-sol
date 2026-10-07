@@ -595,6 +595,7 @@ input, textarea, select {
 .scroll-reveal {
   position: relative;
 }
+.scroll-reveal-no-edge::after { display: none; }
 
 @media (prefers-reduced-motion: no-preference) {
   .scroll-reveal {
@@ -909,4 +910,82 @@ input, textarea, select {
 .token-discovery-dialog::backdrop {
   background: color-mix(in srgb, var(--color-canvas) 75%, transparent);
   backdrop-filter: blur(3px);
+}
+
+/* A luminous signal winds through the four mission stages. */
+.process-signal-field { position: absolute; z-index: 1; inset: 0; pointer-events: none; }
+.process-signal-map { overflow: visible; fill: none; }
+.process-signal-route { stroke-dasharray: 1; stroke-dashoffset: 1; stroke: color-mix(in srgb, var(--color-primary) 50%, var(--color-line)); stroke-width: 2; stroke-linecap: round; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent)); }
+.process-signal-route-drawn { stroke-dashoffset: 0; }
+.process-signal-trace { stroke: var(--color-primary); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; filter: drop-shadow(0 0 5px var(--color-primary)); }
+.process-signal-trace.process-signal-route-drawn { stroke-dashoffset: 0; }
+.process-signal-flow { stroke: var(--color-primary); stroke-width: 2.5; stroke-linecap: butt; }
+.process-signal-flow-glow { filter: drop-shadow(0 0 4px var(--color-primary)) drop-shadow(0 0 10px color-mix(in srgb, var(--color-primary) 75%, transparent)); }
+@media (prefers-reduced-motion: no-preference) {
+  .journey-step { opacity: 0; visibility: hidden; transition: opacity 400ms cubic-bezier(0.22, 0, 0.2, 1); }
+  .journey-step-visible { opacity: 1; visibility: visible; }
+  .journey-copy { translate: 0 8px; }
+  .journey-step-visible .journey-copy { translate: 0 0; }
+  .process-signal-route, .process-signal-trace { transition: stroke-dashoffset 700ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease-out; }
+  .process-signal-trace-active { animation: process-signal-ink 950ms ease-out both; }
+}
+@keyframes process-signal-ink {
+  0%, 75% { opacity: 1; }
+  to { opacity: 0; }
+}
+/* Reuse the surrounding sections’ signal contours behind the frosted cards. */
+.journey-section { position: relative; isolation: isolate; width: 100%; margin-inline: auto; }
+.journey-background { position: absolute; z-index: -1; inset: 0; overflow: hidden; pointer-events: none; }
+.journey-background .section-signal-field { height: 100%; opacity: 0.16; }
+.journey-background .section-signal-flow { display: none; }
+.journey-background .section-signal-field-left { top: 35%; height: 65%; }
+.journey-intro { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem; }
+.journey-steps { display: grid; width: 100%; max-width: 78rem; margin-inline: auto; row-gap: 3rem; }
+.journey-step { position: relative; display: grid; min-width: 0; padding-left: 2.75rem; }
+.journey-node { position: absolute; z-index: 2; top: 2rem; left: 0; display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border: 1px solid var(--color-line-strong); border-radius: 50%; color: var(--color-primary); background: var(--color-canvas); }
+.journey-node-desktop { display: none; }
+.journey-copy { cursor: default; display: flex; flex-direction: column; position: relative; z-index: 1; isolation: isolate; overflow: hidden; min-width: 0; padding: 1.5rem; border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent); border-radius: 1.5rem; background: linear-gradient(135deg, color-mix(in srgb, var(--color-surface-raised) 56%, transparent), color-mix(in srgb, var(--color-surface) 38%, transparent)); -webkit-backdrop-filter: blur(32px) saturate(145%); backdrop-filter: blur(32px) saturate(145%); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 10%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--color-ink) 4%, transparent); }
+/* Static grain stays behind readable text and never intercepts links. */
+.journey-copy::before { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; opacity: 0.18; background-size: 128px 128px; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23noise)' opacity='.65' d='M0 0h180v180H0z'/%3E%3C/svg%3E"); }
+.journey-copy::after { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: linear-gradient(125deg, color-mix(in srgb, var(--color-ink) 7%, transparent), transparent 45%, color-mix(in srgb, var(--color-ink) 2%, transparent)); }
+.journey-sheen { position: absolute; z-index: -1; inset: 0; pointer-events: none; opacity: 0; background: linear-gradient(var(--sheen-angle, 125deg), transparent calc(var(--sheen-position, 50%) - 28%), color-mix(in srgb, var(--color-ink) 2%, transparent) calc(var(--sheen-position, 50%) - 14%), color-mix(in srgb, var(--color-ink) 10%, transparent) var(--sheen-position, 50%), color-mix(in srgb, var(--color-ink) 3%, transparent) calc(var(--sheen-position, 50%) + 14%), transparent calc(var(--sheen-position, 50%) + 28%)); }
+@media (hover: hover) and (pointer: fine) {
+  .journey-copy:hover .journey-sheen { opacity: 1; }
+  .journey-copy:hover { border-color: color-mix(in srgb, var(--color-ink) 32%, transparent); }
+}
+.journey-copy:focus-within .journey-sheen { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .journey-sheen { transition: opacity 250ms ease-out; }
+  .journey-copy { transition: translate 400ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms ease-out; }
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .journey-copy { transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)); transition: translate 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms ease-out, border-color 150ms ease-out; }
+}
+.journey-copy > a { cursor: pointer; align-self: flex-start; margin-top: auto; padding-top: 1rem; }
+.journey-eyebrow { display: flex; align-items: center; gap: 0.75rem; color: var(--color-muted); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.journey-number { color: var(--color-primary); font-size: 0.875rem; font-weight: 600; letter-spacing: normal; font-variant-numeric: tabular-nums; }
+/* Equal-width cards keep their staggered vertical rhythm. */
+@media (min-width: 768px) {
+  .journey-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 4rem; row-gap: 7rem; align-items: start; }
+  .journey-step { width: 100%; max-width: 36rem; justify-self: end; padding-left: 0; }
+  .journey-step[data-process-step="01"] { grid-column: 1; grid-row: 1; }
+  .journey-step[data-process-step="02"] { grid-column: 2; grid-row: 1; justify-self: start; margin-top: 5rem; }
+  .journey-step[data-process-step="03"] { grid-column: 1; grid-row: 2; }
+  .journey-step[data-process-step="04"] { grid-column: 2; grid-row: 2; justify-self: start; margin-top: 10rem; }
+  .journey-copy { min-height: 19rem; padding: 1.5rem 2rem; }
+  .journey-eyebrow { padding-right: 2rem; }
+  .journey-node-mobile { display: none; }
+  .journey-node-desktop { display: grid; }
+  .journey-node { top: 1.25rem; right: 2rem; left: auto; border: 0; background: transparent; }
+  .journey-node svg { width: 1.25rem; height: 1.25rem; }
+}
+@media (min-width: 1280px) {
+  .journey-steps { column-gap: 6rem; row-gap: 8rem; }
+  .journey-step[data-process-step="02"] { margin-top: 7rem; }
+  .journey-step[data-process-step="03"] { grid-column: 1; }
+  .journey-step[data-process-step="04"] { grid-column: 2; margin-top: 12rem; }
+  .journey-copy { min-height: 18rem; padding: 2rem 3rem; border-radius: 2rem; }
+  .journey-step[data-process-step="01"] .journey-copy, .journey-step[data-process-step="04"] .journey-copy { min-height: 19rem; }
+  .journey-copy h3 { margin-top: 1.5rem; font-size: 2.5rem; }
+  .journey-node { top: 1.75rem; right: 3rem; }
 }

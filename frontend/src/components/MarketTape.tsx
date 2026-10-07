@@ -39,7 +39,7 @@ export function MarketTape() {
   }, [state.markets])
 
   return (
-    <section className="market-tape border-t border-line/70 bg-surface-muted" aria-label="Top 10 trending Solana meme coins">
+    <section className="market-tape" aria-label="Top 10 trending Solana meme coins">
       <div className="flex min-h-9 items-stretch">
         <div className="market-tape-window min-w-0 flex-1">
           {tape.length > 0 ? (

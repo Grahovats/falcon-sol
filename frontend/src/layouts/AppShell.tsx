@@ -70,7 +70,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen">
-      <header ref={headerRef} className="sticky top-0 z-40 border-b border-line bg-canvas/90 backdrop-blur-xl">
+      <header ref={headerRef} className={`sticky top-0 z-40 bg-canvas/90 backdrop-blur-xl ${location.pathname === "/" ? "" : "border-b border-line"}`}>
         <div className={`grid w-full min-w-0 grid-cols-[auto_1fr] items-center gap-x-4 py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-x-5 ${pageGutters}`}>
           <div className="justify-self-start"><Logo /></div>
           <nav
