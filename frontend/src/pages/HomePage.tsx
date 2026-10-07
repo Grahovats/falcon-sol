@@ -5,6 +5,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { GlassPanel } from "../components/GlassPanel";
 import { HowItWorks } from "../components/HowItWorks";
 import { HeroSignalField } from "../components/HeroSignalField";
 import { ScrollChargeDivider } from "../components/ScrollChargeDivider";
@@ -54,88 +55,51 @@ export function HomePage() {
         <HowItWorks />
       </ScrollReveal>
 
-      <ScrollReveal direction="right">
-        <section
-          className="section-signal-host relative isolate border-t border-line py-16 sm:py-20"
-          aria-label="Falcon platform summary"
-        >
-          <SectionSignalField side="right" wide />
-          <div className="relative z-10">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-end">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
-                  Operational integrity
-                </p>
-                <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-[-0.04em] text-ink sm:text-4xl">
-                  Every operator faces the same clock, capital, and market.
-                </h2>
-              </div>
-              <p className="max-w-xl text-sm leading-7 text-muted lg:justify-self-end">
-                Falcon isolates decision quality from wallet size. Missions create a
-                controlled arena where execution and risk management determine the
-                result.
-              </p>
+      <ScrollReveal direction="up" edge={false}>
+        <section className="home-integrity-section py-16 sm:py-20" aria-labelledby="integrity-title">
+          <div className="home-section-background" aria-hidden="true"><SectionSignalField side="right" wide /></div>
+          <div className="home-section-heading">
+            <div>
+              <p className="home-section-eyebrow">Operational integrity</p>
+              <h2 id="integrity-title" className="mt-5 text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
+                Equal conditions.<br /><span className="text-primary">A clear result.</span>
+              </h2>
             </div>
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
-              <PlatformStat
-                number="01"
-                icon={<Radio />}
-                label="Live operations"
-                value="Time-boxed"
-                detail="Every mission has a defined market and finish line."
-              />
-              <PlatformStat
-                number="02"
-                icon={<Crosshair />}
-                label="Execution"
-                value="Market-aware"
-                detail="Paper fills follow current pricing and route conditions."
-              />
-              <PlatformStat
-                number="03"
-                icon={<Trophy />}
-                label="Performance"
-                value="Verifiable"
-                detail="Final equity determines the command board."
-              />
-            </div>
+            <p className="max-w-md text-base leading-8 text-muted">
+              Same clock. Same capital. Same market. Falcon gives every operator
+              a controlled arena where execution and risk management decide the result.
+            </p>
+          </div>
+          <div className="home-integrity-grid mt-10 sm:mt-14">
+            <PlatformStat number="01" icon={<Radio />} label="Live operations" value="Time boxed" detail="Every mission has a defined market and finish line. You always know the clock you're trading against." />
+            <PlatformStat number="02" icon={<Crosshair />} label="Execution" value="Market aware" detail="Paper fills follow current pricing and route conditions. Every decision meets the same market." />
+            <PlatformStat number="03" icon={<Trophy />} label="Performance" value="Verifiable" detail="Final equity determines the command board. Your rank reflects the result you earned." />
           </div>
         </section>
       </ScrollReveal>
 
-      <ScrollReveal direction="up">
-        <section
-          className="relative mb-8 grid overflow-hidden rounded-lg border border-line bg-surface lg:grid-cols-[1fr_auto]"
-          aria-labelledby="final-cta-title"
-        >
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_right,var(--color-primary),transparent_68%)] opacity-[0.08]"
-            aria-hidden="true"
-          />
-          <div className="relative px-6 py-10 sm:px-10 sm:py-12">
-            <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
-              Your record starts here
-            </p>
-            <h2
-              id="final-cta-title"
-              className="mt-4 max-w-2xl text-3xl font-semibold tracking-[-0.04em] text-ink sm:text-4xl"
-            >
-              Put your strategy where the scoreboard can see it.
+      <ScrollReveal direction="up" edge={false}>
+        <section className="home-final-section py-12 sm:py-16" aria-labelledby="final-cta-title">
+          <div className="home-section-background" aria-hidden="true"><SectionSignalField side="left" wide /></div>
+          <GlassPanel className="home-final-panel" interactive={false}>
+            <p className="home-section-eyebrow">Your record starts here</p>
+            <h2 id="final-cta-title" className="mt-6 text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-5xl lg:text-6xl">
+              Your next move.<br /><span className="text-primary">Your first mission.</span>
             </h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">
-              Connect a wallet to establish your participant identity. All trades
-              use virtual capital—no deposits, no real swaps.
+            <p className="mx-auto mt-6 max-w-xl text-base leading-8 text-muted sm:text-lg">
+              Put your strategy where the scoreboard can see it.
+              Connect a wallet, choose your mission, and trade with virtual capital.
             </p>
-          </div>
-          <div className="relative flex items-center border-t border-line px-6 py-6 sm:px-10 lg:border-l lg:border-t-0">
-            <Link
-              to="/missions"
-              className="directional-action focus-ring inline-flex min-h-14 w-full items-center justify-between gap-8 rounded-md bg-primary px-6 text-sm font-semibold text-primary-ink lg:w-auto"
-            >
-              Browse missions{" "}
-              <ArrowRight className="action-icon size-4" aria-hidden="true" />
-            </Link>
-          </div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-10 sm:gap-5">
+              <Link to="/missions" className="directional-action focus-ring inline-flex min-h-14 items-center gap-3 rounded-sm bg-primary px-8 text-base font-semibold text-primary-ink motion-safe:transition-colors motion-safe:duration-100 hover:bg-primary-strong">
+                Enter the arena<ArrowRight className="action-icon size-5" aria-hidden="true" />
+              </Link>
+              <Link to="/rankings" className="focus-ring inline-flex min-h-14 items-center gap-2 rounded-sm px-6 text-base font-semibold text-muted motion-safe:transition-colors motion-safe:duration-100 hover:text-primary">
+                View rankings<ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </div>
+            <p className="mt-8 text-sm text-muted">Equal virtual capital. No deposits. No real swaps.</p>
+          </GlassPanel>
         </section>
       </ScrollReveal>
     </div>
@@ -169,23 +133,13 @@ function PlatformStat({
   detail: string;
 }) {
   return (
-    <article className="group relative min-h-64 overflow-hidden rounded-lg border border-line bg-surface p-6 motion-safe:transition-colors motion-safe:duration-150 hover:border-line-strong sm:p-7">
+    <GlassPanel className="home-integrity-card">
       <div className="flex items-start justify-between gap-4">
-        <span className="flex size-11 items-center justify-center rounded-md border border-line bg-canvas text-primary [&>svg]:size-5">
-          {icon}
-        </span>
-        <span className="font-mono text-xs tabular-nums text-muted">{number}</span>
+        <p className="journey-eyebrow"><span className="journey-number">{number}</span>{label}</p>
+        <span className="shrink-0 text-primary [&>svg]:size-5 [&>svg]:stroke-[1.5]" aria-hidden="true">{icon}</span>
       </div>
-      <div className="mt-12">
-        <p className="font-mono text-xs uppercase tracking-[0.14em] text-primary">
-          {label}
-        </p>
-        <p className="mt-3 text-2xl font-semibold tracking-tight text-ink">
-          {value}
-        </p>
-        <p className="mt-3 max-w-xs text-sm leading-6 text-muted">{detail}</p>
-      </div>
-      <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-primary motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-x-100" aria-hidden="true" />
-    </article>
+      <h3 className="mt-8 text-3xl font-semibold tracking-tight text-ink md:text-2xl xl:text-3xl">{value}</h3>
+      <p className="mt-4 max-w-sm text-base leading-7 text-muted">{detail}</p>
+    </GlassPanel>
   );
 }

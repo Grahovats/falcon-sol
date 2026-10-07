@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, BarChart3, ShieldCheck, Swords, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ProcessSignalField } from './ProcessSignalField'
 import { SectionSignalField } from './SectionSignalField'
+import { resetGlassSheen, updateGlassSheen } from '../lib/glass-hover'
 
 const steps = [
   { number: '01', label: 'Choose your mission', title: 'Find your arena.', description: 'Pick a mission that fits your strategy. Review the assets, rules, and time window before you enter.', icon: Swords, href: '/missions', action: 'Explore missions' },
@@ -17,27 +18,6 @@ const steps = [
  * 700ms  its incoming connector finishes drawing
  */
 const REVEAL_TIMING = { staggerMs: 180 } as const
-
-function updateGlassSheen(event: PointerEvent<HTMLDivElement>) {
-  if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  const card = event.currentTarget
-  // Measure the untransformed wrapper so the tilt never feeds back into itself.
-  const bounds = card.parentElement!.getBoundingClientRect()
-  const x = Math.max(-1, Math.min(1, (event.clientX - bounds.left) / bounds.width * 2 - 1))
-  const y = Math.max(-1, Math.min(1, (event.clientY - bounds.top) / bounds.height * 2 - 1))
-  card.style.setProperty('--tilt-x', `${-y * 4}deg`)
-  card.style.setProperty('--tilt-y', `${x * 5}deg`)
-  card.style.setProperty('--sheen-angle', `${125 + x * 18 - y * 10}deg`)
-  card.style.setProperty('--sheen-position', `${50 + x * 14 + y * 10}%`)
-}
-
-function resetGlassSheen(event: PointerEvent<HTMLDivElement>) {
-  const card = event.currentTarget
-  card.style.setProperty('--tilt-x', '0deg')
-  card.style.setProperty('--tilt-y', '0deg')
-  card.style.setProperty('--sheen-angle', '125deg')
-  card.style.setProperty('--sheen-position', '50%')
-}
 
 export function HowItWorks() {
   const stepsRef = useRef<HTMLDivElement>(null)
@@ -82,7 +62,7 @@ export function HowItWorks() {
     </div>
     <div className="journey-intro">
       <div>
-        <p className="mb-4 flex items-center gap-3 text-xs font-medium uppercase tracking-widest text-muted"><span className="h-px w-6 bg-primary" aria-hidden="true" />How Falcon works</p>
+        <p className="mb-4 flex items-center gap-3 text-xs font-medium uppercase tracking-widest text-muted">How Falcon works</p>
         <h2 id="how-it-works-title" className="text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">From first trade<br />to final rank.</h2>
       </div>
       <p className="max-w-sm text-sm leading-7 text-muted">One mission. Equal starting capital.<br />A clear record of the decisions you make.</p>
