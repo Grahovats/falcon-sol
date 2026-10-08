@@ -2530,14 +2530,14 @@ select {
   background: color-mix(in srgb, var(--color-ink) 5%, transparent);
   color: var(--color-ink);
 }
-.app-button.mission-filter-button[aria-pressed="true"],
-.app-button.mission-filter-button[aria-pressed="true"]:hover {
+.app-button.mission-filter-button:is([aria-pressed="true"], [aria-selected="true"]),
+.app-button.mission-filter-button:is([aria-pressed="true"], [aria-selected="true"]):hover {
   border-color: transparent;
   background: var(--color-primary);
   color: var(--color-primary-ink);
 }
 .mission-filter-button:focus-visible { outline-offset: -3px; }
-.app-button.mission-filter-button[aria-pressed="true"]:focus-visible {
+.app-button.mission-filter-button:is([aria-pressed="true"], [aria-selected="true"]):focus-visible {
   outline-color: var(--color-primary-ink);
 }
 .mission-search-field,

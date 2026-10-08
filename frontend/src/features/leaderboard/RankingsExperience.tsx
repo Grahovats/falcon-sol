@@ -50,10 +50,33 @@ export function RankingsExperience() {
         <Metric icon={<Trophy />} label="Finalized missions" value={String(state.meta.finalizedMissionCount)} />
         <Metric icon={<Activity />} label="Live missions" value={String(state.data.liveMissions.length)} />
       </dl>
-      <div className="mt-8 flex gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Ranking views">
-        {views.map((item) => <button key={item.id} type="button" role="tab" aria-selected={view === item.id} onClick={() => selectView(item.id)} className={`app-button app-tab focus-ring min-h-11 shrink-0 border-b-2 px-4 text-sm font-semibold ${view === item.id ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-ink'}`}>{item.label}</button>)}
+      <div className="mission-filter-scroll mt-8 min-w-0 overflow-x-auto">
+        <div className="grain-surface mission-filter-group" role="tablist" aria-label="Ranking views">
+          {views.map((item, index) => <button
+            key={item.id}
+            id={`ranking-tab-${item.id}`}
+            type="button"
+            role="tab"
+            aria-selected={view === item.id}
+            aria-controls={`ranking-panel-${item.id}`}
+            tabIndex={view === item.id ? 0 : -1}
+            onClick={() => selectView(item.id)}
+            onKeyDown={(event) => {
+              let nextIndex: number
+              if (event.key === 'ArrowRight') nextIndex = (index + 1) % views.length
+              else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + views.length) % views.length
+              else if (event.key === 'Home') nextIndex = 0
+              else if (event.key === 'End') nextIndex = views.length - 1
+              else return
+              event.preventDefault()
+              selectView(views[nextIndex].id)
+              document.getElementById(`ranking-tab-${views[nextIndex].id}`)?.focus()
+            }}
+            className="app-button mission-filter-button focus-ring shrink-0 px-3 text-xs font-semibold"
+          >{item.label}</button>)}
+        </div>
       </div>
-      <div key={view} className="state-content mt-6">
+      <div key={view} id={`ranking-panel-${view}`} role="tabpanel" aria-labelledby={`ranking-tab-${view}`} className="state-content mt-5">
         {view === 'overall' && <OverallRankings rows={state.data.overall} />}
         {view === 'live' && <MissionRankings missions={state.data.liveMissions} kind="live" />}
         {view === 'finalized' && <MissionRankings missions={state.data.finalizedMissions} kind="finalized" />}
@@ -79,7 +102,7 @@ function OverallRankings({ rows }: { rows: RankingRow[] }) {
 
 function MissionRankings({ missions, kind }: { missions: MissionRanking[]; kind: 'live' | 'finalized' }) {
   if (missions.length === 0) return <EmptyState title={kind === 'live' ? 'No missions are live' : 'No finalized missions'} description={kind === 'live' ? 'Open or scheduled operations are available on the mission board.' : 'Completed operation results will appear here permanently.'} />
-  return <div className="grid gap-5">{missions.map((mission) => <section key={mission.id} className="app-surface border border-line bg-surface" aria-labelledby={`mission-ranking-${mission.id}`}><header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-3"><h2 id={`mission-ranking-${mission.id}`} className="font-semibold text-ink">{mission.name}</h2><StatusBadge status={mission.status} /></div><p className="mt-2 font-mono text-xs text-muted">{mission.operatorCount} participants · {kind === 'live' ? `Ends ${formatDate(mission.endsAt)}` : `Finalized ${formatDate(mission.endsAt)}`}</p></div><Link to={`/missions/${mission.id}`} className="app-button focus-ring inline-flex min-h-11 items-center gap-2 self-start px-1 text-sm font-semibold text-primary">Open mission <ChevronRight className="size-4" /></Link></header>{mission.hidden ? <div className="p-8 text-center"><Crosshair className="mx-auto size-6 text-primary" /><p className="mt-3 font-semibold text-ink">Standings under blackout</p><p className="mt-2 text-sm text-muted">Ranks are concealed until settlement to protect the final trading window.</p></div> : mission.rows.length === 0 ? <p className="p-8 text-center text-sm text-muted">No participants have established a ranking in this mission.</p> : <div className="divide-y divide-line">{mission.rows.map((row) => <div key={row.userId} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-5"><Rank rank={row.rank} /><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /><div className="text-right"><p className={`font-mono text-sm ${Number(row.returnPercent) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatPercent(row.returnPercent)}</p><p className="mt-1 font-mono text-xs text-muted">{formatCurrency(row.equity)}</p></div></div>)}</div>}</section>)}</div>
+  return <div className="grid gap-5">{missions.map((mission) => <section key={mission.id} className="app-surface border border-line bg-surface" aria-labelledby={`mission-ranking-${mission.id}`}><header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-3"><h2 id={`mission-ranking-${mission.id}`} className="font-semibold text-ink">{mission.name}</h2><StatusBadge status={mission.status} /></div><p className="mt-2 font-mono text-xs text-muted">{mission.operatorCount} participants · {kind === 'live' ? `Ends ${formatDate(mission.endsAt)}` : `Finalized ${formatDate(mission.endsAt)}`}</p></div><Link to={`/missions/${mission.id}`} className="app-button app-table-action app-button-plain focus-ring inline-flex min-h-11 items-center gap-2 self-start px-1 text-sm font-semibold text-primary">Open mission <ChevronRight className="size-4" /></Link></header>{mission.hidden ? <div className="p-8 text-center"><Crosshair className="mx-auto size-6 text-primary" /><p className="mt-3 font-semibold text-ink">Standings under blackout</p><p className="mt-2 text-sm text-muted">Ranks are concealed until settlement to protect the final trading window.</p></div> : mission.rows.length === 0 ? <p className="p-8 text-center text-sm text-muted">No participants have established a ranking in this mission.</p> : <div className="divide-y divide-line">{mission.rows.map((row) => <div key={row.userId} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-5"><Rank rank={row.rank} /><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /><div className="text-right"><p className={`font-mono text-sm ${Number(row.returnPercent) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatPercent(row.returnPercent)}</p><p className="mt-1 font-mono text-xs text-muted">{formatCurrency(row.equity)}</p></div></div>)}</div>}</section>)}</div>
 }
 
 function OperatorLink({ userId, name, wallet }: { userId: string; name: string; wallet: string | null }) { return <Link to={`/operators/${userId}`} className="app-button app-button-plain focus-ring flex min-h-10 min-w-0 items-center gap-3 rounded-sm hover:text-primary"><SolanaAccountIcon address={wallet ?? userId} size="sm" /><span className="min-w-0"><span className="block truncate font-semibold text-ink">{name}</span>{wallet && <span className="mt-0.5 block font-mono text-[11px] text-muted">{wallet.slice(0, 4)}…{wallet.slice(-4)}</span>}</span></Link> }
