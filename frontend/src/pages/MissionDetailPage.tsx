@@ -72,22 +72,22 @@ export function MissionDetailPage() {
 }
 
 function BackLink() {
-  return <Link to="/missions" className="focus-ring mb-6 inline-flex min-h-11 items-center gap-2 rounded-sm text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" aria-hidden="true" /> Mission board</Link>
+  return <Link to="/missions" className="app-button focus-ring mb-6 inline-flex min-h-11 items-center gap-2 rounded-sm text-sm text-muted hover:text-ink"><ArrowLeft className="size-4" aria-hidden="true" /> Mission board</Link>
 }
 
 function ErrorPanel({ title, message, onRetry }: { title: string; message: string; onRetry?: () => void }) {
   return (
     <div className="border border-danger/40 bg-danger/5 p-6" role="alert">
       <h1 className="text-xl font-semibold text-ink">{title}</h1><p className="mt-2 text-muted">{message}</p>
-      <div className="mt-5 flex flex-wrap gap-3">{onRetry && <button type="button" onClick={onRetry} className="focus-ring min-h-11 border border-line px-4 text-sm text-ink hover:border-primary">Retry</button>}<Link to="/missions" className="focus-ring inline-flex min-h-11 items-center gap-2 text-primary"><ArrowLeft className="size-4" aria-hidden="true" /> Mission board</Link></div>
+      <div className="mt-5 flex flex-wrap gap-3">{onRetry && <button type="button" onClick={onRetry} className="app-button focus-ring min-h-11 border border-line px-4 text-sm text-ink hover:border-primary">Retry</button>}<Link to="/missions" className="app-button focus-ring inline-flex min-h-11 items-center gap-2 text-primary"><ArrowLeft className="size-4" aria-hidden="true" /> Mission board</Link></div>
     </div>
   )
 }
 
 function TerminalSkeleton() {
-  return <div className="space-y-3" aria-busy="true" aria-label="Loading trading terminal"><div className="h-24 animate-pulse border border-line bg-surface" /><div className="terminal-grid"><div className="terminal-watch min-h-40 animate-pulse xl:min-h-96" /><div className="terminal-chart min-w-0"><div className="h-40 animate-pulse border-b border-line" /><div className="terminal-chart-canvas animate-pulse" /></div><div className="terminal-order min-h-96 animate-pulse" /></div></div>
+  return <div className="trading-terminal app-surface" aria-busy="true" aria-label="Loading trading terminal"><section className="app-surface h-24 animate-pulse" /><div className="terminal-grid"><div className="app-surface terminal-watch min-h-40 animate-pulse xl:min-h-96" /><div className="app-surface terminal-chart min-w-0"><div className="h-40 animate-pulse border-b border-line" /><div className="terminal-chart-canvas animate-pulse" /></div><div className="app-surface terminal-order min-h-96 animate-pulse" /></div></div>
 }
 
 function LifecyclePanel({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return <div><BackLink /><section className="panel-cut border border-line bg-surface p-6 sm:p-10"><div className="flex size-11 items-center justify-center border border-primary/30 bg-primary/5 text-primary [&>svg]:size-5">{icon}</div><h1 className="mt-6 text-3xl font-semibold text-ink">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></section></div>
+  return <div><BackLink /><section className="app-surface panel-cut border border-line bg-surface p-6 sm:p-10"><div className="flex size-11 items-center justify-center border border-primary/30 bg-primary/5 text-primary [&>svg]:size-5">{icon}</div><h1 className="mt-6 text-3xl font-semibold text-ink">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></section></div>
 }

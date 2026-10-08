@@ -55,7 +55,7 @@ export function CandlestickChart({ missionId, marketId, symbol, position, onExit
               type="button"
               aria-pressed={timeframe === value}
               onClick={() => { if (value !== timeframe) { setState({ status: 'loading' }); setTimeframe(value) } }}
-              className={`focus-ring min-h-10 min-w-11 px-3 font-mono text-xs transition-colors ${timeframe === value ? 'bg-surface-raised text-primary' : 'text-muted hover:bg-surface hover:text-ink'}`}
+              className={`app-button focus-ring min-h-10 min-w-11 px-3 font-mono text-xs transition-colors ${timeframe === value ? 'bg-surface-raised text-primary' : 'text-muted hover:bg-surface hover:text-ink'}`}
             >
               {value}
             </button>
@@ -69,7 +69,7 @@ export function CandlestickChart({ missionId, marketId, symbol, position, onExit
         <div className="flex min-h-80 flex-col items-center justify-center gap-3 px-6 text-center" role="alert">
           <p className="text-sm font-medium text-ink">Chart unavailable</p>
           <p className="max-w-md text-sm text-muted">{state.message}</p>
-          <button type="button" onClick={() => { setState({ status: 'loading' }); setReloadKey((value) => value + 1) }} className="focus-ring inline-flex min-h-10 items-center gap-2 border border-line px-4 text-sm text-ink hover:border-primary">
+          <button type="button" onClick={() => { setState({ status: 'loading' }); setReloadKey((value) => value + 1) }} className="app-button focus-ring inline-flex min-h-10 items-center gap-2 border border-line px-4 text-sm text-ink hover:border-primary">
             <RotateCw className="size-4" aria-hidden="true" /> Retry chart
           </button>
         </div>
@@ -187,7 +187,7 @@ function CandleMetric({ label, value }: { label: string; value: number }) {
 }
 
 function ChartSkeleton({ symbol }: { symbol: string }) {
-  return <div className="terminal-chart-canvas animate-pulse p-4" aria-busy="true" aria-label={`Loading ${symbol} candlestick chart`}><div className="h-8 w-2/3 bg-line" /><div className="mt-4 h-64 bg-surface sm:h-72" /></div>
+  return <div className="terminal-chart-canvas animate-pulse p-4" aria-busy="true" aria-label={`Loading ${symbol} candlestick chart`}><div className="h-8 w-2/3 bg-line" /><div className="app-subtle-surface mt-4 h-64 bg-surface sm:h-72" /></div>
 }
 
 function chartPriceFormat(price: number) {

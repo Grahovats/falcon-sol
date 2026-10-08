@@ -1,6 +1,7 @@
 import { AnimatePresence, LazyMotion, m, useReducedMotion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { NavLink, useLocation, useOutlet } from "react-router-dom";
+import { SectionSignalField } from "../components/SectionSignalField";
 import { Logo } from "../components/Logo";
 import { MarketTape } from "../components/MarketTape";
 import { WalletAuthButton } from "../components/WalletAuthButton";
@@ -69,7 +70,7 @@ export function AppShell() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="app-shell min-h-screen">
       <header ref={headerRef} className={`sticky top-0 z-40 bg-canvas/90 backdrop-blur-xl ${location.pathname === "/" ? "" : "border-b border-line"}`}>
         <div className={`grid w-full min-w-0 grid-cols-[auto_1fr] items-center gap-x-4 py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-x-5 ${pageGutters}`}>
           <div className="justify-self-start"><Logo /></div>
@@ -96,12 +97,12 @@ export function AppShell() {
         </div>
         {location.pathname === "/" && <MarketTape />}
       </header>
-      <main className={`grid w-full min-w-0 [&>*]:col-start-1 [&>*]:row-start-1 ${pageGutters}`}>
+      <main className={`app-main grid w-full min-w-0 [&>*]:col-start-1 [&>*]:row-start-1 ${pageGutters}`}>
         <LazyMotion features={loadMotionFeatures}>
           <AnimatePresence initial={false}>
             <m.div
               key={location.pathname}
-              className={`route-content min-w-0 ${location.pathname === "/" ? "pb-8 pt-0" : isTradingPage ? "py-3" : "py-8 sm:py-10"}`}
+              className={`route-content min-w-0 ${location.pathname === "/" ? "" : `app-page-content${isTradingPage ? " app-page-content-terminal" : ""}`} ${location.pathname === "/" ? "pt-0" : isTradingPage ? "py-3" : "py-8 sm:py-10"}`}
               initial={reduceMotion ? false : { opacity: 0, y: ROUTE_MOTION.offsetY }}
               animate={{ opacity: 1, y: 0 }}
               exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -2, transition: { duration: ROUTE_TIMING.exitDurationMs / 1000, ease: ROUTE_MOTION.easeIn } }}
@@ -110,19 +111,12 @@ export function AppShell() {
                 y: ROUTE_MOTION.spring,
               }}
             >
+              {location.pathname !== "/" && <div className="app-page-background" aria-hidden="true"><SectionSignalField side="right" wide stretch /></div>}
               {outlet}
             </m.div>
           </AnimatePresence>
         </LazyMotion>
       </main>
-      <footer className="border-t border-line">
-        <div className={`flex w-full flex-col gap-2 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between ${pageGutters}`}>
-          <span>Falcon command system</span>
-          <span className="font-mono uppercase tracking-wider">
-            Paper trading only
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }

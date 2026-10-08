@@ -14,7 +14,7 @@ export function MissionBrief({ mission, deploying, error, onDeploy }: MissionBri
   const deployable = mission.status === 'REGISTRATION' || mission.status === 'ACTIVE'
 
   return (
-    <section className="panel-cut border border-line bg-surface p-6 sm:p-10">
+    <section className="app-surface panel-cut border border-line bg-surface p-6 sm:p-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <StatusBadge status={mission.status} />
       </div>
@@ -36,7 +36,7 @@ export function MissionBrief({ mission, deploying, error, onDeploy }: MissionBri
       </div>
 
       {error && <p className="mt-6 border border-danger/40 bg-danger/5 p-3 text-sm text-danger" role="alert">{error}</p>}
-      <button type="button" onClick={onDeploy} disabled={!deployable || deploying} aria-busy={deploying} className="focus-ring mt-8 min-h-11 bg-primary px-6 text-sm font-semibold uppercase tracking-wider text-primary-ink hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-line disabled:text-muted">
+      <button type="button" onClick={onDeploy} disabled={!deployable || deploying} aria-busy={deploying} className="app-button focus-ring mt-8 min-h-11 bg-primary px-6 text-sm font-semibold uppercase tracking-wider text-primary-ink hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-line disabled:text-muted">
         {deploying ? 'Deploying…' : deployable ? 'Deploy' : 'Deployment closed'}
       </button>
     </section>

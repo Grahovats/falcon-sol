@@ -4,7 +4,7 @@ import { SectionSignalField } from "../components/SectionSignalField";
 export function MissionsPage() {
   return (
     <div>
-      <header className="relative isolate border-b border-line py-10 sm:py-12">
+      <header className="app-page-heading relative isolate border-b border-line pt-0 pb-8">
         <SectionSignalField side="right" wide />
         <div className="relative z-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center">
           <div>
@@ -20,7 +20,7 @@ export function MissionsPage() {
             </p>
           </div>
 
-          <div className="hidden justify-self-end rounded-md border border-line bg-canvas/70 px-5 py-4 backdrop-blur-sm lg:block">
+          <div className="app-surface hidden justify-self-end rounded-md border border-line bg-canvas/70 px-5 py-4 backdrop-blur-sm lg:block">
             <p className="font-mono text-[10px] uppercase leading-5 tracking-[0.12em] text-primary">
               Different markets.<br />Same skill.<br />Higher rank.
             </p>

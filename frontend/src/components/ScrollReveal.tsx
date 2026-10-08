@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 const SCROLL_REVEAL_OBSERVER = {
   threshold: 0.08,
@@ -9,6 +9,9 @@ type ScrollRevealProps = {
   children: ReactNode;
   direction?: "up" | "left" | "right";
   edge?: boolean;
+  className?: string;
+  delayMs?: number;
+  stagger?: boolean;
 };
 
 /*
@@ -22,6 +25,9 @@ export function ScrollReveal({
   children,
   direction = "up",
   edge = true,
+  className = "",
+  delayMs = 0,
+  stagger = false,
 }: ScrollRevealProps) {
   const elementRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(
@@ -48,7 +54,8 @@ export function ScrollReveal({
   return (
     <div
       ref={elementRef}
-      className={`scroll-reveal scroll-reveal-${direction}${edge ? "" : " scroll-reveal-no-edge"}${visible ? " scroll-reveal-visible" : ""}`}
+      className={`scroll-reveal scroll-reveal-${direction}${edge ? "" : " scroll-reveal-no-edge"}${visible ? " scroll-reveal-visible" : ""}${stagger ? " scroll-reveal-stagger" : ""} ${className}`}
+      style={{ "--scroll-reveal-delay": `${delayMs}ms` } as CSSProperties}
     >
       {children}
     </div>

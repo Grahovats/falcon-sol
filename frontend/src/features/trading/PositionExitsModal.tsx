@@ -20,10 +20,10 @@ export function PositionExitsModal({ missionId, position, enabled, onPortfolioUp
     if (event.target !== event.currentTarget) return
     const bounds = event.currentTarget.getBoundingClientRect()
     if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onDismiss()
-  }} className="token-discovery-dialog m-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-md overflow-y-auto overscroll-contain rounded-lg bg-surface p-0 text-ink">
+  }} className="app-surface app-modal token-discovery-dialog m-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-md overflow-y-auto overscroll-contain rounded-lg bg-surface p-0 text-ink">
     <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
       <h2 id="position-modal-title" className="text-base font-semibold">TP/SL · {position.symbol}</h2>
-      <button type="button" onClick={onDismiss} aria-label="Close TP/SL" className="focus-ring grid size-10 shrink-0 place-items-center rounded-sm text-muted hover:bg-surface-raised hover:text-ink"><X className="size-4" aria-hidden="true" /></button>
+      <button type="button" onClick={onDismiss} aria-label="Close TP/SL" className="app-button focus-ring grid size-10 shrink-0 place-items-center rounded-sm text-muted hover:bg-surface-raised hover:text-ink"><X className="size-4" aria-hidden="true" /></button>
     </div>
     <PositionExitControls missionId={missionId} position={position} enabled={enabled} onPortfolioUpdate={onPortfolioUpdate} idPrefix="position-modal" hideHeading onSaved={onDismiss} />
   </dialog>

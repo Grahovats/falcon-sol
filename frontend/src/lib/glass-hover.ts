@@ -1,5 +1,16 @@
 import type { PointerEvent } from 'react'
 
+/** Track reflections on a surface that stays flat, using its own bounds. */
+export function updateSurfaceSheen(event: PointerEvent<HTMLElement>) {
+  if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const surface = event.currentTarget
+  const bounds = surface.getBoundingClientRect()
+  const x = Math.max(-1, Math.min(1, (event.clientX - bounds.left) / Math.max(bounds.width, 1) * 2 - 1))
+  const y = Math.max(-1, Math.min(1, (event.clientY - bounds.top) / Math.max(bounds.height, 1) * 2 - 1))
+  surface.style.setProperty('--sheen-angle', `${125 + x * 18 - y * 10}deg`)
+  surface.style.setProperty('--sheen-position', `${50 + x * 14 + y * 10}%`)
+}
+
 export function updateGlassSheen(event: PointerEvent<HTMLElement>) {
   if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   const card = event.currentTarget

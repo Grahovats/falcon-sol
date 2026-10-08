@@ -84,7 +84,7 @@ export function ProfilePage() {
 
   return (
     <div className="state-content w-full pb-8">
-      <header>
+      <header className="app-page-heading">
         <h1 className="text-3xl font-semibold tracking-[-0.055em] text-ink sm:text-4xl">
           History &amp; Profile
         </h1>
@@ -94,7 +94,7 @@ export function ProfilePage() {
       </header>
 
       <section
-        className="mt-9 overflow-hidden rounded-[10px] border border-line bg-surface"
+        className="app-surface mt-9 overflow-hidden rounded-[10px] border border-line bg-surface"
         aria-label="Operator profile"
       >
         <div className="flex flex-col gap-7 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
@@ -120,7 +120,7 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-3 self-start rounded-md border border-line-strong px-5 text-xs font-semibold text-ink hover:border-primary hover:text-primary"
+            className="app-button focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-3 self-start rounded-md border border-line-strong px-5 text-xs font-semibold text-ink hover:border-primary hover:text-primary"
           >
             Edit profile <ArrowUpRight className="size-4" aria-hidden="true" />
           </button>
@@ -155,7 +155,7 @@ export function ProfilePage() {
       </div>
 
       <section
-        className="mt-6 overflow-hidden rounded-[10px] border border-line bg-surface"
+        className="app-surface mt-6 overflow-hidden rounded-[10px] border border-line bg-surface"
         aria-labelledby="records-title"
       >
         <div className="flex min-h-14 items-center justify-between gap-4 border-b border-line px-5 sm:px-6">
@@ -178,7 +178,7 @@ export function ProfilePage() {
             </p>
             <Link
               to="/missions"
-              className="focus-ring mt-5 inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-ink"
+              className="app-button focus-ring mt-5 inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-ink"
             >
               Browse missions
             </Link>
@@ -186,7 +186,7 @@ export function ProfilePage() {
         ) : (
           <>
             <div className="hidden overflow-x-auto md:block">
-              <table className="w-full min-w-[850px] text-left">
+              <table className="app-table w-full min-w-[850px] text-left">
                 <thead className="border-b border-line bg-surface-muted text-xs text-muted">
                   <tr>
                     <th className="px-5 py-4 font-normal sm:px-6">Mission</th>
@@ -277,7 +277,7 @@ function MissionRow({ result }: { result: Result }) {
         <Link
           to={`/missions/${result.missionId}`}
           aria-label={`Open ${result.missionName}`}
-          className="focus-ring flex size-10 items-center justify-center rounded-md text-muted hover:text-primary"
+          className="app-button app-table-action focus-ring flex size-10 items-center justify-center rounded-md text-muted hover:text-primary"
         >
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </Link>
@@ -429,7 +429,7 @@ function EditProfileDialog({
       onClose={onClose}
       onCancel={onClose}
       aria-labelledby="edit-profile-title"
-      className="wallet-dialog m-auto w-[min(92vw,30rem)] rounded-[10px] border border-line bg-surface p-0 text-ink backdrop:bg-black/80"
+      className="app-surface app-modal wallet-dialog m-auto w-[min(92vw,30rem)] rounded-[10px] border border-line bg-surface p-0 text-ink backdrop:bg-black/80"
     >
       <form onSubmit={submit} className="p-6">
         <div className="flex items-center justify-between gap-4">
@@ -440,7 +440,7 @@ function EditProfileDialog({
             type="button"
             onClick={() => dialogRef.current?.close()}
             aria-label="Close"
-            className="focus-ring flex size-10 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-ink"
+            className="app-button focus-ring flex size-10 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-ink"
           >
             <X className="size-5" aria-hidden="true" />
           </button>
@@ -461,7 +461,7 @@ function EditProfileDialog({
           autoComplete="username"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          className="focus-ring mt-2 min-h-11 w-full rounded-md border border-line-strong bg-canvas px-3 text-sm text-ink"
+          className="app-field focus-ring mt-2 min-h-11 w-full rounded-md border border-line-strong bg-canvas px-3 text-sm text-ink"
         />
         {error && (
           <p className="mt-2 text-xs text-danger" role="alert">
@@ -472,14 +472,14 @@ function EditProfileDialog({
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            className="focus-ring min-h-11 rounded-md border border-line px-4 text-sm font-semibold text-ink hover:border-line-strong"
+            className="app-button focus-ring min-h-11 rounded-md border border-line px-4 text-sm font-semibold text-ink hover:border-line-strong"
           >
             Cancel
           </button>
           <button
             disabled={busy || value.trim() === username}
             aria-busy={busy}
-            className="focus-ring min-h-11 rounded-md bg-primary px-4 text-sm font-semibold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
+            className="app-button focus-ring min-h-11 rounded-md bg-primary px-4 text-sm font-semibold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? "Saving…" : "Save changes"}
           </button>
@@ -508,9 +508,9 @@ function ProfileSkeleton() {
       aria-busy="true"
       aria-label="Loading profile"
     >
-      <div className="h-20 animate-pulse bg-surface" />
-      <div className="h-72 animate-pulse rounded-[10px] border border-line bg-surface" />
-      <div className="h-80 animate-pulse rounded-[10px] border border-line bg-surface" />
+      <div className="app-subtle-surface h-20 animate-pulse bg-surface" />
+      <div className="app-surface h-72 animate-pulse rounded-[10px] border border-line bg-surface" />
+      <div className="app-surface h-80 animate-pulse rounded-[10px] border border-line bg-surface" />
     </div>
   );
 }
@@ -535,7 +535,7 @@ function ProfileError({
       <button
         type="button"
         onClick={retry}
-        className="focus-ring mt-5 inline-flex min-h-11 items-center gap-2 rounded-md border border-line px-4 text-sm text-ink hover:border-primary"
+        className="app-button focus-ring mt-5 inline-flex min-h-11 items-center gap-2 rounded-md border border-line px-4 text-sm text-ink hover:border-primary"
       >
         <RotateCw className="size-4" aria-hidden="true" />
         Retry

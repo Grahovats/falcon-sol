@@ -2,9 +2,11 @@
 export function SectionSignalField({
   side = "left",
   wide = false,
+  stretch = false,
 }: {
   side?: "left" | "right";
   wide?: boolean;
+  stretch?: boolean;
 }) {
   return (
     <div
@@ -14,7 +16,7 @@ export function SectionSignalField({
       <svg
         className="section-signal-map"
         viewBox="0 0 900 600"
-        preserveAspectRatio="xMinYMid slice"
+        preserveAspectRatio={stretch ? "none" : "xMinYMid slice"}
       >
         <g className="section-signal-contours">
           <path d="M-120 548C86 520 162 366 334 346S582 174 928 222" />
