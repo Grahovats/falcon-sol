@@ -420,7 +420,7 @@ function serializeExecution(execution: {
   }
 }
 
-function assertQuoteUsable(quote: ExecutionQuote, market: { mintAddress: string }, side: OrderSide) {
+export function assertQuoteUsable(quote: ExecutionQuote, market: { mintAddress: string }, side: OrderSide) {
   if ([quote.quantity, quote.notional, quote.executionPrice, quote.referencePrice].some((value) => !value.isFinite() || !value.greaterThan(0))) {
     throw new AppError('QUOTE_UNAVAILABLE', 'No positive execution quote is available for this amount.', 409)
   }
@@ -432,7 +432,7 @@ function assertQuoteUsable(quote: ExecutionQuote, market: { mintAddress: string 
   }
 }
 
-function quoteMetadata(quote: ExecutionQuote) {
+export function quoteMetadata(quote: ExecutionQuote) {
   return {
     referencePrice: quote.referencePrice,
     priceImpactPct: quote.priceImpactPercent,

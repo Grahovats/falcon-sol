@@ -120,8 +120,15 @@ Run `npm run mission:test` to create a fresh **Terminal Test Flight** mission th
 - Live portfolio, positions, allocation, quick sell, trade history, and equity-ranked Command Board
 - Three-minute BLACKOUT that keeps trading open while concealing rankings
 - Automatic registration → active → blackout → settling → finalized lifecycle
-- Locked settlement prices, immutable final rankings, cancellation handling, and restart retries
+- Quote-based full-position liquidation, immutable final rankings, cancellation handling, and restart retries
 - Wallet-allowlisted mission administration with atomic audit records
+
+At settlement, each open position is synthetically sold using a full-quantity sell quote.
+Final equity is remaining virtual cash plus the quoted USDC proceeds, with the fills,
+balances, closed positions, and rankings saved in one transaction. Settlement sells are
+labelled “Mission end” in trade history. Missing, expired, or invalid quotes leave the
+mission in SETTLING for retry rather than falling back to spot valuation. Quotes are
+obtained when settlement runs; a historical deadline snapshot is not yet implemented.
 
 ## API overview
 

@@ -109,7 +109,7 @@ export interface OrderHistoryItem {
   executionPrice: string | null
   notional: string
   status: string
-  exitReason: 'TAKE_PROFIT' | 'STOP_LOSS' | null
+  exitReason: 'TAKE_PROFIT' | 'STOP_LOSS' | 'MISSION_END' | null
   quoteProvider: string | null
   quoteRouter: string | null
   priceImpactPercent: string | null

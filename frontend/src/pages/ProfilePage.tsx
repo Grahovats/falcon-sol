@@ -134,7 +134,7 @@ export function ProfilePage() {
           <ProfileMetric label="Win rate" value={formatPercent(winRate)} />
           <ProfileMetric
             label="Best return"
-            value={bestReturn === null ? "—" : formatPercent(bestReturn)}
+            value={bestReturn === null ? "N/A" : formatPercent(bestReturn)}
             positive={bestReturn !== null && bestReturn >= 0}
           />
           <ProfileMetric
@@ -263,7 +263,7 @@ function MissionRow({ result }: { result: Result }) {
               : "text-ink"
           }
         >
-          {result.rank ? `#${result.rank}` : "—"}
+          {result.rank ? `#${result.rank}` : "N/A"}
         </span>
         <span className="text-muted"> / {result.participantCount}</span>
       </td>
@@ -312,7 +312,7 @@ function MissionCard({ result }: { result: Result }) {
         />
         <MobileMetric
           label="Rank"
-          value={`${result.rank ? `#${result.rank}` : "—"} / ${result.participantCount}`}
+          value={`${result.rank ? `#${result.rank}` : "N/A"} / ${result.participantCount}`}
         />
         <MobileMetric label="Equity" value={formatCurrency(result.equity)} />
       </dl>

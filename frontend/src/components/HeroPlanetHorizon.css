@@ -1,0 +1,211 @@
+/* Keep the planet layout alongside its component so Vite loads both together. */
+.falcon-hero:has(.hero-planet-field) {
+  --hero-motion-scale: 1.6;
+  --hero-horizon-top: 70%;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4rem;
+  /* Reserve space for the horizon and stats even on short mobile screens. */
+  padding-bottom: 20rem;
+  min-height: max(48rem, calc(100dvh - var(--app-header-height)));
+}
+.falcon-hero .falcon-hero-copy {
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.falcon-hero .falcon-hero-copy h1 {
+  text-align: center;
+}
+.falcon-hero .hero-actions {
+  justify-content: center;
+}
+.falcon-hero .hero-metrics {
+  position: absolute;
+  left: 50%;
+  top: calc((100% + var(--hero-horizon-top)) / 2);
+  width: min(80%, 42rem);
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
+
+/* Oversized ellipses form a planet rim without a raster background.
+ * The horizon scales with the content so it stays below the actions. */
+.hero-planet-field {
+  position: absolute;
+  z-index: 0;
+  inset: 0 -1rem;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--color-primary);
+  background: radial-gradient(ellipse at 50% 62%, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 58%);
+}
+.hero-planet-stars {
+  position: absolute;
+  inset: 0;
+}
+.hero-planet-star {
+  position: absolute;
+  width: var(--star-size);
+  height: var(--star-size);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-ink) 75%, var(--color-primary));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-primary) 45%, transparent);
+  opacity: 0.45;
+}
+.hero-planet-atmosphere {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  width: 110%;
+  height: 53%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--color-primary) 24%, transparent), color-mix(in srgb, var(--color-primary) 6%, transparent) 42%, transparent 70%);
+  filter: blur(24px);
+}
+.hero-planet-surface,
+.hero-planet-rim {
+  position: absolute;
+  top: var(--hero-horizon-top);
+  left: 50%;
+  width: 140%;
+  height: 110%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+}
+.hero-planet-surface {
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-primary) 8%, var(--color-canvas)), var(--color-canvas) 48%);
+}
+.hero-planet-rim {
+  border-top: 2px solid color-mix(in srgb, var(--color-primary) 65%, var(--color-ink));
+  box-shadow:
+    0 -2px 8px color-mix(in srgb, var(--color-primary) 50%, transparent),
+    0 -10px 36px color-mix(in srgb, var(--color-primary) 16%, transparent),
+    inset 0 10px 28px color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+.hero-planet-rim::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border-top: 2px solid var(--color-primary);
+  box-shadow:
+    0 -3px 12px color-mix(in srgb, var(--color-primary) 55%, transparent),
+    0 -10px 36px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  filter: blur(2px);
+  opacity: 0.3;
+}
+.hero-planet-rim::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border-top: 2px solid var(--color-ink);
+  box-shadow: 0 -2px 7px color-mix(in srgb, var(--color-primary) 65%, transparent);
+  mask-image: linear-gradient(to right, transparent 40%, black 48%, black 52%, transparent 60%);
+  mask-size: 300% 100%;
+  mask-repeat: no-repeat;
+  opacity: 0;
+}
+.hero-planet-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, var(--color-canvas), transparent 18%, transparent 80%, var(--color-canvas)),
+    linear-gradient(to right, color-mix(in srgb, var(--color-canvas) 55%, transparent), transparent 25%, transparent 75%, color-mix(in srgb, var(--color-canvas) 55%, transparent));
+}
+.hero-shooting-stars {
+  position: absolute;
+  inset: 0;
+  --shooting-distance-x: clamp(10rem, 28vw, 26rem);
+  --shooting-distance-y: clamp(7rem, 19.6vw, 18.2rem);
+}
+.hero-shooting-star {
+  position: absolute;
+  width: clamp(4rem, 9vw, 8rem);
+  height: 1px;
+  opacity: 0;
+  transform: rotate(-35deg);
+  transform-origin: left center;
+  background: linear-gradient(to right, var(--color-ink), color-mix(in srgb, var(--color-primary) 65%, transparent) 18%, transparent);
+}
+.hero-shooting-star::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  box-shadow: 0 0 8px var(--color-primary);
+}
+@media (min-width: 640px) {
+  .hero-planet-field { inset-inline: -1.5rem; }
+}
+@media (min-width: 1024px) {
+  .hero-planet-field { inset-inline: -2rem; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .falcon-hero .hero-metrics { width: min(100%, 42rem); }
+  .hero-planet-surface,
+  .hero-planet-rim { width: 180%; height: 100%; }
+}
+@media (max-width: 639px) {
+  .falcon-hero:has(.hero-planet-field) { --hero-horizon-top: 72%; }
+  .falcon-hero .hero-metrics { width: 100%; }
+  .hero-planet-surface,
+  .hero-planet-rim { width: 200%; height: 80%; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-shooting-star {
+    /* A brief pass followed by a long pause keeps the sky quiet. */
+    animation: hero-shooting-star-pass calc(var(--shooting-duration) * var(--hero-motion-scale)) linear calc(var(--shooting-delay) * var(--hero-motion-scale)) infinite both;
+  }
+  .hero-planet-star {
+    animation: hero-star-twinkle calc(var(--star-duration) * var(--hero-motion-scale)) cubic-bezier(0.4, 0, 0.2, 1) var(--star-delay) infinite;
+  }
+  .hero-planet-rim {
+    animation: hero-horizon-reveal calc(1600ms * var(--hero-motion-scale)) cubic-bezier(0.16, 1, 0.3, 1) calc(200ms * var(--hero-motion-scale)) both;
+  }
+  .hero-planet-rim::before {
+    animation: hero-arc-glow calc(4s * var(--hero-motion-scale)) cubic-bezier(0.4, 0, 0.2, 1) calc(1800ms * var(--hero-motion-scale)) infinite both;
+  }
+  .hero-planet-rim::after {
+    animation: hero-arc-highlight calc(5s * var(--hero-motion-scale)) linear calc(1800ms * var(--hero-motion-scale)) infinite both;
+  }
+  .hero-planet-atmosphere {
+    animation: hero-atmosphere-reveal calc(1800ms * var(--hero-motion-scale)) cubic-bezier(0, 0, 0.2, 1) both;
+  }
+}
+@keyframes hero-arc-glow {
+  0%, 100% { opacity: 0.16; }
+  50% { opacity: 0.55; }
+}
+@keyframes hero-arc-highlight {
+  0% { mask-position: 100% 0; opacity: 0; }
+  8%, 92% { opacity: 0.9; }
+  100% { mask-position: 0% 0; opacity: 0; }
+}
+@keyframes hero-shooting-star-pass {
+  0% { opacity: 0; transform: translate(0, 0) rotate(-35deg); }
+  3% { opacity: 0.8; }
+  14% { opacity: 0; transform: translate(calc(-1 * var(--shooting-distance-x)), var(--shooting-distance-y)) rotate(-35deg); }
+  100% { opacity: 0; transform: translate(calc(-1 * var(--shooting-distance-x)), var(--shooting-distance-y)) rotate(-35deg); }
+}
+@keyframes hero-star-twinkle {
+  0%, 18%, 82%, 100% { opacity: 0; }
+  45% { opacity: 0.75; }
+  60% { opacity: 0.35; }
+}
+@keyframes hero-horizon-reveal {
+  from { clip-path: inset(0 50% 0 50%); opacity: 0; }
+  to { clip-path: inset(-20% -5% 0 -5%); opacity: 1; }
+}
+@keyframes hero-atmosphere-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+

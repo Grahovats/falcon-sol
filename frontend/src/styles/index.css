@@ -576,16 +576,19 @@ select {
   position: relative;
   isolation: isolate;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: center;
   min-height: calc(100vh - var(--app-header-height));
   min-height: calc(100dvh - var(--app-header-height));
-  padding-top: 3rem;
+  padding-top: 4rem;
   padding-bottom: 4rem;
   background: var(--color-canvas);
 }
 .falcon-hero-copy {
   width: 100%;
   min-width: 0;
+  max-width: 64rem;
+  text-align: center;
 }
 
 /* A clipped headline lift and short signal sweep introduce the hero once. */
@@ -596,20 +599,20 @@ select {
     margin-block: -0.16em -0.24em;
   }
   .hero-title-reveal {
-    animation: hero-title-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: hero-title-in calc(700ms * var(--hero-motion-scale, 1)) cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .hero-title-line:nth-child(2) .hero-title-reveal {
     animation-delay: var(--hero-headline-delay);
   }
   .hero-description {
-    animation: hero-content-in 600ms cubic-bezier(0.16, 1, 0.3, 1)
+    animation: hero-content-in calc(600ms * var(--hero-motion-scale, 1)) cubic-bezier(0.16, 1, 0.3, 1)
       var(--hero-description-delay) both;
   }
   .hero-actions {
-    animation: hero-actions-in 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: hero-actions-in calc(650ms * var(--hero-motion-scale, 1)) cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .hero-metrics > * {
-    animation: hero-content-in 550ms cubic-bezier(0.16, 1, 0.3, 1)
+    animation: hero-content-in calc(550ms * var(--hero-motion-scale, 1)) cubic-bezier(0.16, 1, 0.3, 1)
       var(--hero-metrics-delay) both;
   }
   .hero-metrics > :nth-child(2) {
@@ -2735,6 +2738,72 @@ select {
 }
 .trading-terminal .terminal-positions thead th { white-space: nowrap; }
 .trading-terminal .terminal-positions tbody tr { height: 4.5rem; }
+.hero-signal-field-knot {
+  --hero-route-duration: 18s;
+  background:
+    radial-gradient(ellipse at 76% 48%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 36%),
+    radial-gradient(ellipse at 94% 22%, color-mix(in srgb, var(--color-primary) 4%, transparent), transparent 30%);
+}
+.hero-signal-field-knot .hero-signal-map {
+  inset: 0 0 0 auto;
+  width: 64%;
+  height: 100%;
+  mask-image: linear-gradient(to right, transparent, black 18%, black 92%, transparent);
+}
+.hero-signal-grain {
+  position: absolute;
+  inset: 0;
+  background-image: var(--app-glass-grain);
+  background-size: 128px 128px;
+  opacity: 0.25;
+  mask-image: linear-gradient(to right, transparent 35%, black 75%);
+}
+.hero-knot-contours,
+.hero-knot-sections {
+  fill: none;
+  stroke: url(#signal-fade);
+  stroke-width: 0.85;
+}
+.hero-knot-sections { stroke-width: 0.6; opacity: 0.32; }
+.hero-knot-contours path,
+.hero-knot-sections path { vector-effect: non-scaling-stroke; }
+.hero-knot-depth {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 8;
+  opacity: 0.035;
+  filter: blur(5px);
+}
+.hero-signal-field-knot .hero-signal-route {
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent));
+}
+.hero-signal-field-knot .hero-signal-flow {
+  stroke-width: 2.5;
+  stroke-dasharray: 0.04 0.96;
+}
+.hero-signal-field-knot .hero-signal-flow-secondary { opacity: 0.4; }
+.hero-signal-field-knot .hero-signal-vignette {
+  background:
+    linear-gradient(to right, var(--color-canvas), transparent 44%, transparent 95%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-canvas) 30%, transparent), transparent 18%, transparent 83%, var(--color-canvas));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-knot-sculpture {
+    transform-origin: 550px 400px;
+    animation: hero-knot-drift 18s ease-in-out infinite alternate;
+  }
+}
+@keyframes hero-knot-drift {
+  from { transform: translateY(6px) rotate(0deg); }
+  to { transform: translateY(-8px) rotate(-1.5deg); }
+}
+@media (max-width: 639px) {
+  .hero-signal-field-knot .hero-signal-map { width: 92%; opacity: 0.4; }
+  .hero-signal-field-knot .hero-signal-vignette {
+    background: linear-gradient(to right, color-mix(in srgb, var(--color-canvas) 95%, transparent), color-mix(in srgb, var(--color-canvas) 55%, transparent) 50%, transparent);
+  }
+}
 @media (min-width: 768px) {
   .trading-terminal .terminal-grid {
     grid-template-areas: "watch watch" "chart order" "positions rankings";

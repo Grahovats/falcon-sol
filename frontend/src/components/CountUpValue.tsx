@@ -40,7 +40,7 @@ export function CountUpValue({ value, format = 'count', delayMs = 0 }: { value: 
     }
   }, [delayMs])
 
-  if (value === null || !Number.isFinite(value)) return <>—</>
+  if (value === null || !Number.isFinite(value)) return <>N/A</>
 
   return <>
     <span aria-hidden="true">{formatValue(value * progress, format)}</span>

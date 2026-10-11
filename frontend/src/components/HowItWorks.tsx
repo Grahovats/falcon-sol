@@ -7,7 +7,7 @@ import { resetGlassSheen, updateGlassSheen } from '../lib/glass-hover'
 
 const steps = [
   { number: '01', label: 'Choose your mission', title: 'Find your arena.', description: 'Pick a mission that fits your strategy. Review the assets, rules, and time window before you enter.', icon: Swords, href: '/missions', action: 'Explore missions' },
-  { number: '02', label: 'Deploy virtual capital', title: 'Same start. Your edge.', description: 'Enter with the same virtual starting balance as every operator. No deposits or real swaps—just your decisions.', icon: Wallet, href: null, action: null },
+  { number: '02', label: 'Deploy virtual capital', title: 'Same start. Your edge.', description: 'Enter with the same virtual starting balance as every operator. No deposits or real swaps. Just your decisions.', icon: Wallet, href: null, action: null },
   { number: '03', label: 'Execute your strategy', title: 'Make every move count.', description: 'Read live charts, size your positions, and set take-profit and stop-loss exits. Trade with a plan until the clock runs out.', icon: BarChart3, href: null, action: null },
   { number: '04', label: 'See your standing', title: 'Let the result speak.', description: 'The mission closes on a shared price snapshot. Your final equity locks in your rank and a record you can compare.', icon: ShieldCheck, href: '/rankings', action: 'View rankings' },
 ] as const
@@ -61,11 +61,7 @@ export function HowItWorks() {
       <SectionSignalField side="left" />
     </div>
     <div className="journey-intro">
-      <div>
-        <p className="mb-4 flex items-center gap-3 text-xs font-medium uppercase tracking-widest text-muted">How Falcon works</p>
-        <h2 id="how-it-works-title" className="text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">From first trade<br />to final rank.</h2>
-      </div>
-      <p className="max-w-sm text-sm leading-7 text-muted">One mission. Equal starting capital.<br />A clear record of the decisions you make.</p>
+      <h2 id="how-it-works-title" className="text-xs font-medium uppercase tracking-widest text-muted">How Falcon works</h2>
     </div>
 
     <div ref={stepsRef} className="journey-steps relative mt-12 sm:mt-16">

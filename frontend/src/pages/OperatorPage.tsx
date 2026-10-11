@@ -43,7 +43,7 @@ export function OperatorPage() {
       <Metric icon={<Award />} label="Wins" value={String(profile.wins)} />
       <Metric icon={<Medal />} label="Podium finishes" value={String(profile.topThreeFinishes)} />
       <Metric label="Average return" value={formatPercent(profile.averageReturn)} tone={Number(profile.averageReturn)} />
-      <Metric label="Best result" value={profile.bestResult ? `#${profile.bestResult.rank} · ${formatPercent(profile.bestResult.returnPercent)}` : '—'} />
+      <Metric label="Best result" value={profile.bestResult ? `#${profile.bestResult.rank} · ${formatPercent(profile.bestResult.returnPercent)}` : 'N/A'} />
     </dl>
     <section className="app-surface mt-8 border border-line bg-surface" aria-labelledby="operator-results-title">
       <div className="border-b border-line px-5 py-4"><h2 id="operator-results-title" className="text-sm font-semibold uppercase tracking-wider text-ink">Finalized mission record</h2></div>

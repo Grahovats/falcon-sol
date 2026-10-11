@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { GlassPanel } from "../components/GlassPanel";
 import { HowItWorks } from "../components/HowItWorks";
-import { HeroSignalField } from "../components/HeroSignalField";
+import { HeroPlanetHorizon } from "../components/HeroPlanetHorizon";
 import { ScrollChargeDivider } from "../components/ScrollChargeDivider";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { SectionSignalField } from "../components/SectionSignalField";
@@ -19,11 +19,11 @@ const CLOSING_REVEAL_TIMING = { cardStaggerMs: 90 } as const;
 
 /* HERO ENTRANCE
  *   0ms  first headline lifts into view; actions stay usable
- *  100ms second headline follows
- *  200ms supporting copy settles; signal routes draw in
- *  320ms metrics arrive from left to right (70ms intervals)
+ *  160ms second headline follows
+ *  320ms supporting copy settles; the horizon begins drawing
+ *  512ms metrics arrive from left to right (112ms intervals)
  */
-const HERO_TIMING = { headlineMs: 100, descriptionMs: 200, metricsMs: 320, metricStaggerMs: 70 } as const;
+const HERO_TIMING = { headlineMs: 160, descriptionMs: 320, metricsMs: 512, metricStaggerMs: 112 } as const;
 const heroEntranceStyle = {
   "--hero-headline-delay": `${HERO_TIMING.headlineMs}ms`,
   "--hero-description-delay": `${HERO_TIMING.descriptionMs}ms`,
@@ -35,23 +35,22 @@ export function HomePage() {
   return (
     <div>
       <section className="falcon-hero" style={heroEntranceStyle}>
-        <HeroSignalField />
+        <HeroPlanetHorizon />
         <div className="falcon-hero-copy relative z-10">
-          <h1 className="flex flex-col gap-[0.1em] text-[clamp(3.25rem,7.5vw,7.5rem)] font-semibold leading-none tracking-[-0.055em] text-ink">
-            <span className="hero-title-line block"><span className="hero-title-reveal block">Trade the signal.</span></span>
-            <span className="hero-title-line block text-primary"><span className="hero-title-reveal block">Prove the edge.</span></span>
+          <h1 className="flex flex-col gap-[0.1em] text-[clamp(2.5rem,5vw,5rem)] font-semibold leading-none tracking-[-0.055em] text-ink">
+            <span className="hero-title-line block"><span className="hero-title-reveal block">The market moves.</span></span>
+            <span className="hero-title-line block text-primary"><span className="hero-title-reveal block">Make your mark.</span></span>
           </h1>
-          <p className="hero-description mt-8 max-w-3xl text-lg leading-8 text-muted sm:mt-10 sm:text-xl sm:leading-9 lg:text-2xl lg:leading-10">
-            Enter time-boxed meme-coin missions with equal virtual capital.
-            Build your strategy, execute against live market data, and earn your
-            position on the command board.
+          <p className="hero-description mx-auto mt-8 max-w-2xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
+            Trade live Solana markets with $10,000 in virtual capital.
+            Compete in timed missions, climb the leaderboard, and earn rewards in prize missions.
           </p>
-          <div className="hero-actions mt-9 flex flex-wrap items-center gap-4 sm:mt-10">
+          <div className="hero-actions mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/missions"
               className="directional-action focus-ring inline-flex min-h-14 items-center gap-3 rounded-sm bg-primary px-8 text-base font-semibold text-primary-ink motion-safe:transition-colors motion-safe:duration-100 hover:bg-primary-strong active:translate-y-px"
             >
-              Enter the arena{" "}
+              Explore missions{" "}
               <ArrowRight className="action-icon size-5" aria-hidden="true" />
             </Link>
             <Link
@@ -61,12 +60,12 @@ export function HomePage() {
               View rankings
             </Link>
           </div>
-          <dl className="hero-metrics mt-12 grid max-w-3xl grid-cols-3 divide-x divide-line py-5 sm:mt-16">
-            <HeroMetric label="Starting capital" value="$10K" />
-            <HeroMetric label="Real assets" value="$0" />
-            <HeroMetric label="Skill signal" value="100%" />
-          </dl>
         </div>
+        <dl className="hero-metrics z-10 grid grid-cols-3 divide-x divide-line py-5">
+          <HeroMetric label="Same clock" value="One deadline" />
+          <HeroMetric label="Same capital" value="$10,000 each" />
+          <HeroMetric label="Prove your skill" value="Compete for cash prizes" />
+        </dl>
       </section>
 
       <ScrollChargeDivider />
@@ -77,16 +76,7 @@ export function HomePage() {
       <section className="home-integrity-section py-16 sm:py-20" aria-labelledby="integrity-title">
         <div className="home-section-background" aria-hidden="true"><SectionSignalField side="right" wide /></div>
         <ScrollReveal edge={false} className="home-section-heading home-scroll-reveal">
-          <div>
-            <p className="home-section-eyebrow">Operational integrity</p>
-            <h2 id="integrity-title" className="mt-5 text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
-              Equal conditions.<br /><span className="text-primary">A clear result.</span>
-            </h2>
-          </div>
-          <p className="max-w-md text-base leading-8 text-muted">
-            Same clock. Same capital. Same market. Falcon gives every operator
-            a controlled arena where execution and risk management decide the result.
-          </p>
+          <h2 id="integrity-title" className="home-section-eyebrow">Operational integrity</h2>
         </ScrollReveal>
         <div className="home-integrity-grid mt-10 sm:mt-14">
           <PlatformStat number="01" icon={<Radio />} label="Live operations" value="Time boxed" detail="Every mission has a defined market and finish line. You always know the clock you're trading against." />
@@ -125,11 +115,11 @@ export function HomePage() {
 
 function HeroMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-4 first:pl-0 last:pr-0 sm:px-8">
+    <div className="px-2 text-center sm:px-4">
       <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
         {label}
       </dt>
-      <dd className="mt-3 font-mono text-2xl tabular-nums text-ink sm:text-3xl">
+      <dd className="mt-3 font-mono text-base tabular-nums text-ink sm:text-xl">
         {value}
       </dd>
     </div>

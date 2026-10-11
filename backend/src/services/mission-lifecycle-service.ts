@@ -1,8 +1,8 @@
-import { AuditActorType, MissionStatus, Prisma, type PrismaClient } from '@prisma/client'
+import { AuditActorType, MissionStatus, OrderSide, OrderStatus, Prisma, type PrismaClient } from '@prisma/client'
 import type { Decimal } from '@prisma/client/runtime/library'
-import { calculateEquity, calculateMarketValue, calculateReturnPercent, decimal } from './trading-calculations.js'
-import { TradingService } from './trading-service.js'
-import type { MarketDataService } from './price-service.js'
+import { calculateEquity, calculateReturnPercent, decimal } from './trading-calculations.js'
+import { assertQuoteUsable, quoteMetadata, TradingService } from './trading-service.js'
+import type { ExecutionQuote, MarketDataService } from './price-service.js'
 import { BLACKOUT_DURATION_MS, nextAutomatedMissionStatus } from './mission-state-service.js'
 
 export class MissionLifecycleService {
@@ -48,20 +48,65 @@ export class MissionLifecycleService {
     if (!mission || mission.status !== MissionStatus.SETTLING) return
 
     try {
-      const quotes = await this.prices.getPrices(mission.markets)
-      const priceByMarket = new Map(quotes.map((quote) => [quote.marketId, quote.price]))
-      const missingMarket = mission.markets.find((market) => !priceByMarket.has(market.id))
-      if (missingMarket) throw new Error(`No settlement price is available for ${missingMarket.symbol}.`)
-      const results = buildSettlementResults(mission.entries, priceByMarket)
+      const marketById = new Map(mission.markets.map((market) => [market.id, market]))
+      const quoteByPosition = new Map<string, ExecutionQuote>()
+      // Equal-size positions in the same market share a quote. Different sizes
+      // must be priced separately because liquidation depth changes the proceeds.
+      const pendingQuotes = new Map<string, Promise<ExecutionQuote>>()
+      await Promise.all(mission.entries.flatMap((entry) => entry.positions.filter((position) => position.quantity.greaterThan(0)).map(async (position) => {
+        const market = marketById.get(position.missionMarketId)
+        if (!market) throw new Error(`Missing settlement market ${position.missionMarketId}.`)
+        const key = `${market.id}:${position.quantity.toString()}`
+        let pending = pendingQuotes.get(key)
+        if (!pending) {
+          pending = this.prices.getSellQuote(market, position.quantity)
+          pendingQuotes.set(key, pending)
+        }
+        const quote = await pending
+        if (!quote.quantity.equals(position.quantity)) throw new Error(`Settlement quote does not cover the full ${market.symbol} position.`)
+        quoteByPosition.set(position.id, quote)
+      })))
+      const results = buildSettlementResults(mission.entries, new Map([...quoteByPosition].map(([id, quote]) => [id, quote.notional])))
 
       await this.database.$transaction(async (transaction) => {
         const current = await transaction.mission.findUnique({ where: { id: missionId }, select: { status: true } })
         if (!current || current.status !== MissionStatus.SETTLING) return
+        // Validate the entire batch before writing anything; never substitute
+        // spot marking when a liquidation route is unavailable or expired.
+        for (const entry of mission.entries) {
+          for (const position of entry.positions.filter((position) => position.quantity.greaterThan(0))) {
+            assertQuoteUsable(quoteByPosition.get(position.id)!, marketById.get(position.missionMarketId)!, OrderSide.SELL)
+          }
+        }
         await transaction.missionResult.deleteMany({ where: { missionId } })
+        for (const entry of mission.entries) {
+          let cashBalance = entry.cashBalance
+          let realizedPnl = entry.realizedPnl
+          for (const position of entry.positions.filter((position) => position.quantity.greaterThan(0))) {
+            const quote = quoteByPosition.get(position.id)!
+            // notional is the quoted USDC output; fees already represented in
+            // that output are metadata, not a second deduction.
+            const pnl = quote.notional.minus(position.quantity.mul(position.averageEntryPrice))
+            cashBalance = cashBalance.plus(quote.notional)
+            realizedPnl = realizedPnl.plus(pnl)
+            const order = await transaction.order.create({ data: {
+              missionEntryId: entry.id, missionMarketId: position.missionMarketId,
+              side: OrderSide.SELL, status: OrderStatus.FILLED, exitReason: 'MISSION_END',
+              requestedNotional: quote.notional, requestedQuantity: position.quantity, executedAt: now,
+            } })
+            await transaction.fill.create({ data: {
+              orderId: order.id, executionPrice: quote.executionPrice, quantity: quote.quantity,
+              notional: quote.notional, simulatedFee: quote.simulatedFee, ...quoteMetadata(quote),
+            } })
+            await transaction.position.update({ where: { id: position.id }, data: {
+              quantity: 0, averageEntryPrice: 0, realizedPnl: position.realizedPnl.plus(pnl),
+              takeProfitPrice: null, stopLossPrice: null, protectionVersion: { increment: 1 },
+            } })
+          }
+          await transaction.missionEntry.update({ where: { id: entry.id }, data: { cashBalance, realizedPnl } })
+        }
         for (const market of mission.markets) {
-          const settlementPrice = priceByMarket.get(market.id)
-          if (!settlementPrice) throw new Error(`No settlement price is available for ${market.symbol}.`)
-          await transaction.missionMarket.update({ where: { id: market.id }, data: { settlementPrice, settledAt: now } })
+          await transaction.missionMarket.update({ where: { id: market.id }, data: { settledAt: now } })
         }
         if (results.length > 0) {
           await transaction.missionResult.createMany({ data: results.map((result) => ({ ...result, missionId, settledAt: now })) })
@@ -73,7 +118,7 @@ export class MissionLifecycleService {
           entityType: 'Mission',
           entityId: missionId,
           missionId,
-          metadata: { operatorCount: results.length, settledAt: now.toISOString() },
+          metadata: { operatorCount: results.length, settledAt: now.toISOString(), valuation: 'SELL_QUOTES', liquidatedPositions: quoteByPosition.size },
         } })
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
     } catch (cause: unknown) {
@@ -102,16 +147,16 @@ interface SettlementEntry {
   startingBalance: Decimal
   cashBalance: Decimal
   joinedAt: Date
-  positions: Array<{ missionMarketId: string; quantity: Decimal }>
+  positions: Array<{ id: string; missionMarketId: string; quantity: Decimal }>
   user: { username: string | null; wallets: Array<{ address: string }> }
 }
 
-export function buildSettlementResults(entries: SettlementEntry[], priceByMarket: ReadonlyMap<string, Decimal>) {
+export function buildSettlementResults(entries: SettlementEntry[], proceedsByPosition: ReadonlyMap<string, Decimal>) {
   return entries.map((entry) => {
-    const marketValues = entry.positions.filter((position) => position.quantity.isPositive()).map((position) => {
-      const price = priceByMarket.get(position.missionMarketId)
-      if (!price) throw new Error(`Missing settlement price for market ${position.missionMarketId}.`)
-      return calculateMarketValue(position.quantity, price)
+    const marketValues = entry.positions.filter((position) => position.quantity.greaterThan(0)).map((position) => {
+      const proceeds = proceedsByPosition.get(position.id)
+      if (!proceeds || !proceeds.isFinite() || !proceeds.greaterThan(0)) throw new Error(`Missing or invalid settlement proceeds for position ${position.id}.`)
+      return proceeds
     })
     const equity = calculateEquity(entry.cashBalance, marketValues)
     const walletAddress = entry.user.wallets[0]?.address ?? null

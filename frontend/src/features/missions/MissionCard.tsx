@@ -21,7 +21,7 @@ export function MissionCard({ mission, entranceIndex = 0 }: { mission: Mission; 
     '--stagger-delay': `${Math.min(entranceIndex * MISSION_CARD_TIMING.staggerMs, MISSION_CARD_TIMING.maxDelayMs)}ms`,
   } as CSSProperties
   const timeLabel = live ? 'Time remaining' : upcoming ? 'Starts in' : mission.status === 'CANCELLED' ? 'Cancelled' : 'Trading ended'
-  const timeValue = live || upcoming ? countdown : mission.status === 'CANCELLED' ? '—' : formatDate(mission.endsAt)
+  const timeValue = live || upcoming ? countdown : mission.status === 'CANCELLED' ? 'N/A' : formatDate(mission.endsAt)
   const canJoin = live || mission.status === 'REGISTRATION'
   const actionLabel = canJoin ? 'Join mission' : RESULT_STATUSES.has(mission.status) ? 'View results' : 'View mission'
 
