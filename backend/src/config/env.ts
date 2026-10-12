@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { z } from 'zod'
+import { resolveSolanaRpcUrl } from './solana-rpc.js'
 
 const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -13,7 +14,8 @@ const environmentSchema = z.object({
   AUTH_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
   ADMIN_WALLET_ADDRESSES: z.string().default(''),
   MISSION_LIFECYCLE_INTERVAL_MS: z.coerce.number().int().min(1_000).max(300_000).default(5_000),
-  SOLANA_RPC_URL: z.string().url().default('https://api.mainnet-beta.solana.com'),
+  SOLANA_RPC_URL: z.preprocess(value => value === '' ? undefined : value, z.string().url().optional()),
+  HELIUS_API_KEY: z.string().trim().optional().transform(value => value || undefined),
   IDENTITY_HASH_SECRET: z.string().min(32).optional(),
   MARKET_DATA_PROVIDER: z.enum(['mock', 'jupiter']).default('mock'),
   JUPITER_API_KEY: z.string().trim().optional().transform((value) => value || undefined),
@@ -36,7 +38,7 @@ if (!result.success) {
   throw new Error('Invalid environment configuration')
 }
 
-export const env = result.data
+export const env = { ...result.data, SOLANA_RPC_URL: resolveSolanaRpcUrl(result.data.SOLANA_RPC_URL, result.data.HELIUS_API_KEY) }
 export const corsOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
 
 export const adminWalletAddresses = new Set(env.ADMIN_WALLET_ADDRESSES.split(',').map((address) => address.trim()).filter(Boolean))

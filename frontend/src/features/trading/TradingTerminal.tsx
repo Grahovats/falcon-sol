@@ -11,6 +11,7 @@ import { TradeHistory } from './TradeHistory'
 import { ExitPriceInputs, PositionExitControls } from './PositionExitControls'
 import { parseExitPrices } from './exit-prices'
 import { TokenDiscovery } from './TokenDiscovery'
+import { ChartLoading } from './ChartLoading'
 import './TerminalPolish.css'
 // A distinct module URL lets retry recover from a cached failed dynamic import.
 const retryChartModules = import.meta.glob<typeof import('./CandlestickChart')['CandlestickChart']>(
@@ -190,7 +191,7 @@ class ChartErrorBoundary extends Component<{ missionId: string; marketId: string
       </div>
     }
     const { Chart } = this.state
-    return <Suspense fallback={<div className="terminal-chart-canvas animate-pulse border-t border-line bg-canvas/40" aria-busy="true" aria-label="Loading candlestick chart" />}>
+    return <Suspense fallback={<ChartLoading symbol={this.props.symbol} detail="Preparing chart" />}>
       <Chart missionId={this.props.missionId} marketId={this.props.marketId} symbol={this.props.symbol} position={this.props.position} onExitChange={this.props.onExitChange} />
     </Suspense>
   }

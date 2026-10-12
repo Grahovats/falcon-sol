@@ -70,6 +70,7 @@ export class AppError extends Error {
     readonly code: ErrorCode,
     message: string,
     readonly statusCode = 400,
+    readonly retryAfterSeconds?: number,
   ) {
     super(message)
     this.name = 'AppError'

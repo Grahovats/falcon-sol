@@ -20,7 +20,7 @@ import { tradingRoutes } from './routes/trading.js'
 export async function buildApp() {
   const app = Fastify({ logger: env.NODE_ENV !== 'test' })
 
-  await app.register(cors, { origin: corsOrigins, credentials: true })
+  await app.register(cors, { origin: corsOrigins, credentials: true, exposedHeaders: ['Retry-After'] })
   await app.register(cookie)
   await app.register(rateLimit, { global: false })
 
@@ -41,6 +41,7 @@ export async function buildApp() {
     }
 
     if (error instanceof AppError) {
+      if (error.retryAfterSeconds) reply.header('Retry-After', error.retryAfterSeconds)
       void reply.code(error.statusCode).send({ error: { code: error.code, message: error.message } })
       return
     }

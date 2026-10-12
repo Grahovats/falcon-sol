@@ -1,5 +1,5 @@
 export type OrderSide = 'BUY' | 'SELL'
-export type CandleTimeframe = '5m' | '15m' | '1h' | '4h'
+export type CandleTimeframe = '1m' | '5m' | '15m' | '1h' | '4h' | '1d'
 
 export interface MarketCandle {
   time: number
@@ -12,7 +12,7 @@ export interface MarketCandle {
 
 export interface CandleResponse {
   data: MarketCandle[]
-  meta: { timeframe: CandleTimeframe; source: 'geckoterminal' }
+  meta: { timeframe: CandleTimeframe; source: 'geckoterminal'; stale: boolean; fetchedAt: number }
 }
 
 export interface MarketPrice {

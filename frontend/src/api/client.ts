@@ -5,12 +5,14 @@ interface ApiErrorBody { error?: { code?: string; message?: string } | string }
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
+  readonly retryAfterSeconds?: number
 
-  constructor(message: string, status: number, code?: string) {
+  constructor(message: string, status: number, code?: string, retryAfterSeconds?: number) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = code
+    this.retryAfterSeconds = retryAfterSeconds
   }
 }
 
@@ -51,7 +53,9 @@ async function request<T>(method: 'GET' | 'POST' | 'PATCH', path: string, body?:
     const error = isApiErrorBody(bodyValue) ? bodyValue.error : undefined
     const message = typeof error === 'string' ? error : error?.message ?? 'The Falcon API request failed.'
     const code = typeof error === 'object' ? error.code : undefined
-    throw new ApiError(message, response.status, code)
+    const retryHeader = response.headers.get('Retry-After')
+    const retryAfter = retryHeader ? Number(retryHeader) : undefined
+    throw new ApiError(message, response.status, code, Number.isFinite(retryAfter) ? retryAfter : undefined)
   }
   if (response.status === 204) return undefined as T
   return (await response.json()) as T

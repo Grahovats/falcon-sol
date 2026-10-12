@@ -45,6 +45,7 @@ interface TrendingServiceOptions {
   cacheTtlMs: number
   fetcher?: typeof fetch
   clock?: () => number
+  requestJson?: (path: string) => Promise<unknown>
 }
 
 export class GeckoTerminalTrendingService {
@@ -108,6 +109,7 @@ export class GeckoTerminalTrendingService {
   }
 
   private async requestJson(path: string): Promise<unknown> {
+    if (this.options.requestJson) return this.options.requestJson(path)
     let response: Response
     try {
       response = await this.fetcher(`${this.options.baseUrl.replace(/\/$/, '')}${path}`, {

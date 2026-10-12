@@ -68,13 +68,19 @@ JUPITER_MIN_TOKEN_LIQUIDITY_USD=10000
 GECKOTERMINAL_API_BASE_URL=https://api.geckoterminal.com/api/v2
 GECKOTERMINAL_REQUEST_TIMEOUT_MS=8000
 GECKOTERMINAL_CACHE_TTL_MS=60000
+HELIUS_API_KEY=
+SOLANA_RPC_URL=
 ```
 
 Set `ADMIN_WALLET_ADDRESSES` to a comma-separated list of public Solana wallet addresses. A wallet receives admin access only when it is both allowlisted and stored with the `ADMIN` database role; Falcon synchronizes that role during session verification. Never enter a private key or seed phrase. Restart the backend after changing the allowlist.
 
 Set `MARKET_DATA_PROVIDER=jupiter` and provide a server-side `JUPITER_API_KEY` to enable Jupiter Price V3, Swap V2 quote-only execution, and Open Arena token discovery. `JUPITER_MIN_TOKEN_LIQUIDITY_USD` is the admission floor; every new market must also return usable $100 buy and sell routes below the configured price-impact ceiling. Never expose the key through Vite or commit it.
 
-Candlestick charts use GeckoTerminal's public Solana OHLC endpoint through the backend. No browser-side key is required; responses are cached to protect provider limits.
+For free Helius RPC, create a key at https://dashboard.helius.dev and set `HELIUS_API_KEY` in `backend/.env` (and the backend deployment's environment). Leave `SOLANA_RPC_URL` blank to select Helius mainnet automatically. An explicit `SOLANA_RPC_URL` overrides Helius; without either setting, Falcon uses public mainnet. Restart the backend after changing these values. Keep the key server-side; never use a `VITE_` variable for it. Helius is used for finalized USDC receipt checks and treasury reads; Jupiter continues to supply trading prices and quotes.
+
+Candlestick charts use GeckoTerminal's public Solana OHLC endpoint through the backend. No browser-side key is required; responses are cached to protect provider limits. Charts request up to 1,000 candles per page, support 1m/5m/15m/1h/4h/1d intervals, and let traders load older pages with `before_timestamp`. The initial view shows the most recent 100 candles; use **Fit history** to see all loaded candles or **Latest** to return to recent trading. Older pages preserve the visible date range. Available history depends on the selected pool and the provider's free historical limits; an empty older page stops pagination.
+
+Pool discovery, candles, and trending share a backend request client that spaces outbound calls by 2.2 seconds, deduplicates in-flight requests, and respects `Retry-After` on throttling (60 seconds when absent). Coin changes are debounced and already-loaded chart pages are cached in the browser. The chart retries up to twice after a cooldown, then allows manual retry. During provider failures, candles saved within the last 10 minutes may be displayed with a saved-data timestamp; these candles are never used for fills or settlement. Older pages are cached for an hour. These backend caches and request budgets are per process: multiple serverless instances or other apps sharing an outbound IP can still exhaust the free provider allowance. Helius RPC does not increase GeckoTerminal's historical-data quota.
 
 `frontend/.env`:
 

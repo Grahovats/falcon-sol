@@ -16,7 +16,7 @@ import { assertCashEntry } from '../services/reward-calculations.js'
 
 const paramsSchema = z.object({ missionId: z.string().min(1) })
 const candleParamsSchema = z.object({ missionId: z.string().min(1), marketId: z.string().min(1) })
-const candleQuerySchema = z.object({ timeframe: z.enum(candleTimeframes).default('5m') })
+const candleQuerySchema = z.object({ timeframe: z.enum(candleTimeframes).default('5m'), before: z.coerce.number().int().positive().max(253402300799).optional() })
 const tokenQuerySchema = z.object({ query: z.string().trim().min(2).max(100).optional(), feed: z.enum(['recent']).optional() })
   .refine((value) => Boolean(value.query) !== Boolean(value.feed), { message: 'Provide either a search query or the recent feed.' })
 const admitTokenSchema = z.object({ mintAddress: z.string().trim().min(32).max(64) })
@@ -168,15 +168,16 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
 
   app.get('/missions/:missionId/markets/:marketId/candles', async (request) => {
     const { missionId, marketId } = candleParamsSchema.parse(request.params)
-    const { timeframe } = candleQuerySchema.parse(request.query)
+    const { timeframe, before } = candleQuerySchema.parse(request.query)
     const market = await prisma.missionMarket.findFirst({
       where: { id: marketId, missionId, enabled: true },
       select: { id: true, symbol: true, mintAddress: true, decimals: true },
     })
     if (!market) throw new AppError('MARKET_NOT_FOUND', 'This market is not available in the mission.', 404)
+    const page = await candleDataService.getCandlePage(market, timeframe, before)
     return {
-      data: await candleDataService.getCandles(market, timeframe),
-      meta: { timeframe, source: 'geckoterminal' as const },
+      data: page.data,
+      meta: { timeframe, source: 'geckoterminal' as const, stale: page.stale, fetchedAt: page.fetchedAt },
     }
   })
 

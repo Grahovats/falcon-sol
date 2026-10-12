@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { AppError } from '../errors/app-error.js'
 import type { PriceMarket } from './price-service.js'
 
-export const candleTimeframes = ['5m', '15m', '1h', '4h'] as const
+export const candleTimeframes = ['1m', '5m', '15m', '1h', '4h', '1d'] as const
 export type CandleTimeframe = (typeof candleTimeframes)[number]
 
 export interface MarketCandle {
@@ -20,6 +20,7 @@ interface GeckoTerminalOptions {
   cacheTtlMs: number
   fetcher?: typeof fetch
   clock?: () => number
+  requestJson?: (path: string) => Promise<unknown>
 }
 
 const poolSchema = z.object({
@@ -48,36 +49,48 @@ const ohlcvResponseSchema = z.object({
   }),
 })
 
-const timeframeConfig: Record<CandleTimeframe, { unit: 'minute' | 'hour'; aggregate: number }> = {
+const timeframeConfig: Record<CandleTimeframe, { unit: 'minute' | 'hour' | 'day'; aggregate: number }> = {
+  '1m': { unit: 'minute', aggregate: 1 },
   '5m': { unit: 'minute', aggregate: 5 },
   '15m': { unit: 'minute', aggregate: 15 },
   '1h': { unit: 'hour', aggregate: 1 },
   '4h': { unit: 'hour', aggregate: 4 },
+  '1d': { unit: 'day', aggregate: 1 },
 }
 
 type PoolSelection = { address: string; tokenSide: 'base' | 'quote' }
 type CacheEntry<T> = { value: T; expiresAt: number }
+export type CandlePage = { data: MarketCandle[]; fetchedAt: number; stale: boolean }
 
 export class GeckoTerminalCandleService {
   private readonly fetcher: typeof fetch
   private readonly clock: () => number
   private readonly pools = new Map<string, CacheEntry<PoolSelection>>()
-  private readonly candles = new Map<string, CacheEntry<MarketCandle[]>>()
-  private readonly pendingCandles = new Map<string, Promise<MarketCandle[]>>()
+  private readonly candles = new Map<string, CacheEntry<CandlePage>>()
+  private readonly pendingCandles = new Map<string, Promise<CandlePage>>()
+  private readonly pendingPools = new Map<string, Promise<PoolSelection>>()
 
   constructor(private readonly options: GeckoTerminalOptions) {
     this.fetcher = options.fetcher ?? fetch
     this.clock = options.clock ?? Date.now
   }
 
-  async getCandles(market: PriceMarket, timeframe: CandleTimeframe): Promise<MarketCandle[]> {
-    const cacheKey = `${market.mintAddress}:${timeframe}`
-    const cached = this.getCached(this.candles, cacheKey)
-    if (cached) return cached
+  async getCandles(market: PriceMarket, timeframe: CandleTimeframe, before?: number): Promise<MarketCandle[]> {
+    return (await this.getCandlePage(market, timeframe, before)).data
+  }
+
+  async getCandlePage(market: PriceMarket, timeframe: CandleTimeframe, before?: number): Promise<CandlePage> {
+    const cacheKey = `${market.mintAddress}:${timeframe}:${before ?? 'latest'}`
+    const cached = this.candles.get(cacheKey)
+    if (cached && cached.expiresAt > this.clock()) return cached.value
     const pending = this.pendingCandles.get(cacheKey)
     if (pending) return pending
 
-    const request = this.loadCandles(market, timeframe, cacheKey)
+    const request = this.loadCandles(market, timeframe, cacheKey, before).catch(error => {
+      // Chart-only fallback, never used for trading prices or execution.
+      if (cached && this.clock() - cached.value.fetchedAt < 10 * 60_000) return { ...cached.value, stale: true }
+      throw error
+    })
     this.pendingCandles.set(cacheKey, request)
     try {
       return await request
@@ -86,31 +99,43 @@ export class GeckoTerminalCandleService {
     }
   }
 
-  private async loadCandles(market: PriceMarket, timeframe: CandleTimeframe, cacheKey: string) {
+  private async loadCandles(market: PriceMarket, timeframe: CandleTimeframe, cacheKey: string, before?: number) {
     const pool = await this.getPool(market.mintAddress)
     const config = timeframeConfig[timeframe]
     const query = new URLSearchParams({
       aggregate: String(config.aggregate),
-      limit: '120',
+      limit: '1000',
       currency: 'usd',
       token: pool.tokenSide,
     })
+    if (before !== undefined) query.set('before_timestamp', String(before))
     const response = ohlcvResponseSchema.parse(await this.requestJson(
       `/networks/solana/pools/${encodeURIComponent(pool.address)}/ohlcv/${config.unit}?${query.toString()}`,
     ))
-    const candles = response.data.attributes.ohlcv_list
+    const rows = response.data.attributes.ohlcv_list
       .map(([time, open, high, low, close, volume]) => ({ time, open, high, low, close, volume }))
+      .filter(candle => before === undefined || candle.time < before)
+    const candles = [...new Map(rows.map(candle => [candle.time, candle])).values()]
       .sort((left, right) => left.time - right.time)
 
-    if (candles.length === 0) throw new AppError('CANDLE_DATA_UNAVAILABLE', `No candle history is available for ${market.symbol}.`, 503)
-    this.candles.set(cacheKey, { value: candles, expiresAt: this.clock() + this.options.cacheTtlMs })
-    return candles
+    if (candles.length === 0 && before === undefined) throw new AppError('CANDLE_DATA_UNAVAILABLE', `No candle history is available for ${market.symbol}.`, 503)
+    const page = { data: candles, fetchedAt: this.clock(), stale: false }
+    if (this.candles.size >= 500) this.candles.delete(this.candles.keys().next().value!)
+    this.candles.set(cacheKey, { value: page, expiresAt: this.clock() + (before === undefined ? this.options.cacheTtlMs : 60 * 60_000) })
+    return page
   }
 
   private async getPool(mintAddress: string) {
     const cached = this.getCached(this.pools, mintAddress)
     if (cached) return cached
+    const pending = this.pendingPools.get(mintAddress)
+    if (pending) return pending
+    const request = this.loadPool(mintAddress)
+    this.pendingPools.set(mintAddress, request)
+    try { return await request } finally { this.pendingPools.delete(mintAddress) }
+  }
 
+  private async loadPool(mintAddress: string) {
     const response = poolsResponseSchema.parse(await this.requestJson(
       `/networks/solana/tokens/${encodeURIComponent(mintAddress)}/pools?page=1`,
     ))
@@ -140,6 +165,7 @@ export class GeckoTerminalCandleService {
   }
 
   private async requestJson(path: string): Promise<unknown> {
+    if (this.options.requestJson) return this.options.requestJson(path)
     let response: Response
     try {
       response = await this.fetcher(`${this.options.baseUrl.replace(/\/$/, '')}${path}`, {
