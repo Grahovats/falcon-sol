@@ -378,8 +378,12 @@ export class TradingService {
   }
 
   private async getTradingContext(database: Prisma.TransactionClient | PrismaClient, input: OrderInput) {
-    const mission = await database.mission.findUnique({ where: { id: input.missionId } })
+    const mission = await database.mission.findUnique({ where: { id: input.missionId }, include: { rewardPlan: true } })
     if (!mission) throw new AppError('MISSION_NOT_FOUND', 'Mission not found.', 404)
+    if (mission.rewardPlan) {
+      const entrant = await database.cashParticipant.findUnique({ where: { missionId_userId: { missionId: input.missionId, userId: input.userId } } })
+      if (mission.rewardPlan.state !== 'LOCKED' || entrant?.status !== 'APPROVED') throw new AppError('NOT_ELIGIBLE', 'Cash trading requires a locked prize reserve and approved eligibility.', 403)
+    }
     const missionStatus = deriveMissionStatus(mission)
 
     const entry = await database.missionEntry.findUnique({

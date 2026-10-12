@@ -1,0 +1,529 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Falcon — Mission operating model</title>
+<style>
+:root{color-scheme:dark;--bg:#080b0c;--panel:#101617;--line:#394547;--ink:#eef3ef;--muted:#a6b0ab;--lime:#b8f23d;--red:#ff776d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:48px 24px 80px}a{color:var(--lime);text-underline-offset:4px}a:hover{color:#d0ff69}a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--lime);outline-offset:3px}h1{font-size:clamp(30px,5vw,48px);line-height:1.15;letter-spacing:-.04em}h2{margin-top:56px;font-size:28px;line-height:1.3;letter-spacing:-.025em}h3{font-size:20px;margin-top:28px}p,li{max-width:85ch}li{margin:8px 0}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.6}th,td{border-bottom:1px solid var(--line);padding:16px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--muted)}td:first-child{width:28%;font-weight:500}code{color:var(--lime);overflow-wrap:anywhere}pre{overflow:auto}.badge{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:12px;color:var(--muted)}.intro{color:var(--muted);margin-bottom:32px}.box{margin-top:32px;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:24px}.box h2{margin:0 0 16px;font-size:24px}.note{color:var(--muted);font-size:14px}.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}.flow>div{padding:16px;border:1px solid var(--line);border-radius:12px}.flow strong{display:block;color:var(--lime)}.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}label{display:block;font-size:13px;color:var(--muted)}input,select{display:block;margin-top:6px;width:100%;min-height:44px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:10px;color:var(--ink);font:inherit;font-size:15px}input:disabled{opacity:.5}.outputs{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;border-top:1px solid var(--line);padding-top:24px;margin-top:24px}.outputs dt{font-size:12px;color:var(--muted)}.outputs dd{margin:6px 0 0;font-size:24px;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums}.outputs dd.lime{color:var(--lime)}.red{color:var(--red)}#break-even,#awards,#cash-check{font-size:14px;color:var(--muted)}nav{display:flex;flex-wrap:wrap;gap:12px;border-block:1px solid var(--line);padding:16px 0;margin:24px 0;font-size:14px}.table-wrap{overflow:auto}.table-wrap table{min-width:620px}@media(max-width:700px){main{padding:24px 16px}.fields,.outputs{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:1fr}.outputs dd{font-size:21px}.box{padding:20px}h2{font-size:24px}}@media print{body{background:white;color:black}main{padding:0}.box{background:white}a{color:black}nav{display:none}.table-wrap{overflow:visible}.table-wrap table{min-width:0}h2{break-after:avoid}.outputs dd.lime{color:black}}
+</style>
+<main><span class="badge">Research · 12 October 2026 · Proposed rules</span><h1>Make the prize real.<br>Make the competition fair.</h1><p class="intro">Prepared for Falcon: zero initial budget, funded collaborations, and a possible future sponsor-plus-entry model. This document does not launch a contest or authorize collecting fees.</p>
+<nav aria-label="Report navigation"><a href="#economics">Prize calculator</a><a href="#report">Full research and operating rules</a><a href="falcon-mission-model.md">Markdown version</a></nav>
+<div class="flow" aria-label="Recommended public mission stages"><div><strong>Live mission</strong>One shared field competes against the same clock.</div><div><strong>Next mission</strong>Registration opens after the sponsor reserve is secured.</div><div><strong>Previous mission</strong>Results, review status, and confirmed award evidence.</div></div>
+<section class="box" id="economics" aria-labelledby="calculator-title"><h2 id="calculator-title">Test the event economics</h2><p class="note">Illustrative amounts only. “Sponsored, free entry” is the proposed first step. Paid entry requires review of the actual format and permitted territories. Enter only settled, mission-allocated funds when using this model in planning.</p>
+<div class="fields"><label>Format<select id="format"><option value="free">Sponsored, free entry</option><option value="hybrid">Hypothetical approved hybrid</option></select></label><label>Eligible entrants<input id="entrants" type="number" min="0" max="100000" step="1" value="100"></label><label>Entry price (USDC)<input id="fee" type="number" min="0" step="0.1" value="5"></label><label>Sponsor prize reserve (USDC)<input id="sponsor" type="number" min="0" step="1" value="250"></label><label>Falcon's share of entry fees (%)<input id="rake" type="number" min="0" max="100" step="1" value="10"></label><label>Sponsor operating payment (USDC)<input id="hosting" type="number" min="0" step="1" value="50"></label><label>Estimated operating expenses (USDC)<input id="cost" type="number" min="0" step="1" value="80"></label></div>
+<div aria-live="polite"><dl class="outputs"><div><dt>Prize reserve</dt><dd class="lime" id="pool"></dd></div><div><dt>Gross operating revenue</dt><dd id="revenue"></dd></div><div><dt>Contribution margin</dt><dd id="margin"></dd></div><div><dt>Total entrant payments</dt><dd id="payments"></dd></div></dl><p id="awards"></p><p id="break-even"></p><p id="cash-check"></p></div>
+<p class="note">Prizes are shown at 50% / 30% / 20%, assuming at least three eligible competitors and no ties. Margin excludes founder pay, legal overhead, tax and acquisition expenses unless included in the expense input. No simulated trading return enters this calculation.</p></section>
+<article id="report"><h1>Falcon mission model — research and proposed operating rules</h1>
+<p>Research date: 12 October 2026. This is a recommendation and specification, not an implemented prize system or a legal clearance.</p>
+<p>Founder constraints: no initial prize budget; collaborations fund launch; intended long-term mix of sponsorship and entry fees; international ambition. No sponsors are confirmed in the information provided. The exchanges in the quoted CT Olympics post are proposed sponsors of that idea, not evidence of a Falcon partnership.</p>
+<h2>The recommendation</h2>
+<p>Start with small, sponsor-funded, free-entry paper-trading missions. A partner pays the prize reserve and a separate operating fee before cash registration opens. Keep practice available while looking for partners. Introduce sponsor-plus-entry-fee missions only in jurisdictions approved for the exact format, with a funded refund reserve and a reviewed payments arrangement.</p>
+<p>Use one flagship competition at a time. The mission board shows three stages of a rolling series: live, next, and previous results. An always-available practice arena sits separately and has no cash prize. This gives people somewhere to trade without splitting a small audience across three prize pools.</p>
+<p>Run the first two partner pilots for 72 hours. Test a seven-day competition after the settlement and payout process works and participants return. This duration is a hypothesis to validate, not an established optimum. A week of promotion can precede each competition; it must not be a week in which entrants have paid and are waiting indefinitely for enough funding.</p>
+<p>There is no mechanism that makes everybody earn. Paper returns are simulated. Withdrawable money is an externally funded prize awarded to eligible winners. If entrants supply all funding, their aggregate winnings are less than their aggregate entry payments whenever Falcon deducts a fee. Sponsor contributions can increase the pool, but cannot guarantee any particular entrant income.</p>
+<h2>What research establishes, and what it does not</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Product/source</th>
+<th>Observed design</th>
+<th>Implication for Falcon</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.tradingview.com/the-leap/">TradingView's The Leap</a></td>
+<td>Paper competitions advertise real-money prizes; its results page lists tens of thousands of participants in several contests. These are the company's reported counts.</td>
+<td>There is evidence of category participation. It does not establish demand for Falcon or willingness to pay Falcon.</td>
+</tr>
+<tr>
+<td><a href="https://www.tradingview.com/the-leap/amp-futures-september-2026/rules/">The Leap / AMP September 2026 rules</a></td>
+<td>A named sponsor, scheduled contest, restrictions on eligibility, a cash-prize budget, and identity requirements before awards.</td>
+<td>A sponsor-backed simulated competition is an established format. Avoid representing every competitor prize as cash: prizes differ by event.</td>
+</tr>
+<tr>
+<td><a href="https://www.tradingview.com/the-leap/february-2026/rules/">The Leap Crypto rules</a></td>
+<td>Dedicated accounts, fixed balances, position limits, one entry per person, and automatic closure of open positions.</td>
+<td>Copy the clarity and separation of competition accounts, not every leverage or activity rule.</td>
+</tr>
+<tr>
+<td><a href="https://announcements.bybit.com/en/article/win-a-share-of-20-000-usdt-in-the-summer-demo-trading-challenge--bltf0344baba809e35a/">Bybit's Summer Demo Trading Challenge</a></td>
+<td>A restricted demo contest advertised cash rewards and explicit multi-account/manipulation restrictions.</td>
+<td>Another category precedent; selected-user and turnover conditions make it a different offer from Falcon.</td>
+</tr>
+<tr>
+<td><a href="https://www.pumpcapital.fun/docs">Pump Capital documentation</a></td>
+<td>A direct Solana memecoin paper-trading competitor describes round payouts, reset disqualification, and limits tied to pool depth.</td>
+<td>Falcon is not first in this niche. Execution integrity and verified payout history matter more than the existence of a leaderboard. These are operator-described rules.</td>
+</tr>
+<tr>
+<td><a href="https://www.pumpcapital.fun/funding">Pump Capital funding page</a></td>
+<td>Displays a prize wallet, a top-three split, advertised round rewards, and payout links.</td>
+<td>Public proof helps, but a wallet's entire balance is not the same thing as money reserved for a specific mission. I did not independently reconcile its reserves or verify all payouts.</td>
+</tr>
+<tr>
+<td><a href="https://paperleague.fun/">Paper League</a></td>
+<td>Describes a first house-sponsored contest and subsequent token-funded pots, with paid membership/top-ups in its published rules.</td>
+<td>A token-funded approach exists, but this research does not verify its solvency, economics, user counts, or legal status.</td>
+</tr>
+<tr>
+<td><a href="https://www.paperape.fun/">PaperApe</a></td>
+<td>Offers Solana memecoin paper trading, including integration with trading terminals.</td>
+<td>Free practice is a substitute. Falcon's differentiation must include the competition experience and partner distribution.</td>
+</tr>
+<tr>
+<td><a href="https://www.drift.trade/updates/apt-trading-competition">Drift's historical APT contest</a></td>
+<td>A 2023, 48-hour real-trading promotion used trading requirements and random prize selection.</td>
+<td>Short promotions exist, but this was not a skill-ranked paper contest. Do not treat it as proof that 48 hours is best or copy its raffle.</td>
+</tr>
+<tr>
+<td><a href="https://docs.superteam.fun/the-superteam-handbook/products/superteam-earn">Superteam Earn handbook</a></td>
+<td>Describes sponsor-funded bounties and freelance work.</td>
+<td>Adjacent evidence that crypto organizations fund specific community outcomes; not evidence that they will sponsor Falcon.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Category verdict: competition exists in both conventional and Solana products. Falcon-specific demand and repeat sponsor spending remain unproven. The Ansem post is an opening for outreach, not a signed budget, paid acquisition result, or product-market fit.</p>
+<h2>Funding: the two models</h2>
+<h3>Launch model: sponsored, free entry</h3>
+<p>A collaboration needs four explicit commitments: a cash prize, an operating contribution, distribution by the partner, and authority to run the contest in its eligible territories. A retweet-only collaboration supplies distribution, not a prize reserve.</p>
+<p>An illustrative small pilot package is 200 USDC total: 150 USDC reserved for prizes and 50 USDC for operating work and expenses. Top three receive 75 / 45 / 30 USDC. These are proposed amounts, not researched market rates. If a partner can only supply 100 USDC, scope the event accordingly and estimate expenses before agreeing. In-kind data or hosting helps operating costs but is not cash in the prize pool.</p>
+<p>A sponsor agreement must settle who is legally organizing the promotion, which party verifies eligibility, who holds the reserve, who sends awards, who handles taxes and complaints, cancellation terms, logo permissions, and reporting. Direct sponsor payouts can reduce Falcon's handling of money, but introduce counterparty risk and do not eliminate Falcon's obligations. Do not call sponsor promises escrow.</p>
+<p>First prospects: communities whose traders already exist, wallet/analytics products seeking feedback, and ecosystem teams with community budgets. Treat exchange partnerships as a later prospect, not a prerequisite. Their actual willingness, budgets, and permissions need direct confirmation.</p>
+<p>Example unsent pitch: “Falcon runs Solana paper-trading competitions with equal starting balances. We'd like to co-host a 72-hour challenge for your community. You supply a funded prize and announce the event; we provide the terminal, standings, winner review, and a campaign report. Let's scope a small pilot first.” No outreach was sent during this research.</p>
+<h3>Later model: sponsorship plus paid entry</h3>
+<p>Subject to the reviewed format in permitted locations:</p>
+<ul>
+<li>S = confirmed sponsor contribution reserved for prizes.</li>
+<li>E = settled entry payments from eligible entrants, after refunds.</li>
+<li>r = clearly disclosed share of entry payments retained by Falcon.</li>
+<li>H = separate sponsor payment to Falcon for hosting/operations.</li>
+<li>Prize pool P = S + E × (1 − r).</li>
+<li>Falcon gross operating revenue R = H + E × r.</li>
+<li>Contribution margin = R − actual event expenses. This excludes founder pay, tax, legal overhead, and acquisition costs unless those are explicitly included.</li>
+</ul>
+<p>Illustration: S = 250, H = 50, 100 eligible entries at 5 USDC, and r = 10%. Entrants pay 500; the prize reserve becomes 700; Falcon's gross operating revenue is 100. If event expenses are 80, contribution margin is 20. A sponsor pays 300 in total. These are assumptions, not a forecast or approved fee schedule.</p>
+<p>With no sponsor prize contribution, 100 people paying 5 USDC and a 10% fee produce a 450 USDC prize reserve and 50 USDC operating revenue. This is a redistribution contest, not generated investment yield. A three-place payout means almost everyone will receive no award.</p>
+<p>Hold the full entry payment, including the retained-fee component, until its cancellation/refund liability is resolved. A nominal rake is not spendable operating cash while it may still have to be refunded.</p>
+<p>Do not deduct hidden operating expenses from an advertised reserve. Quote payment costs separately or include them transparently in the published fee. Compute break-even from actual costs: if expenses exceed H, required paid entrants are ceil((expenses − H)/(entry price × r)). At H = 50, expenses = 80, a 5 entry, and 10% rake, that is 60 entrants; zero entrants is not economically safe merely because prizes are sponsored.</p>
+<p>Some legal pathways may require prizes to be fixed and independent of entry revenue. In that case this variable-pot formula cannot simply be used: counsel must approve a different structure, potentially a fixed sponsored prize with entry revenue kept separate. Never assume a crypto payment bypasses contest rules.</p>
+<h2>Timers and the funding promise</h2>
+<p>Use distinct clocks for distinct commitments:</p>
+<ol>
+<li>Funding deadline: for prospective sponsors, or for a clearly marked unfunded proposal. Do not accept participant payments here at launch.</li>
+<li>Registration closes: when the eligible field is locked.</li>
+<li>Trading starts: a fixed public timestamp. Everybody can trade from this moment.</li>
+<li>Trading ends: a fixed public timestamp. Orders cannot be accepted after it.</li>
+<li>Result review ends / payout due: a specific deadline, qualified by the published eligibility and dispute process.</li>
+</ol>
+<p>Proposed lead time: 3–7 days of registration and promotion, with a funding cutoff 48 hours before trading starts. If the prize reserve is not secured at cutoff, cancel the proposed cash event, notify registrants, and announce a new event only after funding. No repeatedly extended timer. No silent conversion from paid competition to practice.</p>
+<p>For the first two small pilots, cash entrants register before the trading start. Practice can remain open to newcomers. Later entry into a cash mission is a different competition rule and needs deliberate design; a fresh $10,000 account at the end can beat players who spent the week losing money.</p>
+<p>Require at least three eligible registered competitors for a three-prize pilot. Check that at registration close, before trading. If the published minimum is unmet, cancel under published terms, return participant fees in full if any, and handle sponsor funds under its agreement. The initial free pilot avoids participant refunds entirely.</p>
+<p>A funded mission should start on schedule even when marketing performance disappoints, as long as its disclosed minimum is met. Funded sponsor prizes must not quietly shrink because fewer people showed up.</p>
+<h2>What the mission card should show</h2>
+<p>Example, hypothetical paid format only where approved:</p>
+<p>“Community Cup 004 · 7-day mission”</p>
+<ul>
+<li>700 USDC current funded prize pool.</li>
+<li>250 USDC funded sponsor floor.</li>
+<li>450 USDC contributed to prizes by settled entries.</li>
+<li>5 USDC entry; 10% of entry payments goes to Falcon.</li>
+<li>Estimated current payouts: 350 / 210 / 140 USDC.</li>
+<li>Registration closes [time]; competition starts [time]; competition ends [time].</li>
+<li>100 verified entrants; permitted locations; rules; funding evidence.</li>
+</ul>
+<p>At registration close, freeze the pool and payout schedule. During competition show final prize amounts, not a moving prediction. Before that, payouts may be labelled estimates derived from the current reserve. Avoid “up to” headline amounts that are not actually funded.</p>
+<p>Display token units as the commitment: “700 USDC”, with an optional approximate USD value. USDC is not a guaranteed-dollar bank deposit; asset/network risks and supported payout locations belong in the rules.</p>
+<p>A funded amount is a mission-specific allocation of settled funds, net of refund obligations and already approved disbursements. Do not count a sponsor invoice, expected future entries, volatile-token appreciation, or the entire treasury wallet. A public wallet provides transparency; it does not prove segregation or make admin-controlled money trustless escrow.</p>
+<p>Unfunded proposal copy: “Seeking a sponsor · Cash prizes not confirmed”. Practice copy: “Practice mission · No cash prize”. Never label an unfunded target a guaranteed prize.</p>
+<h2>The rolling calendar</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Calendar week</th>
+<th>Mission A</th>
+<th>Mission B</th>
+<th>Mission C</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Week 1</td>
+<td>Funded registration / promotion</td>
+<td>Internal proposal</td>
+<td>Not announced</td>
+</tr>
+<tr>
+<td>Week 2</td>
+<td>Trading</td>
+<td>Funded registration / promotion</td>
+<td>Internal proposal</td>
+</tr>
+<tr>
+<td>Week 3</td>
+<td>Results, review, payment evidence</td>
+<td>Trading</td>
+<td>Funded registration / promotion</td>
+</tr>
+</tbody>
+</table></div>
+<p>Once funded partnerships recur, an event can start every week even though each event has a promotion week and a trading week. The three public cards should reflect actual available stages; do not invent an upcoming prize event when no partner has funded it.</p>
+<p>With no initial budget, a rigid promise of cash every week is premature. Keep practice continuously available; cash events initially run when partners fund them. Move to a reliable weekly series only after recurring funding and operations are proven.</p>
+<p>Three simultaneous paid competitions would split scarce entrants and prizes, create additional payout and fraud work, and make average entrants face more entry costs. Expand to separate formats only after observed attendance can sustain each event, not because three cards look better.</p>
+<h2>Fairness rules for the first cash mission</h2>
+<ul>
+<li>One eligible human, one account, one entry, no reset. A wallet is an identity credential, not proof that its owner is unique. Require a proportionate verification process disclosed before registration; stronger checks before paid entry, not only after losing entrants have paid.</li>
+<li>Everyone starts with 10,000 virtual USDC. Additional funding, prize contributions, subscriptions, or referrals must not increase virtual capital or change fills.</li>
+<li>Long-only spot, no leverage or shorting in the first version. Retain Falcon's 100-vUSDC minimum buy and cap on new exposure at 30% of initial capital per market; appreciation alone does not force liquidation. Document precisely how the server measures the cap.</li>
+<li>Fix the allowed token mints before trading. Use a curated, established, liquid roster for cash missions. Keep unrestricted discovery in practice initially. Sponsor tokens do not get automatic admission.</li>
+<li>Liquidity, route availability, token restrictions, and price impact are checked throughout the mission, not just on admission. A provisional liquidity screening floor can be tested, but is not a proof of manipulation resistance.</li>
+<li>Qualify with at least one legitimate filled buy meeting the minimum; buy-and-hold is permitted. Do not claim that an arbitrary five-trade or three-day rule proves skill. Additional activity requirements can be tested later and must be visible in advance.</li>
+<li>Rank by final simulated liquidation equity; report return and drawdown as supplementary statistics. The largest one-week return is the winner of that event, not proof of permanent trading ability.</li>
+<li>Eligible traders can win even if the whole field loses virtual money; smallest loss may be best performance. Empty accounts do not qualify.</li>
+<li>Exact ties share the sum of the prizes for the positions they occupy, including zero-prize positions beyond the payout boundary. Do not resolve prize ties by more trades or earliest registration. Specify precision and deterministic rounding.</li>
+<li>Keep the existing three-minute blackout as a disclosed entertainment mechanic, not an anti-cheating guarantee. Players can still inspect markets and may coordinate externally.</li>
+<li>No discretionary post-start rule changes. Version the rules and roster. Exceptional pauses and cancellations follow predefined terms, with notices and an audit record.</li>
+<li>Prohibit market manipulation, multiple identities, sponsor/employee conflicts, and exploit abuse. Detect and review them. Similar trading alone is not proof of cheating; household IPs and copied strategies can be legitimate.</li>
+<li>Announce whether bots are permitted. Proposed pilot: human entrants using the supplied interface, no external automation; enforce server rate limits and investigate suspicious patterns. Do not claim this makes bots impossible. Add a separate bot format later if desired.</li>
+</ul>
+<h2>Settlement and awards</h2>
+<p>Treat trading, final scoring, review, and money movement as separate states:</p>
+<p>Draft → Funded → Registration → Entry locked → Active → Blackout → Settlement → Provisional results → Review/appeals → Final results → Payment pending → Paid.</p>
+<p>Funding and payment each need their own ledger/status; they must not be inferred from the trading state. Cancellation has a refund path. Refund complete is distinct from cancellation.</p>
+<p>End-price policy is the hardest implementation decision. Every account must have the same published valuation time policy and quantity-aware execution methodology. A delayed worker must not reward whichever participant happened to get a later rising quote. Persist the relevant deadline market evidence and results so a reviewer can reproduce the standings.</p>
+<p>A pilot can use a deterministic, separately disclosed valuation model based on archived pool state or market evidence. A live Jupiter quote fetched later is not a historical deadline quote. If a brief settlement window is used instead, disclose it, capture its data, bound its duration, and evaluate whether its timing differences are acceptable before prizes. Do not call it exact-deadline settlement.</p>
+<p>Distinguish two failures. A data-provider outage is missing information, not proof that a token is worthless. A verified absence of executable liquidity under the rules is an economic condition. The rules must specify how each is resolved, how long review can take, and when a mission is cancelled/refunded. Do not silently use the most flattering last price or leave all entrants unpaid forever because one position cannot be quoted. Test both cases before cash.</p>
+<p>Proposed ordinary review window: 48 hours. Proposed payout target: within 72 hours after results become final for verified eligible winners. These are service targets to test and fund; not guarantees the current app meets. Publish exceptional delays and their reason. Contest terms also need claim expiry, unclaimed-award treatment, disqualification promotion, and tax documentation.</p>
+<p>For an initial small sponsor pilot, reviewed manual payouts with two-person approval can be more practical than a custom contract. Use a standard supported USDC transfer path; keep signing keys out of the API. Record recipient, mint, amount, mission, award ID, transaction signature, and finalized chain status. A pending submission is not payment evidence. Reconcile before retrying to prevent duplicate payments.</p>
+<p>Wallet authentication should remain a clearly identified off-chain message. A future paid entry requires a separate, explicit payment flow showing the exact mint, network, recipient, amount, and refund rules; the login signature is not an entry payment.</p>
+<p>If sponsor money is held by Falcon, describe that custody arrangement accurately. If a partner pays directly, show its confirmed payment transaction and define remedies for failure. A future escrow program can improve control of locked funds; it still cannot independently adjudicate off-chain market manipulation or verify every simulated fill.</p>
+<p><a href="https://solana.com/docs/payments/how-payments-work">Solana's payment documentation</a> describes token accounts and transfer mechanics. <a href="https://developers.jup.ag/docs/guides/how-to-build-a-custom-swap-with-metis">Jupiter's developer documentation</a> separates obtaining a quote from building a transaction. Integration can supply these primitives; it does not complete contest governance or historical execution replay.</p>
+<h2>The legal boundary matters to the design</h2>
+<p>Worldwide marketing is not universal prize or paid-entry eligibility. Decide the operating entity, actual organizers, participant locations, payment structure, and eligible territories before collecting entry fees. Free registration is a more feasible launch hypothesis with no budget, but free promotional competitions still have jurisdiction-specific rules, advertising, privacy, tax, and sanctions obligations.</p>
+<p>New York law defines a chance-based contest to include one where chance materially affects the outcome even when skill is also involved. This is why a “skill” label alone is not a clearance. <a href="https://www.nysenate.gov/legislation/laws/PEN/225.00">New York Penal Law 225.00</a>.</p>
+<p>The US federal fantasy/simulation exception has several conditions, including a condition on prizes being determined independently of entrant count or entry fees; it is not an automatic permission for a variable crypto trading pot. Counsel must determine whether any exception applies and how federal and state rules interact. <a href="https://www.law.cornell.edu/uscode/text/31/5362">31 USC 5362</a>.</p>
+<p>The UK's regulator distinguishes genuine prize competitions from chance-based arrangements and says the skill requirement must meet statutory conditions. This is guidance for Great Britain, not a global exception. <a href="https://www.gamblingcommission.gov.uk/public-and-players/guide/page/free-draws-and-prize-competitions/">Gambling Commission guidance</a>.</p>
+<p>The UAE regulator's commercial-gaming description includes combinations of chance and skill when money is wagered. Dubai virtual-asset marketing also has incentive and promotion rules whose applicability needs checking for the actual offer. <a href="https://www.gcgra.gov.ae/en/commercial-gaming/what-is-commercial-gaming/">GCGRA</a>, <a href="https://rulebooks.vara.ae/entiresection/14">VARA marketing guidance</a>.</p>
+<p>Recommended boundary: keep spectator betting out of the initial product. Paid entry to participate and outsiders betting on participants are distinct legal/product questions. A competition permission does not automatically authorize spectator wagering. Given zero budget and no identified approved jurisdictions, paid worldwide launch is not a currently validated operating model.</p>
+<h2>Sponsor value and distribution</h2>
+<p>Sell a community event with measurable outcomes: unique eligible entrants, activated traders, repeat attendance, completion rate, consented product feedback, and attributed traffic. Do not present simulated notional volume as real exchange turnover or deposits.</p>
+<p>Supply a short post-event report: registrations; activated humans; median trades and active days; approximate engagement; retained participants; disputes; paid awards; and opt-in sponsor actions. No personal-data export without appropriate consent. Fraudulent wallets are not acquisition results.</p>
+<p>Offer naming rights, an authorized logo, a results recap, an optional product walkthrough, and a co-hosted event. Prize eligibility should not require buying a sponsor token, funding a real trading account, or trading more to generate its fees. Those changes create new incentives and legal questions.</p>
+<p>The defensible direction is trusted competition operations, independently inspectable results, a repeat-player record, and community partnerships. A timer, charts, and a prize split are easy to copy. Low-friction paper trading already has substitutes.</p>
+<p>Do not launch a Falcon token just to finance the reserve. Revenue tied to speculation can disappear at the same time a prize becomes due. Creator fees can be supplemental funding only once actually received; <a href="https://pump.fun/docs/terms-and-conditions?_rsc=1s8ba">Pump's terms</a> explicitly do not guarantee their collection or distribution.</p>
+<h2>Questions the model must answer before launch</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Proposed answer / remaining dependency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Where do prizes come from?</td>
+<td>Confirmed partner reserve; later approved entry contributions.</td>
+</tr>
+<tr>
+<td>What if no sponsor signs?</td>
+<td>Run clearly labelled practice; no cash promise.</td>
+</tr>
+<tr>
+<td>Is a retweet a sponsorship?</td>
+<td>Distribution only unless money/other deliverables are committed.</td>
+</tr>
+<tr>
+<td>How is a prize funded with zero budget?</td>
+<td>A collaborator pays the reserve; Falcon cannot guarantee an unfunded amount.</td>
+</tr>
+<tr>
+<td>Who pays hosting and data?</td>
+<td>Separate sponsor operating contribution or documented in-kind resources.</td>
+</tr>
+<tr>
+<td>Does simulated profit pay the winner?</td>
+<td>No. It determines ranking, not a redeemable account balance.</td>
+</tr>
+<tr>
+<td>Can everyone earn?</td>
+<td>No; a small set of eligible winners share a finite award budget.</td>
+</tr>
+<tr>
+<td>Do player fees produce net wealth?</td>
+<td>No; aggregate entrant-funded awards are lower after fees.</td>
+</tr>
+<tr>
+<td>What duration is best?</td>
+<td>Test 72-hour pilots, then seven-day missions; evidence decides.</td>
+</tr>
+<tr>
+<td>Is one funding week + one competition week workable?</td>
+<td>Yes, with overlapping cycles and fixed deadlines.</td>
+</tr>
+<tr>
+<td>Must people wait for the pool to reach a target?</td>
+<td>Not after payment; fund the base before accepting cash entries.</td>
+</tr>
+<tr>
+<td>What if funding misses its deadline?</td>
+<td>Cancel the cash proposal and notify people; no endless extensions.</td>
+</tr>
+<tr>
+<td>Should the current pot be visible?</td>
+<td>Yes: mission-specific settled reserve plus source breakdown.</td>
+</tr>
+<tr>
+<td>Should projected money be visible?</td>
+<td>Only separately as a target, never in the funded headline.</td>
+</tr>
+<tr>
+<td>Can a wallet balance prove funding?</td>
+<td>Only part of the evidence; reconcile allocations and refund liabilities.</td>
+</tr>
+<tr>
+<td>Can the same money fund two cards?</td>
+<td>No; reserves must not be double-counted.</td>
+</tr>
+<tr>
+<td>Can the sponsor pull out mid-event?</td>
+<td>Funding and agreement must prevent unfunded promised awards; remedies need terms.</td>
+</tr>
+<tr>
+<td>Should there be three live cash missions?</td>
+<td>Not at launch. Show live / next / completed stages instead.</td>
+</tr>
+<tr>
+<td>Is a prize every week guaranteed?</td>
+<td>Only when recurring funding and operations are secured.</td>
+</tr>
+<tr>
+<td>Can players join late?</td>
+<td>Practice yes; cash pilot registrations close before trading starts.</td>
+</tr>
+<tr>
+<td>Can entrants reset?</td>
+<td>Practice yes; cash entry no.</td>
+</tr>
+<tr>
+<td>Can a person use multiple wallets?</td>
+<td>Not as multiple eligible entries; wallets do not prove unique humans.</td>
+</tr>
+<tr>
+<td>Are referral rewards safe?</td>
+<td>Separate budget and qualified-human criteria; no virtual-capital advantage.</td>
+</tr>
+<tr>
+<td>How are fake referrals stopped?</td>
+<td>Verification and audit; raw signups/addresses are not payable results.</td>
+</tr>
+<tr>
+<td>Must winners have positive PnL?</td>
+<td>No under the proposed best-performance rules; disclose it.</td>
+</tr>
+<tr>
+<td>Can an inactive account win?</td>
+<td>No; the qualifying buy requirement excludes it.</td>
+</tr>
+<tr>
+<td>Are more trades better?</td>
+<td>Not necessarily. Avoid turnover bonuses in skill-ranking missions.</td>
+</tr>
+<tr>
+<td>Can traders hold until the end?</td>
+<td>Yes, under the published automatic valuation rule.</td>
+</tr>
+<tr>
+<td>Can open gains be inflated?</td>
+<td>Yes; quantity-aware sell valuation and market controls are necessary.</td>
+</tr>
+<tr>
+<td>Can someone pump a thin token with real trades?</td>
+<td>Possible; quote sourcing alone does not remove this attack.</td>
+</tr>
+<tr>
+<td>Do cash missions allow every new memecoin?</td>
+<td>No initially; fixed curated mint roster.</td>
+</tr>
+<tr>
+<td>Can token sponsors bypass admission?</td>
+<td>No; sponsorship must not change execution or admissibility standards.</td>
+</tr>
+<tr>
+<td>Can several symbols refer to different tokens?</td>
+<td>Yes; canonical mint IDs and understandable token identity are essential.</td>
+</tr>
+<tr>
+<td>Does $10,000 simulate real liquidity?</td>
+<td>Only to the extent execution constraints do; paper fills do not consume real pools.</td>
+</tr>
+<tr>
+<td>Can participants exploit stale quotes?</td>
+<td>Must be checked at trade time, with evidence and expiry.</td>
+</tr>
+<tr>
+<td>Are bots allowed?</td>
+<td>Decide before launch; proposed pilot disallows outside automation without claiming perfect enforcement.</td>
+</tr>
+<tr>
+<td>Is the blackout anti-cheating?</td>
+<td>No; an event mechanic with a limited purpose.</td>
+</tr>
+<tr>
+<td>Is rank a permanent skill rating?</td>
+<td>No; add multi-event results before claiming consistency.</td>
+</tr>
+<tr>
+<td>How are exact ties paid?</td>
+<td>Share combined occupied-position prizes, with published rounding.</td>
+</tr>
+<tr>
+<td>Can admins change the rules?</td>
+<td>Not after lock except published emergency procedures.</td>
+</tr>
+<tr>
+<td>Can staff or sponsors win?</td>
+<td>Define conflicts and exclusions before registration.</td>
+</tr>
+<tr>
+<td>What if the app goes offline?</td>
+<td>Predefined pause/cancellation and evidence policy; test recovery first.</td>
+</tr>
+<tr>
+<td>What if one market's data fails?</td>
+<td>Distinguish data outage from unavailable liquidity; apply published resolution.</td>
+</tr>
+<tr>
+<td>What if settlement runs late?</td>
+<td>Use archived market evidence / documented valuation window, not arbitrary later quotes.</td>
+</tr>
+<tr>
+<td>What if one position cannot sell?</td>
+<td>Published economic-resolution policy; no indefinite mission-wide deadlock.</td>
+</tr>
+<tr>
+<td>What is the appeal window?</td>
+<td>Proposed 48-hour review, with human adjudication and records.</td>
+</tr>
+<tr>
+<td>When is an award actually paid?</td>
+<td>After eligibility review and finalized transfer evidence.</td>
+</tr>
+<tr>
+<td>Can a payout retry pay twice?</td>
+<td>Yes without reconciliation; unique award ledger and chain checks required.</td>
+</tr>
+<tr>
+<td>Who pays transfer/network costs?</td>
+<td>Operating budget, not silently deducted from displayed prizes.</td>
+</tr>
+<tr>
+<td>What if a winner supplies a wrong wallet?</td>
+<td>Verify control and destination before finalizing; publish correction policy.</td>
+</tr>
+<tr>
+<td>What if a winner refuses verification?</td>
+<td>Follow disclosed eligibility and replacement rules, not improvised withholding.</td>
+</tr>
+<tr>
+<td>What happens to unclaimed awards?</td>
+<td>Define claim expiry and disposition; never silently treat them as operating revenue.</td>
+</tr>
+<tr>
+<td>Is refund money segregated?</td>
+<td>It must remain available until refund rights are extinguished.</td>
+</tr>
+<tr>
+<td>Are paid cancellations refunded fully?</td>
+<td>Proposed full entry refund; gas/processing coverage must be budgeted.</td>
+</tr>
+<tr>
+<td>Can cash entry be worldwide?</td>
+<td>Not assumed; country-specific advice and enforcement are outstanding.</td>
+</tr>
+<tr>
+<td>Is “skill competition” enough?</td>
+<td>No; classification depends on mechanics and local rules.</td>
+</tr>
+<tr>
+<td>Do crypto payments avoid regulation?</td>
+<td>No.</td>
+</tr>
+<tr>
+<td>Are subscriptions a way around entry restrictions?</td>
+<td>Not automatically; indirect payment can matter.</td>
+</tr>
+<tr>
+<td>Are public wallet payouts enough to prove fairness?</td>
+<td>No; they prove a transfer, not the validity of the winning score.</td>
+</tr>
+<tr>
+<td>Is a custom smart contract required initially?</td>
+<td>No for simulated trading; standard payout infrastructure may suffice after review.</td>
+</tr>
+<tr>
+<td>Does a contract remove all trust?</td>
+<td>No; off-chain scoring and eligibility still need accountable operators.</td>
+</tr>
+<tr>
+<td>Is blockchain necessary to practice trading?</td>
+<td>No. Its useful role here is optional payment transparency and wallet compatibility.</td>
+</tr>
+<tr>
+<td>Can the sponsor run payouts itself?</td>
+<td>Yes contractually, but legal roles and counterparty protection still need resolution.</td>
+</tr>
+<tr>
+<td>What counts as sponsor ROI?</td>
+<td>Retained, verified community participation and agreed opt-in outcomes.</td>
+</tr>
+<tr>
+<td>Should real exchange deposits be required?</td>
+<td>Not in the proposed pilot.</td>
+</tr>
+<tr>
+<td>What proves users want this?</td>
+<td>Actual activation, return visits, and repeat attendance, not likes.</td>
+</tr>
+<tr>
+<td>What proves sponsors want this?</td>
+<td>Funded pilots and renewal payments, not friendly replies.</td>
+</tr>
+<tr>
+<td>When should prizes get bigger?</td>
+<td>After verified clean settlements, repeat attendance, and funded renewal.</td>
+</tr>
+<tr>
+<td>Is the project perfect after research?</td>
+<td>No. Validate hypotheses with real entrants, budgets, and adversarial testing.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Current code gaps to address before cash</h2>
+<p>Read-only findings from this repository; no cash handling or mission rules were changed during this research.</p>
+<ol>
+<li><strong>Prizes and payment are absent.</strong> The Mission model has no prize reserve, fee ledger, sponsor allocation, award, refund, or payout fields. README also identifies cash prizes, entry fees, KYC, and contracts as unimplemented.</li>
+<li><strong>Entries are accepted during ACTIVE.</strong> <code>acceptsEntries</code> in <code>backend/src/services/mission-state-service.ts</code> permits this. Cash missions need an independent registration cutoff; practice can retain its flexibility.</li>
+<li><strong>Finish-time evidence is missing.</strong> <code>backend/src/services/mission-lifecycle-service.ts</code> obtains current sell quotes when settlement runs. README acknowledges that historical deadline settlement is not implemented.</li>
+<li><strong>One unavailable quote can block the batch.</strong> The settlement routine requires usable proceeds for every held position; failures keep the mission awaiting a retry. This needs a bounded resolution policy before payout commitments.</li>
+<li><strong>Ties use joining time.</strong> <code>buildSettlementResults</code> orders identical equity by <code>joinedAt</code>. An award allocator needs explicit shared-prize treatment, distinct from display ordering.</li>
+<li><strong>A wallet login is not person uniqueness.</strong> The existing nonce/session design proves wallet control but does not establish age, location, or one-human-one-entry.</li>
+<li><strong>Open Arena admission is insufficient for cash integrity.</strong> Dynamic token discovery and small route checks are useful practice features, but are not a complete ongoing liquidity or manipulation policy.</li>
+<li><strong>The production worker is required.</strong> Vercel's API does not itself run the mission lifecycle scheduler; the persistent worker must be deployed, monitored, and recoverable.</li>
+<li><strong>Operational budget remains unknown.</strong> At four 10-second polls per always-connected client, 100 concurrent clients for a week imply approximately 24.2 million resource requests before browser suspensions or caching. This is arithmetic from <code>useTradingData.ts</code>, not a hosting bill estimate; shared quote caching and actual concurrency determine external costs.</li>
+<li><strong>Award release needs an independent approval and audit path.</strong> Admin mission controls alone do not provide eligibility review, appeal records, payout reconciliation, or protection against an organizer moving the prize reserve.</li>
+</ol>
+<p>Implement funding/entry-lock/settlement integrity first, then eligibility, award allocation and reviewed payouts. Defer custom escrow and spectator betting. No confirmed delivery-time estimate is possible before the legal and historical-pricing decisions are made.</p>
+<h2>Validation plan and decision</h2>
+<p>Verdict: validate a narrower sponsor-funded launch; defer worldwide paid entry. Moderate confidence in this staged recommendation, low confidence in untested sponsor pricing, player fee conversion, and optimal duration.</p>
+<ul>
+<li>Obtain one funded collaboration, not only a social endorsement. Agree who organizes and pays before promising cash.</li>
+<li>Invite a bounded first cohort, e.g. 20–50 people. Recruit actual traders and first-time practice users; distinguish their retention.</li>
+<li>Run adversarial dry runs: late entry, multiple accounts, stale quotes, thin token manipulation, API outage, worker restart, ties, unsellable positions, failed payout, and duplicate retry.</li>
+<li>Run two small free pilots and publish the final results and actual payment evidence.</li>
+<li>Track registered → eligible → activated → completed → returned participants; disputes, settlement time, direct operating cost, and sponsor renewal.</li>
+<li>Proposed decision gates: at least half of eligible registrants activate; at least a quarter of activated participants return for another event; no unexplained standings or unresolved payout discrepancies; at least one funded sponsor renewal. These are pilot targets, not industry benchmarks, and small sample sizes limit conclusions.</li>
+<li>Interview people who quit or did not register. Ask what they already do, what prevented participation, and whether they would pay a specific entry fee in an eligible jurisdiction. A hypothetical yes is weaker than payment once a lawful paid pilot exists.</li>
+<li>Only run a paid test after jurisdiction, entity, refunds, verification, and payment arrangements are approved and funded. Measure willingness to pay independently of sponsor engagement.</li>
+</ul>
+<p>The practical objective is to complete and pay one fair, funded event that people want to repeat. That is a stronger foundation than three large advertised pools whose funding, rules, and settlement have not yet been proven.</p>
+</article></main><script>
+const ids=['entrants','fee','sponsor','rake','hosting','cost'];const money=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});const value=id=>{const e=document.getElementById(id);let n=Number(e.value);if(!Number.isFinite(n))n=0;return Math.min(Number(e.max||Number.MAX_SAFE_INTEGER),Math.max(0,n));};
+function recalc(){const free=document.getElementById('format').value==='free';document.getElementById('fee').disabled=free;document.getElementById('rake').disabled=free;const n=Math.floor(value('entrants')),f=free?0:value('fee'),r=free?0:value('rake')/100,s=value('sponsor'),h=value('hosting'),c=value('cost'),e=n*f,p=s+e*(1-r),rev=h+e*r,m=rev-c;document.getElementById('pool').textContent=money.format(p)+' USDC';document.getElementById('revenue').textContent=money.format(rev);const margin=document.getElementById('margin');margin.textContent=money.format(m);margin.classList.toggle('red',m<0);document.getElementById('payments').textContent=money.format(e);document.getElementById('awards').textContent='Illustrative awards: '+[.5,.3,.2].map(v=>money.format(p*v)+' USDC').join(' / ')+(n<3?' — fewer than three entrants: proposed minimum is not met.':'');document.getElementById('break-even').textContent=c<=h?'Estimated event expenses are covered by the sponsor operating payment.':f*r>0?'Operating break-even: '+Math.ceil((c-h)/(f*r))+' paid entrants at these assumptions.':'Operating shortfall: '+money.format(c-h)+' USDC. Entry fees provide no operating revenue in this format.';document.getElementById('cash-check').textContent='Total modeled funds: '+money.format(s+h+e)+' = '+money.format(p)+' prize reserve + '+money.format(rev)+' operating revenue. Sponsor prize money is not operating profit.';}
+ids.forEach(id=>document.getElementById(id).addEventListener('input',recalc));document.getElementById('format').addEventListener('change',recalc);recalc();
+</script></html>

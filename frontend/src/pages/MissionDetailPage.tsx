@@ -1,7 +1,10 @@
 import { ArrowLeft, Clock3, ShieldX } from 'lucide-react'
 import { AuthenticationRequired } from '../components/AuthenticationRequired'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import type { CashEntryInput } from '../types/mission'
+import { apiGet } from '../api/client'
+import { PrizePanel } from '../features/missions/PrizePanel'
 import { joinMission } from '../api/trading'
 import { MissionBrief } from '../features/trading/MissionBrief'
 import { TradingTerminal } from '../features/trading/TradingTerminal'
@@ -16,11 +19,21 @@ export function MissionDetailPage() {
   const [deploying, setDeploying] = useState(false)
   const [deployError, setDeployError] = useState<string | null>(null)
 
-  async function deploy() {
+  const [cashStatus, setCashStatus] = useState('PENDING')
+  const cashJoined = missionState.status === 'success' && Boolean(missionState.mission.rewards) && trading.portfolio.status === 'success'
+  useEffect(() => {
+    if (!cashJoined) return
+    const controller = new AbortController()
+    const load = async () => { try { const result = await apiGet<{ data: { status: string } | null }>(`/missions/${encodeURIComponent(id)}/rewards/me`, controller.signal); setCashStatus(result.data?.status ?? 'PENDING') } catch { if (!controller.signal.aborted) setCashStatus('UNAVAILABLE') } }
+    void load(); const timer = window.setInterval(() => void load(), 10000)
+    return () => { controller.abort(); window.clearInterval(timer) }
+  }, [cashJoined, id])
+
+  async function deploy(input?: CashEntryInput) {
     setDeploying(true)
     setDeployError(null)
     try {
-      await joinMission(id)
+      await joinMission(id, input)
       await Promise.all([trading.refreshPortfolio(), trading.refreshLeaderboard()])
     } catch (error: unknown) {
       setDeployError(error instanceof Error ? error.message : 'Deployment failed.')
@@ -33,16 +46,16 @@ export function MissionDetailPage() {
   if (missionState.status === 'error') return <ErrorPanel title="Mission unavailable" message={missionState.message} />
 
   const { mission } = missionState
-  if (mission.status === 'SETTLING') return <LifecyclePanel icon={<Clock3 />} title="Locking final results" description="Falcon is capturing one final price per market and calculating immutable standings. This page updates automatically." />
-  if (mission.status === 'CANCELLED') return <LifecyclePanel icon={<ShieldX />} title="Operation stood down" description="Trading is closed and no final ranking will be awarded for this mission." />
+  if (mission.status === 'SETTLING') return <div><PrizePanel mission={mission} /><LifecyclePanel icon={<Clock3 />} title="Locking final results" description="Falcon is capturing one final price per market and calculating immutable standings. This page updates automatically." /></div>
+  if (mission.status === 'CANCELLED') return <div><PrizePanel mission={mission} /><LifecyclePanel icon={<ShieldX />} title="Operation stood down" description="Trading is closed and no final ranking will be awarded for this mission." /></div>
   const completed = ['FINALIZED', 'CLOSED'].includes(mission.status)
   if (completed) {
-    return <ResultsView mission={mission} portfolio={trading.portfolio.status === 'success' ? trading.portfolio.data : undefined} rows={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []} loading={trading.leaderboard.status === 'loading'} error={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined} />
+    return <div><PrizePanel mission={mission} /><ResultsView mission={mission} portfolio={trading.portfolio.status === 'success' ? trading.portfolio.data : undefined} rows={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []} loading={trading.leaderboard.status === 'loading'} error={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined} /></div>
   }
   if (trading.portfolio.status === 'loading') return <TerminalSkeleton />
   if (trading.portfolio.status === 'authentication-required') return <div><BackLink /><AuthenticationRequired title="Authenticate before deployment" /></div>
   if (trading.portfolio.status === 'not-joined') {
-    return <div><BackLink /><MissionBrief mission={mission} deploying={deploying} error={deployError} onDeploy={() => void deploy()} /></div>
+    return <div><BackLink /><MissionBrief mission={mission} deploying={deploying} error={deployError} onDeploy={input => void deploy(input)} /></div>
   }
   if (trading.portfolio.status === 'error') {
     return <ErrorPanel title="Portfolio unavailable" message={trading.portfolio.message} onRetry={() => void trading.refreshPortfolio()} />
@@ -53,7 +66,10 @@ export function MissionDetailPage() {
   }
 
   return (
+    <><PrizePanel mission={mission} />
+    {mission.rewards && <p className="border-x border-line bg-surface px-4 py-3 text-sm text-muted">Eligibility: {cashStatus.toLowerCase()}{cashStatus !== 'APPROVED' ? ' · Trading stays locked until the organizer approves your identity and location.' : ' · Approved for this mission.'}</p>}
     <TradingTerminal
+      cashEligibilityApproved={!mission.rewards || cashStatus === 'APPROVED'}
       mission={mission}
       markets={trading.markets.data}
       portfolio={trading.portfolio.data}
@@ -67,7 +83,7 @@ export function MissionDetailPage() {
         await Promise.all([trading.refreshPortfolio(), trading.refreshLeaderboard(), trading.refreshOrders()])
       }}
       onMarketsChanged={async () => { await trading.refreshMarkets() }}
-    />
+    /></>
   )
 }
 

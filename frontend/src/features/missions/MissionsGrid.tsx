@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowDownWideNarrow, ArrowUpNarrowWide, ArrowRight, Check, ChevronDown, Clock3, Radar, Search, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowDownWideNarrow, ArrowUpNarrowWide, ArrowRight, Check, ChevronDown, Clock3, Radar, Search, Trophy, Users, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Mission } from "../../types/mission";
 import { resetGlassSheen, updateSurfaceSheen } from "../../lib/glass-hover";
@@ -162,10 +162,34 @@ export function MissionsGrid() {
           }}
         />
       ) : (
-        <div key={filter} className="state-content mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {missions.map((mission, index) => (
-            <MissionCard key={mission.id} mission={mission} entranceIndex={index} />
-          ))}
+        <div key={filter} className="state-content mt-6 space-y-7">
+          {filter === 'ALL' && !normalizedQuery && !state.missions.some(mission => mission.rewards) && (
+            <section className="mission-prize-notice" aria-labelledby="prize-notice-title">
+              <div className="mission-prize-notice-icon" aria-hidden="true"><Trophy className="size-5" strokeWidth={1.5} /></div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-primary">Prize missions</p>
+                <h2 id="prize-notice-title" className="mt-1 text-lg font-semibold tracking-tight text-ink">No prize missions scheduled</h2>
+                <p className="mt-2 text-sm leading-6 text-muted">Sponsor-funded competitions will appear here. Practice your strategy in the meantime.</p>
+              </div>
+              <span className="mission-prize-notice-tag">Free entry · Real prizes</span>
+            </section>
+          )}
+          {[
+            { title: 'Live prize missions', test: (m: Mission) => Boolean(m.rewards) && matchesFilter(m, 'LIVE') },
+            { title: 'Upcoming prize missions', test: (m: Mission) => Boolean(m.rewards) && matchesFilter(m, 'UPCOMING') },
+            { title: 'Prize results & review', test: (m: Mission) => Boolean(m.rewards) && matchesFilter(m, 'COMPLETED') },
+            { title: 'Practice missions', test: (m: Mission) => !m.rewards },
+          ].filter(group => missions.some(group.test)).map(group => {
+            const rows = missions.filter(group.test);
+            return <section key={group.title} aria-label={group.title}>
+              <div className="mb-4 flex items-center gap-3">
+                <h2 className="text-base font-semibold tracking-tight text-ink">{group.title}</h2>
+                <span className="rounded-full border border-line px-2 py-0.5 text-xs tabular-nums text-muted">{rows.length}</span>
+                <span className="h-px flex-1 bg-line" aria-hidden="true" />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((mission, index) => <MissionCard key={mission.id} mission={mission} entranceIndex={index} />)}</div>
+            </section>;
+          })}
         </div>
       )}
     </div>

@@ -4,8 +4,11 @@ import { AppError } from '../errors/app-error.js'
 import { prisma } from '../lib/prisma.js'
 import { deriveMissionStatus } from '../services/mission-state-service.js'
 
+import { rewardInclude, serializeRewards } from '../services/mission-rewards-service.js'
+
 const paramsSchema = z.object({ id: z.string().min(1) })
 const missionSelect = {
+  rewardPlan: { include: rewardInclude },
   id: true,
   name: true,
   slug: true,
@@ -31,6 +34,7 @@ type MissionRecord = NonNullable<Awaited<ReturnType<typeof findMission>>>
 
 function serializeMission(mission: MissionRecord) {
   return {
+    rewards: serializeRewards(mission.rewardPlan),
     id: mission.id,
     name: mission.name,
     slug: mission.slug,

@@ -7,7 +7,7 @@ import type { AuthenticatedUser } from './auth-service.js'
 function user(role: UserRole, address: string): AuthenticatedUser {
   const now = new Date()
   return {
-    id: 'user-1', username: null, role, createdAt: now, updatedAt: now,
+    id: 'user-1', username: null, identityHash: null, role, createdAt: now, updatedAt: now,
     wallets: [{ id: 'wallet-1', address, userId: 'user-1', createdAt: now }],
   }
 }

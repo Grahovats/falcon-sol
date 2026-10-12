@@ -14,13 +14,15 @@ export function useMissions() {
 
   useEffect(() => {
     const controller = new AbortController()
-    getMissions(controller.signal)
+    const load = () => getMissions(controller.signal)
       .then(({ data }) => setState({ status: 'success', missions: data }))
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
         setState({ status: 'error', message: error instanceof Error ? error.message : 'Could not load missions.' })
       })
-    return () => controller.abort()
+    void load()
+    const timer = window.setInterval(() => void load(), 15000)
+    return () => { window.clearInterval(timer); controller.abort() }
   }, [requestKey])
 
   return { state, retry }

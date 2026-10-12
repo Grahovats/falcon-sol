@@ -19,7 +19,6 @@ export function MissionsPage() {
               Same rules. Real market data. Prove your edge.
             </p>
           </div>
-
           <div className="app-surface hidden justify-self-end rounded-md border border-line bg-canvas/70 px-5 py-4 backdrop-blur-sm lg:block">
             <p className="font-mono text-[10px] uppercase leading-5 tracking-[0.12em] text-primary">
               Different markets.<br />Same skill.<br />Higher rank.
@@ -27,10 +26,7 @@ export function MissionsPage() {
           </div>
         </div>
       </header>
-
-      <div className="mt-5">
-        <MissionsGrid />
-      </div>
+      <div className="mt-5"><MissionsGrid /></div>
     </div>
   );
 }

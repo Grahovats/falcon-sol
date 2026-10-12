@@ -1,9 +1,9 @@
-import type { ApiEnvelope } from '../types/mission'
+import type { ApiEnvelope, CashEntryInput } from '../types/mission'
 import type { AdmittedMarket, CandleResponse, CandleTimeframe, LeaderboardResponse, MarketPrice, OrderExecution, OrderHistoryItem, OrderRequest, ExitLevels, Portfolio, TokenCandidate } from '../types/trading'
 import { apiGet, apiPatch, apiPost } from './client'
 
-export function joinMission(missionId: string) {
-  return apiPost<ApiEnvelope<{ id: string }>>(`/missions/${encodeURIComponent(missionId)}/join`)
+export function joinMission(missionId: string, input?: CashEntryInput) {
+  return apiPost<ApiEnvelope<{ id: string }>>(`/missions/${encodeURIComponent(missionId)}/join`, input)
 }
 
 export function getMarkets(missionId: string, signal?: AbortSignal) {

@@ -13,6 +13,8 @@ const environmentSchema = z.object({
   AUTH_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
   ADMIN_WALLET_ADDRESSES: z.string().default(''),
   MISSION_LIFECYCLE_INTERVAL_MS: z.coerce.number().int().min(1_000).max(300_000).default(5_000),
+  SOLANA_RPC_URL: z.string().url().default('https://api.mainnet-beta.solana.com'),
+  IDENTITY_HASH_SECRET: z.string().min(32).optional(),
   MARKET_DATA_PROVIDER: z.enum(['mock', 'jupiter']).default('mock'),
   JUPITER_API_KEY: z.string().trim().optional().transform((value) => value || undefined),
   JUPITER_API_BASE_URL: z.string().url().default('https://api.jup.ag'),

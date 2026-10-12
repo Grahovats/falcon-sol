@@ -5,6 +5,7 @@ import { useCountdown } from '../../hooks/useCountdown'
 import { formatDate, formatVirtualBalance } from '../../lib/format'
 import { resetGlassSheen, updateGlassSheen } from '../../lib/glass-hover'
 import type { Mission } from '../../types/mission'
+import { usdc } from '../../lib/prize-format'
 import { StatusBadge } from './StatusBadge'
 
 // Cards settle into the grid at 60 ms intervals, within a 300 ms budget.
@@ -22,7 +23,7 @@ export function MissionCard({ mission, entranceIndex = 0 }: { mission: Mission; 
   } as CSSProperties
   const timeLabel = live ? 'Time remaining' : upcoming ? 'Starts in' : mission.status === 'CANCELLED' ? 'Cancelled' : 'Trading ended'
   const timeValue = live || upcoming ? countdown : mission.status === 'CANCELLED' ? 'N/A' : formatDate(mission.endsAt)
-  const canJoin = live || mission.status === 'REGISTRATION'
+  const canJoin = mission.rewards ? mission.rewards.state === 'READY' && mission.rewards.mode === 'SPONSORED' && mission.status === 'REGISTRATION' : live || mission.status === 'REGISTRATION'
   const actionLabel = canJoin ? 'Join mission' : RESULT_STATUSES.has(mission.status) ? 'View results' : 'View mission'
 
   return (
@@ -34,8 +35,9 @@ export function MissionCard({ mission, entranceIndex = 0 }: { mission: Mission; 
         <StatusBadge status={mission.status} />
       </header>
 
-      <h3 title={mission.name} className="mt-2 truncate text-lg font-semibold leading-tight tracking-tight text-ink">{mission.name}</h3>
+      <h3 title={mission.name} className="mt-2 shrink-0 truncate text-lg font-semibold leading-tight tracking-tight text-ink">{mission.name}</h3>
 
+      <p className="mt-3 text-xs text-primary">{mission.rewards ? `${usdc(mission.rewards.prizePool)} · ${mission.rewards.state === 'FUNDING' ? 'Funding in progress' : mission.rewards.state === 'CANCELLED' ? 'Cancelled' : 'Sponsor-funded'} · ${mission.rewards.mode === 'SPONSORED' ? 'Free entry' : 'Entry unavailable'}` : 'Practice · Free entry · No cash prize'}</p>
       <dl className="my-2 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Cpu className="size-6 shrink-0 text-primary" strokeWidth={1} aria-hidden="true" />

@@ -106,7 +106,7 @@ The seed creates fixed-list Operation Nightfall with five ranked demo competitor
 
 Local development defaults to deterministic market data. Jupiter mode uses real prices and quote routes but remains paper trading: no swap is submitted.
 
-Run `npm run mission:test` to create a fresh **Terminal Test Flight** mission that is immediately live for seven days, with 10,000 virtual USDC per operator and the five default markets. The command prints its terminal URL. Connect your wallet and deploy to start testing. Each run creates a separate mission and preserves existing portfolios and results.
+Run `npm run mission:test` to create a fresh **Terminal Test Flight** mission that is immediately live for 14 days, with 10,000 virtual USDC per operator and the five default markets. The command prints its terminal URL. Connect your wallet and deploy to start testing. Each run creates a separate mission and preserves existing portfolios and results.
 
 ## Product flows
 
@@ -272,3 +272,7 @@ Trade history marks automatic sells as TP or SL.
 Apply the position-exit migration before starting the updated API/worker. On Vercel,
 `npm --prefix backend run start:worker` on a persistent host remains necessary for
 automatic exits when no browser is open.
+
+### Sponsor-funded prize missions
+
+The mission board separates cash events from free practice. Admin prize controls manage verified Solana mainnet USDC funding, eligible-country registration, identity review, locked prize reserves, tied award allocations, second-administrator approval, and payment/return receipts. Paid entry remains disabled. See [prize operations](docs/mission-rewards-operations.md) before configuring a cash event.

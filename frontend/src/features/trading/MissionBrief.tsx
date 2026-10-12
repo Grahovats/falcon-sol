@@ -1,3 +1,7 @@
+import { useClock } from '../../hooks/useClock'
+import { useState } from 'react'
+import { PrizePanel } from '../missions/PrizePanel'
+import type { CashEntryInput } from '../../types/mission'
 import { CalendarDays, Coins, Crosshair, Radio, Users } from 'lucide-react'
 import { formatDate, formatVirtualBalance } from '../../lib/format'
 import type { Mission } from '../../types/mission'
@@ -7,11 +11,16 @@ interface MissionBriefProps {
   mission: Mission
   deploying: boolean
   error: string | null
-  onDeploy: () => void
+  onDeploy: (input?: CashEntryInput) => void
 }
 
 export function MissionBrief({ mission, deploying, error, onDeploy }: MissionBriefProps) {
-  const deployable = mission.status === 'REGISTRATION' || mission.status === 'ACTIVE'
+  const [country, setCountry] = useState('')
+  const [accepted, setAccepted] = useState(false)
+  const now = useClock()
+  const reward = mission.rewards
+  const cashOpen = !reward || (reward.mode === 'SPONSORED' && reward.state === 'READY' && reward.termsApproved && now < new Date(reward.registrationClosesAt).getTime())
+  const deployable = cashOpen && (mission.status === 'REGISTRATION' || mission.status === 'ACTIVE')
 
   return (
     <section className="app-surface panel-cut border border-line bg-surface p-6 sm:p-10">
@@ -35,9 +44,11 @@ export function MissionBrief({ mission, deploying, error, onDeploy }: MissionBri
         </div>
       </div>
 
+      <div className="mt-8"><PrizePanel mission={mission} /></div>
+      {reward && <div className="mt-6 space-y-4"><label className="block text-sm text-ink">Country of residence<select value={country} onChange={event => setCountry(event.target.value)} className="app-field mt-2 block min-h-11 w-full border border-line bg-canvas px-3"><option value="">Select an eligible country</option>{reward.eligibleCountries.map(code => <option key={code} value={code}>{new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code}</option>)}</select></label><label className="flex items-start gap-3 text-sm leading-6 text-muted"><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.target.checked)} className="focus-ring mt-1 size-4 shrink-0 accent-primary" /> I am 18 or older, reside in the selected country, and accept the published mission rules and eligibility checks.</label><p className="text-xs text-muted">Registration is subject to organizer review. Approval is required before trading.</p></div>}
       {error && <p className="mt-6 border border-danger/40 bg-danger/5 p-3 text-sm text-danger" role="alert">{error}</p>}
-      <button type="button" onClick={onDeploy} disabled={!deployable || deploying} aria-busy={deploying} className="app-button focus-ring mt-8 min-h-11 bg-primary px-6 text-sm font-semibold uppercase tracking-wider text-primary-ink hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-line disabled:text-muted">
-        {deploying ? 'Deploying…' : deployable ? 'Deploy' : 'Deployment closed'}
+      <button type="button" onClick={() => onDeploy(reward ? { country, adult: accepted, acceptedRules: accepted, rulesVersion: reward.rulesVersion } : undefined)} disabled={!deployable || deploying || Boolean(reward && (!accepted || !country))} aria-busy={deploying} className="app-button focus-ring mt-8 min-h-11 bg-primary px-6 text-sm font-semibold uppercase tracking-wider text-primary-ink hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-line disabled:text-muted">
+        {deploying ? 'Deploying…' : deployable ? reward ? 'Register free' : 'Deploy' : 'Deployment closed'}
       </button>
     </section>
   )

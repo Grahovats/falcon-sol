@@ -52,6 +52,8 @@ model User {
   sessions  Session[]
   results   MissionResult[]
   auditLogs AdminAuditLog[]
+  identityHash String? @unique
+  cashParticipants CashParticipant[]
 }
 
 model Wallet {
@@ -106,6 +108,8 @@ model Mission {
   entries         MissionEntry[]
   results         MissionResult[]
   auditLogs       AdminAuditLog[]
+  rewardPlan MissionRewardPlan?
+  cashParticipants CashParticipant[]
 
   @@index([status, startsAt])
 }
@@ -247,4 +251,84 @@ model Position {
 
   @@unique([missionEntryId, missionMarketId])
   @@index([missionMarketId])
+}
+
+model MissionRewardPlan {
+  id                   String           @id @default(cuid())
+  missionId            String           @unique
+  mode                 String           @default("SPONSORED")
+  state                String           @default("FUNDING")
+  sponsorName          String
+  organizerName        String
+  treasuryWallet       String           @unique
+  minimumPool          Decimal          @db.Decimal(20, 6)
+  entryFee             Decimal          @default(0) @db.Decimal(20, 6)
+  platformFeeBps       Int              @default(1000)
+  minimumEntrants      Int              @default(3)
+  fundingDeadline      DateTime
+  registrationClosesAt DateTime
+  eligibleCountries    String[]
+  rulesText            String
+  rulesVersion         Int              @default(1)
+  termsApproved        Boolean          @default(false)
+  lockedPool           Decimal?         @db.Decimal(20, 6)
+  lockedAt             DateTime?
+  reviewEndsAt         DateTime?
+  payoutDueAt          DateTime?
+  preparedBy           String?
+  approvedAt           DateTime?
+  approvedBy           String?
+  cancelReason         String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  mission              Mission          @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  funding              MissionFunding[]
+  awards               MissionAward[]
+}
+
+model MissionFunding {
+  id              String            @id @default(cuid())
+  planId          String
+  sponsorName     String
+  senderWallet    String
+  amount          Decimal           @db.Decimal(20, 6)
+  signature       String            @unique
+  chainSlot       BigInt
+  receivedAt      DateTime
+  verifiedAt      DateTime          @default(now())
+  returnSignature String?           @unique
+  returnedAt      DateTime?
+  plan            MissionRewardPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+}
+
+model CashParticipant {
+  id           String    @id @default(cuid())
+  missionId    String
+  userId       String
+  country      String
+  rulesVersion Int
+  status       String    @default("PENDING")
+  verifiedAt   DateTime?
+  reviewNote   String?
+  submittedAt  DateTime  @default(now())
+  mission      Mission   @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([missionId, userId])
+}
+
+model MissionAward {
+  id              String            @id @default(cuid())
+  planId          String
+  userId          String
+  displayName     String
+  walletAddress   String
+  rank            Int
+  amount          Decimal           @db.Decimal(20, 6)
+  status          String            @default("PENDING")
+  payoutSignature String?           @unique
+  paidAt          DateTime?
+  plan            MissionRewardPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@unique([planId, userId])
 }

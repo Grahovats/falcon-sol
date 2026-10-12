@@ -5,16 +5,47 @@ import { assertQuoteUsable, quoteMetadata, TradingService } from './trading-serv
 import type { ExecutionQuote, MarketDataService } from './price-service.js'
 import { BLACKOUT_DURATION_MS, nextAutomatedMissionStatus } from './mission-state-service.js'
 
+import { env } from '../config/env.js'
+import { cancelCashMission, fundedPool, rewardInclude, reviewDates } from './mission-rewards-service.js'
+import { getTreasuryBalance } from './solana-receipt-service.js'
+import { SETTLEMENT_WINDOW_MS } from './reward-calculations.js'
+
 export class MissionLifecycleService {
   constructor(private readonly database: PrismaClient, private readonly prices: MarketDataService) {}
 
   async runOnce(now = new Date()) {
     const missions = await this.database.mission.findMany({
       where: { status: { in: [MissionStatus.REGISTRATION, MissionStatus.LOCKED, MissionStatus.ACTIVE, MissionStatus.BLACKOUT, MissionStatus.SETTLING] } },
+      include: { rewardPlan: { include: rewardInclude }, markets: { where: { enabled: true } } },
       orderBy: { startsAt: 'asc' },
     })
 
     for (const mission of missions) {
+      if (mission.rewardPlan) {
+        const plan = mission.rewardPlan
+        if (now >= plan.fundingDeadline && plan.state === 'FUNDING') { await cancelCashMission(this.database, mission.id, 'Funding or organizer review did not complete by the published deadline.'); continue }
+        if (plan.state === 'READY' && now >= plan.registrationClosesAt) {
+          const entrants = await this.database.cashParticipant.count({ where: { missionId: mission.id, status: 'APPROVED' } })
+          if (entrants < plan.minimumEntrants || env.MARKET_DATA_PROVIDER !== 'jupiter') { await cancelCashMission(this.database, mission.id, 'Minimum verified entrants or live pricing requirements were not met.'); continue }
+          let reserveBalance: Prisma.Decimal
+          try {
+            for (const market of mission.markets) { const buy = await this.prices.getBuyQuote(market, new Prisma.Decimal(100)); await this.prices.getSellQuote(market, buy.quantity) }
+            reserveBalance = await getTreasuryBalance(plan.treasuryWallet)
+            if (reserveBalance.lessThan(fundedPool(plan))) { await cancelCashMission(this.database, mission.id, 'The treasury does not cover the recorded prize reserve.'); continue }
+          } catch { if (now >= mission.startsAt) await cancelCashMission(this.database, mission.id, 'Prize reserve could not be verified before the scheduled start.'); continue }
+          await this.database.$transaction(async tx => {
+            const fresh = await tx.missionRewardPlan.findUniqueOrThrow({ where: { missionId: mission.id }, include: rewardInclude })
+            if (fresh.state !== 'READY') return
+            if (reserveBalance.lessThan(fundedPool(fresh)) || await tx.cashParticipant.count({ where: { missionId: mission.id, status: 'APPROVED' } }) < fresh.minimumEntrants) throw new Error('Prize reserve or verified entrants changed while locking.')
+            await tx.missionRewardPlan.update({ where: { id: fresh.id }, data: { state: 'LOCKED', lockedAt: now, lockedPool: fundedPool(fresh) } })
+            await tx.mission.update({ where: { id: mission.id }, data: { status: 'LOCKED' } })
+            await tx.adminAuditLog.create({ data: { actorType: 'SYSTEM', action: 'PRIZE_RESERVE_LOCKED', entityType: 'MissionRewardPlan', entityId: fresh.id, missionId: mission.id, metadata: { reserve: fundedPool(fresh).toString() } } })
+          }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+          continue
+        }
+        if (plan.state !== 'LOCKED') continue
+        if (now.getTime() > mission.endsAt.getTime() + SETTLEMENT_WINDOW_MS) { await cancelCashMission(this.database, mission.id, 'Settlement missed the published 60-second window. Sponsor returns are pending.'); continue }
+      }
       const nextStatus = nextAutomatedMissionStatus(mission, now)
       if (nextStatus && nextStatus !== mission.status) await this.transition(mission.id, mission.status, nextStatus, now)
       if (nextStatus === MissionStatus.SETTLING || mission.status === MissionStatus.SETTLING) await this.settle(mission.id, now)
@@ -41,6 +72,7 @@ export class MissionLifecycleService {
     const mission = await this.database.mission.findUnique({
       where: { id: missionId },
       include: {
+        rewardPlan: true,
         markets: true,
         entries: { include: { positions: true, user: { include: { wallets: { take: 1, orderBy: { createdAt: 'asc' } } } } } },
       },
@@ -66,11 +98,13 @@ export class MissionLifecycleService {
         if (!quote.quantity.equals(position.quantity)) throw new Error(`Settlement quote does not cover the full ${market.symbol} position.`)
         quoteByPosition.set(position.id, quote)
       })))
+      if (mission.rewardPlan && (Date.now() > mission.endsAt.getTime() + SETTLEMENT_WINDOW_MS || [...quoteByPosition.values()].some(q => q.quotedAt < mission.endsAt || q.quotedAt.getTime() > mission.endsAt.getTime() + SETTLEMENT_WINDOW_MS))) throw new Error('Settlement quotes fall outside the 60-second window.')
       const results = buildSettlementResults(mission.entries, new Map([...quoteByPosition].map(([id, quote]) => [id, quote.notional])))
 
       await this.database.$transaction(async (transaction) => {
         const current = await transaction.mission.findUnique({ where: { id: missionId }, select: { status: true } })
         if (!current || current.status !== MissionStatus.SETTLING) return
+        if (mission.rewardPlan && Date.now() > mission.endsAt.getTime() + SETTLEMENT_WINDOW_MS) throw new Error('Settlement exceeded the 60-second window.')
         // Validate the entire batch before writing anything; never substitute
         // spot marking when a liquidation route is unavailable or expired.
         for (const entry of mission.entries) {
@@ -111,6 +145,7 @@ export class MissionLifecycleService {
         if (results.length > 0) {
           await transaction.missionResult.createMany({ data: results.map((result) => ({ ...result, missionId, settledAt: now })) })
         }
+        if (mission.rewardPlan) await transaction.missionRewardPlan.update({ where: { missionId }, data: reviewDates(now) })
         await transaction.mission.update({ where: { id: missionId }, data: { status: MissionStatus.FINALIZED, settledAt: now, lifecycleError: null } })
         await transaction.adminAuditLog.create({ data: {
           actorType: AuditActorType.SYSTEM,

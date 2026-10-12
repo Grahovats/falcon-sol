@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import cors from '@fastify/cors'
 import cookie from '@fastify/cookie'
 import rateLimit from '@fastify/rate-limit'
@@ -13,6 +14,7 @@ import { missionRoutes } from './routes/missions.js'
 import { operatorRoutes } from './routes/operators.js'
 import { profileRoutes } from './routes/profile.js'
 import { rankingRoutes } from './routes/rankings.js'
+import { rewardRoutes } from './routes/rewards.js'
 import { tradingRoutes } from './routes/trading.js'
 
 export async function buildApp() {
@@ -30,6 +32,11 @@ export async function buildApp() {
           message: error.issues.map((issue) => issue.message).join(' '),
         },
       })
+      return
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      void reply.code(409).send({ error: { code: 'CONFLICT', message: 'This unique record already exists. A receipt or verified identity cannot be recorded twice.' } })
       return
     }
 
@@ -60,6 +67,7 @@ export async function buildApp() {
   await app.register(tradingRoutes, { prefix: '/api/v1' })
   await app.register(profileRoutes, { prefix: '/api/v1' })
   await app.register(rankingRoutes, { prefix: '/api/v1' })
+  await app.register(rewardRoutes, { prefix: '/api/v1' })
   await app.register(adminRoutes, { prefix: '/api/v1' })
 
   return app

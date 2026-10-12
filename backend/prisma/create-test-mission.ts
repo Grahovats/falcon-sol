@@ -10,11 +10,11 @@ async function main() {
     data: {
       name: 'Terminal Test Flight',
       slug: `terminal-test-flight-${randomUUID()}`,
-      description: 'A seven-day paper-trading mission for testing the trading terminal. Deploy with 10,000 virtual USDC and practice buying and selling across five starting markets, or find and add new Solana coins.',
+      description: 'A 14-day paper-trading mission for testing the trading terminal. Deploy with 10,000 virtual USDC and practice buying and selling across five starting markets, or find and add new Solana coins.',
       status: MissionStatus.ACTIVE,
       startingBalance: '10000',
       startsAt: new Date(now - 60_000),
-      endsAt: new Date(now + 7 * 24 * 60 * 60 * 1_000),
+      endsAt: new Date(now + 14 * 24 * 60 * 60 * 1_000),
       allowDynamicMarkets: true,
       markets: {
         create: [
@@ -30,7 +30,8 @@ async function main() {
 
   console.log(`Created ${mission.name} with 10,000 virtual USDC and five markets.`)
   console.log(`Ends: ${mission.endsAt.toISOString()}`)
-  console.log(`Open: http://localhost:5173/missions/${mission.id}`)
+  const frontendOrigin = process.env.CORS_ORIGIN?.split(',')[0] ?? 'http://localhost:5173'
+  console.log(`Open: ${frontendOrigin}/missions/${mission.id}`)
 }
 
 main()

@@ -65,8 +65,14 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const input = updateMissionSchema.parse(request.body)
     const actor = identityFor(request)
     const mission = await prisma.$transaction(async (transaction) => {
-      const current = await transaction.mission.findUnique({ where: { id } })
+      const current = await transaction.mission.findUnique({ where: { id }, include: { rewardPlan: true } })
       if (!current) throw new AppError('MISSION_NOT_FOUND', 'Mission not found.', 404)
+      if (current.rewardPlan) {
+        const scheduleChanged = (input.startsAt !== undefined && input.startsAt.getTime() !== current.startsAt.getTime()) || (input.endsAt !== undefined && input.endsAt.getTime() !== current.endsAt.getTime())
+        const rulesChanged = (input.startingBalance !== undefined && !current.startingBalance.equals(input.startingBalance)) || (input.allowDynamicMarkets !== undefined && input.allowDynamicMarkets !== current.allowDynamicMarkets)
+        const statusChanged = input.status !== undefined && input.status !== current.status && !(current.status === 'DRAFT' && input.status === 'REGISTRATION')
+        if (scheduleChanged || rulesChanged || statusChanged) throw new AppError('RULES_LOCKED', 'Prize schedules and capital are frozen. Use prize controls to cancel.', 409)
+      }
       const startsAt = input.startsAt ?? current.startsAt
       const endsAt = input.endsAt ?? current.endsAt
       if (endsAt <= startsAt) throw new AppError('VALIDATION_ERROR', 'End time must be after start time.')
@@ -101,6 +107,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       const market = await prisma.$transaction(async (transaction) => {
         const mission = await transaction.mission.findUnique({ where: { id }, select: { id: true, status: true } })
         if (!mission) throw new AppError('MISSION_NOT_FOUND', 'Mission not found.', 404)
+        if (await transaction.missionRewardPlan.findUnique({ where: { missionId: id } })) throw new AppError('RULES_LOCKED', 'The prize roster is frozen.', 409)
         assertMissionConfigurationOpen(mission.status)
         const created = await transaction.missionMarket.create({ data: { missionId: id, ...input } })
         await writeAdminAudit(transaction, actor, 'MISSION_MARKET_CREATED', 'MissionMarket', created.id, id, { symbol: created.symbol, mintAddress: created.mintAddress, decimals: created.decimals })
@@ -117,6 +124,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const market = await prisma.$transaction(async (transaction) => {
       const mission = await transaction.mission.findUnique({ where: { id }, select: { status: true } })
       if (!mission) throw new AppError('MISSION_NOT_FOUND', 'Mission not found.', 404)
+      if (await transaction.missionRewardPlan.findUnique({ where: { missionId: id } })) throw new AppError('RULES_LOCKED', 'The prize roster is frozen.', 409)
       assertMissionConfigurationOpen(mission.status)
       const current = await transaction.missionMarket.findFirst({ where: { id: marketId, missionId: id } })
       if (!current) throw new AppError('MARKET_NOT_FOUND', 'Market does not belong to this mission.', 404)

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
+import { useAmbientActivity } from '../lib/use-ambient-activity'
 
-const FLOW_FADE_BANDS = 24
+const FLOW_FADE_BANDS = 8
 const SIGNAL_TIMING = { traceMs: 700, cycleMs: 8000 } as const
 
 type SignalLayout = { width: number; height: number; paths: string[] }
 
 /** Route flowing signals from each card edge into the next card. */
 export function ProcessSignalField({ revealedSteps = 4 }: { revealedSteps?: number }) {
-  const fieldRef = useRef<HTMLDivElement>(null)
+  const { ref: fieldRef, active } = useAmbientActivity()
+  const phaseRef = useRef(0)
   const [layout, setLayout] = useState<SignalLayout | null>(null)
   const [animate, setAnimate] = useState(() => typeof window !== 'undefined' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
 
@@ -93,7 +95,7 @@ export function ProcessSignalField({ revealedSteps = 4 }: { revealedSteps?: numb
     window.addEventListener('resize', scheduleMeasure)
     scheduleMeasure()
     return () => { observer.disconnect(); window.removeEventListener('resize', scheduleMeasure); window.cancelAnimationFrame(frame) }
-  }, [])
+  }, [fieldRef])
 
   useEffect(() => {
     const field = fieldRef.current
@@ -143,19 +145,21 @@ export function ProcessSignalField({ revealedSteps = 4 }: { revealedSteps?: numb
         start = end
       })
     }
-    const initialDistance = pulse
-    if (!animate) { draw(initialDistance); return }
+    const initialDistance = pulse + phaseRef.current * total
+    if (!animate || !active) { draw(initialDistance % total); return }
     flows.forEach((flow) => { flow.style.opacity = '0' })
     function tick(now: number) {
       if (started === null) started = now
-      draw((initialDistance + (now - started) / SIGNAL_TIMING.cycleMs * total) % total)
+      const distance = (initialDistance + (now - started) / SIGNAL_TIMING.cycleMs * total) % total
+      phaseRef.current = ((distance - pulse + total) % total) / total
+      draw(distance)
       frame = window.requestAnimationFrame(tick)
     }
     const timer = window.setTimeout(() => { frame = window.requestAnimationFrame(tick) }, SIGNAL_TIMING.traceMs)
     return () => { window.clearTimeout(timer); window.cancelAnimationFrame(frame) }
-  }, [layout, animate, revealedSteps])
+  }, [layout, animate, active, revealedSteps, fieldRef])
 
-  return <div ref={fieldRef} className="process-signal-field" aria-hidden="true">
+  return <div ref={fieldRef} className="process-signal-field" data-ambient-active={active} aria-hidden="true">
     {layout && <svg width={layout.width} height={layout.height} className="process-signal-map">
       {layout.paths.map((route, index) => <g key={index}>
         <path d={route} pathLength="1" className={`process-signal-route${!animate || revealedSteps >= index + 2 ? ' process-signal-route-drawn' : ''}`} />

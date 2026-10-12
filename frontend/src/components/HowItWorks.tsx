@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, BarChart3, ShieldCheck, Swords, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ProcessSignalField } from './ProcessSignalField'
-import { SectionSignalField } from './SectionSignalField'
 import { resetGlassSheen, updateGlassSheen } from '../lib/glass-hover'
 
 const steps = [
@@ -56,10 +55,6 @@ export function HowItWorks() {
   }, [requested, stage])
 
   return <section className="journey-section py-16 sm:py-20" aria-labelledby="how-it-works-title">
-    <div className="journey-background" aria-hidden="true">
-      <SectionSignalField side="right" wide />
-      <SectionSignalField side="left" />
-    </div>
     <div className="journey-intro">
       <h2 id="how-it-works-title" className="text-xs font-medium uppercase tracking-widest text-muted">How Falcon works</h2>
     </div>

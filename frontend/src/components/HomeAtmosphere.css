@@ -1,0 +1,103 @@
+.home-below-hero {
+  --home-atmosphere-gutter: 1rem;
+  position: relative;
+  isolation: isolate;
+}
+.home-atmosphere {
+  position: absolute;
+  z-index: -1;
+  inset: 0 calc(-1 * var(--home-atmosphere-gutter));
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--color-primary);
+  background: var(--color-canvas);
+}
+.home-atmosphere-light {
+  position: absolute;
+  width: min(70rem, 115%);
+  height: 48rem;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--color-primary) 9%, transparent), color-mix(in srgb, var(--color-primary) 3%, transparent) 35%, transparent 70%);
+}
+.home-atmosphere-light-left {
+  left: -35%;
+  top: 10%;
+}
+.home-atmosphere-light-right {
+  right: -30%;
+  bottom: -4rem;
+  opacity: 0.8;
+}
+.home-atmosphere-stars,
+.home-atmosphere-orbits,
+.home-atmosphere-fade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.home-atmosphere-stars span {
+  position: absolute;
+  width: var(--atmosphere-star-size);
+  height: var(--atmosphere-star-size);
+  border-radius: 50%;
+  background: var(--color-ink);
+  opacity: 0.2;
+}
+.home-atmosphere-orbits {
+  /* SVG contours keep their original aspect ratio and stay crisp on retina displays. */
+  mask-image: linear-gradient(to right, black, rgb(0 0 0 / 0.35) 35%, rgb(0 0 0 / 0.35) 65%, black);
+}
+.home-atmosphere-contours ellipse,
+.home-atmosphere-trace {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+.home-atmosphere-contours ellipse {
+  stroke-width: 0.75;
+}
+.home-atmosphere-trace {
+  stroke: var(--color-primary);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.06 0.19;
+  opacity: 0.7;
+}
+.home-atmosphere-trace-secondary { opacity: 0.5; }
+.home-atmosphere-trace-halo {
+  stroke-width: 5;
+  opacity: 0.16;
+}
+.home-atmosphere-fade {
+  background:
+    linear-gradient(to bottom, var(--color-canvas), transparent 10%, transparent 88%, var(--color-canvas)),
+    linear-gradient(to right, transparent, color-mix(in srgb, var(--color-canvas) 25%, transparent) 45%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-atmosphere-trace {
+    animation: home-orbit-trace 32s linear var(--orbit-delay) infinite;
+  }
+  .home-atmosphere-trace-secondary {
+    animation-duration: 44s;
+    animation-direction: reverse;
+  }
+  .home-atmosphere-contours {
+    animation: home-orbit-breathe 14s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+}
+@keyframes home-orbit-trace {
+  to { stroke-dashoffset: -1; }
+}
+@keyframes home-orbit-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@media (min-width: 640px) {
+  .home-below-hero { --home-atmosphere-gutter: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .home-below-hero { --home-atmosphere-gutter: 2rem; }
+}
+@media (max-width: 639px) {
+  .home-atmosphere-orbits { opacity: 0.65; }
+  .home-atmosphere-light-left { left: -45%; }
+}

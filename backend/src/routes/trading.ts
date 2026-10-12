@@ -12,6 +12,8 @@ import { acceptsEntries, deriveMissionStatus, isLeaderboardHidden } from '../ser
 import { TradingService } from '../services/trading-service.js'
 import { tokenDiscoveryService } from '../services/token-discovery.js'
 
+import { assertCashEntry } from '../services/reward-calculations.js'
+
 const paramsSchema = z.object({ missionId: z.string().min(1) })
 const candleParamsSchema = z.object({ missionId: z.string().min(1), marketId: z.string().min(1) })
 const candleQuerySchema = z.object({ timeframe: z.enum(candleTimeframes).default('5m') })
@@ -45,10 +47,15 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const entry = await prisma.$transaction(async (transaction) => {
-        const mission = await transaction.mission.findUnique({ where: { id: missionId } })
+        const mission = await transaction.mission.findUnique({ where: { id: missionId }, include: { rewardPlan: true } })
         if (!mission) throw new AppError('MISSION_NOT_FOUND', 'Mission not found.', 404)
         if (!acceptsEntries(deriveMissionStatus(mission))) {
           throw new AppError('MISSION_NOT_ACTIVE', 'This mission is not accepting deployments.')
+        }
+        if (mission.rewardPlan) {
+          const accepted = z.object({ country: z.string().regex(/^[A-Z]{2}$/), adult: z.literal(true), rulesVersion: z.number().int(), acceptedRules: z.literal(true) }).parse(request.body)
+          assertCashEntry(mission.rewardPlan, accepted)
+          await transaction.cashParticipant.create({ data: { missionId, userId: user.id, country: accepted.country, rulesVersion: accepted.rulesVersion } })
         }
         const existing = await transaction.missionEntry.findUnique({
           where: { missionId_userId: { missionId, userId: user.id } },

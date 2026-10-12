@@ -62,7 +62,6 @@
   height: 53%;
   transform: translateX(-50%);
   background: radial-gradient(ellipse at center, color-mix(in srgb, var(--color-primary) 24%, transparent), color-mix(in srgb, var(--color-primary) 6%, transparent) 42%, transparent 70%);
-  filter: blur(24px);
 }
 .hero-planet-surface,
 .hero-planet-rim {
@@ -93,7 +92,6 @@
   box-shadow:
     0 -3px 12px color-mix(in srgb, var(--color-primary) 55%, transparent),
     0 -10px 36px color-mix(in srgb, var(--color-primary) 22%, transparent);
-  filter: blur(2px);
   opacity: 0.3;
 }
 .hero-planet-rim::after {

@@ -1,6 +1,7 @@
 import "./HeroPlanetHorizon.css";
 import { useState } from "react";
 import type { CSSProperties } from "react";
+import { useAmbientActivity } from '../lib/use-ambient-activity';
 
 // Deterministic positions keep the sky stable across renders and reloads.
 const stars = Array.from({ length: 64 }, (_, index) => ({
@@ -23,6 +24,7 @@ const shootingStars = [
 
 /** A live CSS planet horizon, kept decorative so the hero stays accessible. */
 export function HeroPlanetHorizon() {
+  const { ref, active } = useAmbientActivity();
   const [skyStars, setSkyStars] = useState(stars);
 
   const repositionStar = (index: number) => {
@@ -33,7 +35,7 @@ export function HeroPlanetHorizon() {
   };
 
   return (
-    <div className="hero-planet-field" aria-hidden="true">
+    <div ref={ref} className="hero-planet-field" data-ambient-active={active} aria-hidden="true">
       <div className="hero-planet-stars">
         {skyStars.map((style, index) => (
           <span key={index} className="hero-planet-star" style={style} onAnimationIteration={() => repositionStar(index)} />

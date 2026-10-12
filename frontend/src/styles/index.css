@@ -1592,9 +1592,6 @@ select {
   stroke: color-mix(in srgb, var(--color-primary) 50%, var(--color-line));
   stroke-width: 2;
   stroke-linecap: round;
-  filter: drop-shadow(
-    0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent)
-  );
 }
 .process-signal-route-drawn {
   stroke-dashoffset: 0;
@@ -1606,7 +1603,6 @@ select {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   opacity: 0;
-  filter: drop-shadow(0 0 5px var(--color-primary));
 }
 .process-signal-trace.process-signal-route-drawn {
   stroke-dashoffset: 0;
@@ -1617,10 +1613,6 @@ select {
   stroke-linecap: butt;
 }
 .process-signal-flow-glow {
-  filter: drop-shadow(0 0 4px var(--color-primary))
-    drop-shadow(
-      0 0 10px color-mix(in srgb, var(--color-primary) 75%, transparent)
-    );
 }
 @media (prefers-reduced-motion: no-preference) {
   .journey-step {
@@ -1738,8 +1730,6 @@ select {
     color-mix(in srgb, var(--color-surface-raised) 92%, transparent),
     color-mix(in srgb, var(--color-surface) 88%, transparent)
   );
-  -webkit-backdrop-filter: blur(32px) saturate(145%);
-  backdrop-filter: blur(32px) saturate(145%);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--color-ink) 10%, transparent),
     inset 0 -1px 0 color-mix(in srgb, var(--color-ink) 4%, transparent);
@@ -1755,7 +1745,7 @@ select {
   pointer-events: none;
   opacity: 0.18;
   background-size: 128px 128px;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23noise)' opacity='.65' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+  background-image: none;
 }
 .journey-copy::after,
 .falcon-glass::after {
@@ -1819,11 +1809,8 @@ select {
 @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
   .journey-copy,
   .falcon-glass {
-    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg))
-      rotateY(var(--tilt-y, 0deg));
     transition:
       translate 400ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 220ms ease-out,
       border-color 150ms ease-out;
   }
 }
@@ -2065,7 +2052,7 @@ select {
     transparent 45%,
     color-mix(in srgb, var(--color-ink) 2%, transparent)
   );
-  --app-glass-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23noise)' opacity='.12' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+  --app-glass-grain: none;
 }
 .app-page-content {
   --app-page-gutter: 1rem;
@@ -2141,8 +2128,6 @@ select {
     128px 128px,
     auto;
   background-repeat: no-repeat, repeat, no-repeat;
-  -webkit-backdrop-filter: blur(24px) saturate(145%);
-  backdrop-filter: blur(24px) saturate(145%);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--color-ink) 10%, transparent),
     inset 0 -1px 0 color-mix(in srgb, var(--color-ink) 4%, transparent);
@@ -2819,4 +2804,51 @@ select {
   .trading-terminal .terminal-grid > .terminal-positions {
     border-left: 1px solid var(--color-line);
   }
+}
+
+/* Suspend decorative work only outside the viewport or in hidden tabs. */
+[data-ambient-active="false"] *,
+[data-ambient-active="false"] *::before,
+[data-ambient-active="false"] *::after {
+  animation-play-state: paused !important;
+}
+
+/* Prize metadata must not squeeze the mission title out of the card. */
+.mission-card-modern.mission-credit-card {
+  aspect-ratio: auto;
+  min-height: 15rem;
+}
+
+/* One quiet notice keeps an unfunded prize calendar from dominating practice. */
+.mission-prize-notice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  background: var(--color-surface);
+}
+.mission-prize-notice-icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, var(--color-line));
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface));
+  color: var(--color-primary);
+}
+.mission-prize-notice-tag {
+  flex-shrink: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+@media (max-width: 639px) {
+  .mission-prize-notice { align-items: flex-start; padding: 1rem; }
+  .mission-prize-notice-tag { display: none; }
 }
