@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAmbientActivity } from '../lib/use-ambient-activity'
 
-const FLOW_FADE_BANDS = 8
+const FLOW_FADE_BANDS = 24
 const SIGNAL_TIMING = { traceMs: 700, cycleMs: 8000 } as const
 
 type SignalLayout = { width: number; height: number; paths: string[] }

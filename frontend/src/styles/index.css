@@ -1592,6 +1592,9 @@ select {
   stroke: color-mix(in srgb, var(--color-primary) 50%, var(--color-line));
   stroke-width: 2;
   stroke-linecap: round;
+  filter: drop-shadow(
+    0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent)
+  );
 }
 .process-signal-route-drawn {
   stroke-dashoffset: 0;
@@ -1603,6 +1606,7 @@ select {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   opacity: 0;
+  filter: drop-shadow(0 0 5px var(--color-primary));
 }
 .process-signal-trace.process-signal-route-drawn {
   stroke-dashoffset: 0;
@@ -1613,6 +1617,10 @@ select {
   stroke-linecap: butt;
 }
 .process-signal-flow-glow {
+  filter: drop-shadow(0 0 4px var(--color-primary))
+    drop-shadow(
+      0 0 10px color-mix(in srgb, var(--color-primary) 75%, transparent)
+    );
 }
 @media (prefers-reduced-motion: no-preference) {
   .journey-step {
@@ -1809,8 +1817,11 @@ select {
 @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
   .journey-copy,
   .falcon-glass {
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg))
+      rotateY(var(--tilt-y, 0deg));
     transition:
       translate 400ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 220ms ease-out,
       border-color 150ms ease-out;
   }
 }
