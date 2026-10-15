@@ -70,15 +70,19 @@ export function TradingTerminal({ cashEligibilityApproved = true, mission, marke
 
       <div className="terminal-grid">
         <MarketList onDiscover={mission.allowDynamicMarkets ? () => setDiscoveryOpen(true) : undefined} markets={markets} positions={portfolio.positions} selectedMarketId={selectedMarket?.marketId ?? ''} onSelect={(id) => { setSelectedMarketId(id); setOrderSide('BUY') }} />
-        <div className="app-surface terminal-chart min-w-0">
-          {selectedMarket ? <MarketWorkspace key={selectedMarket.marketId} missionId={mission.id} market={selectedMarket} quantity={selectedPosition?.quantity ?? '0'} averageEntryPrice={selectedPosition?.averageEntryPrice ?? '0'} unrealizedPnl={selectedPosition?.unrealizedPnl ?? '0'} position={selectedPosition} onExitChange={cashEligibilityApproved && selectedMarket.enabled && ['ACTIVE', 'BLACKOUT'].includes(mission.status) ? async (levels) => { const { data } = await updatePositionExits(mission.id, selectedMarket.marketId, levels); onPortfolioUpdate(data) } : undefined} /> : <div className="p-6 text-sm text-danger" role="alert">No current price is available for this mission.</div>}
-        </div>
-        <aside className="app-surface terminal-order min-w-0" aria-label="Order entry">
-          {selectedMarket && <OrderTicket key={`${selectedMarket.marketId}:${orderSide}`} mission={mission} marketId={selectedMarket.marketId} symbol={selectedMarket.symbol} price={selectedMarket.currentPrice} cashEligibilityApproved={cashEligibilityApproved} enabled={selectedMarket.enabled} side={orderSide} onSideChange={setOrderSide} portfolio={portfolio} onPortfolioUpdate={onPortfolioUpdate} onOrderFilled={onOrderFilled} />}
-          {selectedPosition && <PositionExitControls key={`${selectedPosition.marketId}:${selectedPosition.takeProfitPrice}:${selectedPosition.stopLossPrice}`} missionId={mission.id} position={selectedPosition} enabled={cashEligibilityApproved && Boolean(selectedMarket?.enabled) && ['ACTIVE', 'BLACKOUT'].includes(mission.status)} onPortfolioUpdate={onPortfolioUpdate} />}
-        </aside>
+        <div className="terminal-main-column">
+          <div className="app-surface terminal-chart min-w-0">
+            {selectedMarket ? <MarketWorkspace key={selectedMarket.marketId} missionId={mission.id} market={selectedMarket} quantity={selectedPosition?.quantity ?? '0'} averageEntryPrice={selectedPosition?.averageEntryPrice ?? '0'} unrealizedPnl={selectedPosition?.unrealizedPnl ?? '0'} position={selectedPosition} onExitChange={cashEligibilityApproved && selectedMarket.enabled && ['ACTIVE', 'BLACKOUT'].includes(mission.status) ? async (levels) => { const { data } = await updatePositionExits(mission.id, selectedMarket.marketId, levels); onPortfolioUpdate(data) } : undefined} /> : <div className="p-6 text-sm text-danger" role="alert">No current price is available for this mission.</div>}
+          </div>
           <PositionsTable className="terminal-positions" missionId={mission.id} positions={portfolio.positions} enabledMarketIds={new Set(cashEligibilityApproved && ['ACTIVE', 'BLACKOUT'].includes(mission.status) ? markets.filter((market) => market.enabled).map((market) => market.marketId) : [])} onSell={quickSell} onPortfolioUpdate={onPortfolioUpdate} />
+        </div>
+        <div className="terminal-side-column">
+          <aside className="app-surface terminal-order min-w-0" aria-label="Order entry">
+            {selectedMarket && <OrderTicket key={`${selectedMarket.marketId}:${orderSide}`} mission={mission} marketId={selectedMarket.marketId} symbol={selectedMarket.symbol} price={selectedMarket.currentPrice} cashEligibilityApproved={cashEligibilityApproved} enabled={selectedMarket.enabled} side={orderSide} onSideChange={setOrderSide} portfolio={portfolio} onPortfolioUpdate={onPortfolioUpdate} onOrderFilled={onOrderFilled} />}
+            {selectedPosition && <PositionExitControls key={`${selectedPosition.marketId}:${selectedPosition.takeProfitPrice}:${selectedPosition.stopLossPrice}`} missionId={mission.id} position={selectedPosition} enabled={cashEligibilityApproved && Boolean(selectedMarket?.enabled) && ['ACTIVE', 'BLACKOUT'].includes(mission.status)} onPortfolioUpdate={onPortfolioUpdate} />}
+          </aside>
           <CommandBoard rows={leaderboard} currentUserId={portfolio.userId} hidden={leaderboardHidden} error={leaderboardError} />
+        </div>
       </div>
 
       {mission.allowDynamicMarkets && discoveryOpen && <TokenDiscoveryModal onDismiss={() => setDiscoveryOpen(false)}>

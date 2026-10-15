@@ -2610,6 +2610,8 @@ select {
 }
 .trading-terminal > section.app-surface,
 .trading-terminal .terminal-grid > .app-surface,
+.trading-terminal .terminal-main-column > .app-surface,
+.trading-terminal .terminal-side-column > .app-surface,
 .trading-terminal .terminal-chart > .app-surface,
 .trading-terminal .terminal-order > .app-surface {
   border: 0;
@@ -2628,8 +2630,8 @@ select {
 .trading-terminal > section.app-surface:last-child:not(:first-child),
 .trading-terminal .terminal-chart > .app-surface + .app-surface,
 .trading-terminal .terminal-order > .app-surface + .app-surface,
-.trading-terminal .terminal-grid > .terminal-chart,
-.trading-terminal .terminal-grid > .terminal-order {
+.trading-terminal .terminal-chart,
+.trading-terminal .terminal-order {
   border-top: 1px solid var(--color-line);
 }
 .trading-terminal .terminal-watch .terminal-market-list {
@@ -2661,9 +2663,6 @@ select {
   letter-spacing: normal;
 }
 @media (min-width: 768px) {
-  .trading-terminal .terminal-grid > .terminal-order {
-    border-left: 1px solid var(--color-line);
-  }
   .trading-terminal .terminal-market-row.app-button:nth-child(n) {
     border-right: 1px solid var(--color-line);
   }
@@ -2672,10 +2671,9 @@ select {
   }
 }
 @media (min-width: 1280px) {
-  .trading-terminal .terminal-grid > .terminal-chart,
-  .trading-terminal .terminal-grid > .terminal-order {
+  .trading-terminal .terminal-chart,
+  .trading-terminal .terminal-order {
     border-top: 0;
-    border-left: 1px solid var(--color-line);
   }
   .trading-terminal .terminal-market-row.app-button:nth-child(n) {
     border-right: 0;
@@ -2704,18 +2702,20 @@ select {
 }
 .trading-terminal .terminal-grid { flex: 1; }
 
-/* Shared grid rows keep chart/order and positions/rankings dividers aligned. */
+/* Independent columns keep the order form from adding empty space below the chart. */
 .trading-terminal .terminal-grid {
   grid-template-areas: "watch" "chart" "order" "positions" "rankings";
   grid-template-rows: auto;
 }
+.trading-terminal .terminal-main-column,
+.trading-terminal .terminal-side-column { display: contents; }
 .trading-terminal .terminal-watch { grid-area: watch; }
 .trading-terminal .terminal-chart { grid-area: chart; }
 .trading-terminal .terminal-order { grid-area: order; }
 .trading-terminal .terminal-positions { grid-area: positions; }
 .trading-terminal .terminal-rankings { grid-area: rankings; }
-.trading-terminal .terminal-grid > .terminal-positions,
-.trading-terminal .terminal-grid > .terminal-rankings {
+.trading-terminal .terminal-positions,
+.trading-terminal .terminal-rankings {
   border-top: 1px solid var(--color-line);
 }
 .trading-terminal .terminal-ranking-columns { height: 3rem; }
@@ -2802,17 +2802,27 @@ select {
 }
 @media (min-width: 768px) {
   .trading-terminal .terminal-grid {
-    grid-template-areas: "watch watch" "chart order" "positions rankings";
+    grid-template-areas: "watch watch" "main side";
+    align-content: start;
+    align-items: start;
   }
-  .trading-terminal .terminal-grid > .terminal-rankings {
+  .trading-terminal .terminal-main-column,
+  .trading-terminal .terminal-side-column {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+  .trading-terminal .terminal-main-column { grid-area: main; }
+  .trading-terminal .terminal-side-column {
+    grid-area: side;
     border-left: 1px solid var(--color-line);
   }
 }
 @media (min-width: 1280px) {
   .trading-terminal .terminal-grid {
-    grid-template-areas: "watch chart order" "watch positions rankings";
+    grid-template-areas: "watch main side";
   }
-  .trading-terminal .terminal-grid > .terminal-positions {
+  .trading-terminal .terminal-main-column {
     border-left: 1px solid var(--color-line);
   }
 }
