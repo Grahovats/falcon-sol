@@ -76,3 +76,45 @@ describe('JupiterTokenService', () => {
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('mission token icons', () => {
+  it('shares an in-flight batch, caches logos by mint, and preserves missing-icon fallbacks', async () => {
+    const icon = 'https://example.com/bonk.png'
+    const otherMint = 'So11111111111111111111111111111111111111112'
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse([token({ icon }), token({ id: otherMint })]))
+    const tokens = service(fetcher)
+    const [first, concurrent] = await Promise.all([tokens.getIcons([mint, otherMint]), tokens.getIcons([otherMint, mint])])
+    expect(first).toEqual({ [mint]: icon, [otherMint]: null })
+    expect(concurrent).toEqual(first)
+    expect(await tokens.getIcons([mint])).toEqual({ [mint]: icon })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps provider failures optional and caches the fallback briefly', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({}, 429))
+    const tokens = service(fetcher)
+    await expect(tokens.getIcons([mint])).resolves.toEqual({ [mint]: null })
+    await expect(tokens.getIcons([mint])).resolves.toEqual({ [mint]: null })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores invalid and non-HTTPS image URLs without dropping token metadata', async () => {
+    for (const icon of ['javascript:alert(1)', 'http://example.com/icon.png', 'not a url']) {
+      const fetcher = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse([token({ icon })]))
+      expect(await service(fetcher).getIcons([mint])).toEqual({ [mint]: null })
+    }
+  })
+
+  it('batches larger rosters within the provider limit of 100 mint addresses', async () => {
+    const mints = Array.from({ length: 101 }, (_, index) => `mint-${index}`)
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async input => {
+      const ids = new URL(String(input)).searchParams.get('query')!.split(',')
+      expect(ids.length).toBeLessThanOrEqual(100)
+      return jsonResponse(ids.map(id => token({ id, icon: `https://example.com/${id}.png` })))
+    })
+    const icons = await service(fetcher).getIcons(mints)
+    expect(Object.keys(icons)).toHaveLength(101)
+    expect(icons['mint-100']).toBe('https://example.com/mint-100.png')
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+})

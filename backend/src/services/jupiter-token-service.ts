@@ -13,6 +13,7 @@ const tokenSchema = z.object({
   id: z.string(),
   name: z.string().default('Unknown token'),
   symbol: z.string().default('UNKNOWN'),
+  icon: z.string().url().nullish().catch(null),
   decimals: z.number().int().min(0).max(18),
   firstPool: z.object({ createdAt: z.string().nullish() }).nullish(),
   holderCount: nullableNumber,
@@ -37,6 +38,7 @@ export interface TokenCandidate {
   mintAddress: string
   name: string
   symbol: string
+  iconUrl?: string | null
   decimals: number
   usdPrice: number | null
   liquidityUsd: number | null
@@ -64,6 +66,8 @@ interface JupiterTokenOptions {
 
 export class JupiterTokenService {
   private readonly fetcher: typeof fetch
+  private readonly iconCache = new Map<string, { url: string | null; expiresAt: number }>()
+  private readonly pendingIcons = new Map<string, Promise<void>>()
 
   constructor(private readonly options: JupiterTokenOptions) {
     this.fetcher = options.fetcher ?? fetch
@@ -85,6 +89,35 @@ export class JupiterTokenService {
     const token = tokens.find((candidate) => candidate.mintAddress === mintAddress)
     if (!token) throw new AppError('TOKEN_NOT_FOUND', 'Jupiter does not recognize this token mint.', 404)
     return token
+  }
+
+  async getIcons(mintAddresses: string[]): Promise<Record<string, string | null>> {
+    const mints = [...new Set(mintAddresses)].sort()
+    const missing = mints.filter(mint => (this.iconCache.get(mint)?.expiresAt ?? 0) <= Date.now())
+    const requests: Promise<void>[] = []
+    for (let offset = 0; offset < missing.length; offset += 100) {
+      const batch = missing.slice(offset, offset + 100)
+      const key = batch.join(',')
+      let request = this.pendingIcons.get(key)
+      if (!request) {
+        request = (async () => {
+          let tokens: TokenCandidate[] = []
+          let failed = false
+          try { tokens = await this.fetchTokens(`/tokens/v2/search?query=${encodeURIComponent(key)}`) }
+          catch { failed = true } // Logos must never interrupt trading or trigger retry storms.
+          const icons = new Map(tokens.map(token => [token.mintAddress, token.iconUrl ?? null]))
+          const expiresAt = Date.now() + (failed ? 60_000 : 86_400_000)
+          for (const mint of batch) {
+            if (this.iconCache.size >= 2_000) this.iconCache.delete(this.iconCache.keys().next().value!)
+            this.iconCache.set(mint, { url: icons.get(mint) ?? null, expiresAt })
+          }
+        })().finally(() => { this.pendingIcons.delete(key) })
+        this.pendingIcons.set(key, request)
+      }
+      requests.push(request)
+    }
+    await Promise.all(requests)
+    return Object.fromEntries(mints.map(mint => [mint, this.iconCache.get(mint)?.url ?? null]))
   }
 
   private async fetchTokens(path: string) {
@@ -132,6 +165,7 @@ export class JupiterTokenService {
       mintAddress: token.id,
       name: token.name,
       symbol: token.symbol.toUpperCase().slice(0, 20),
+      iconUrl: token.icon?.startsWith('https://') ? token.icon : null,
       decimals: token.decimals,
       usdPrice,
       liquidityUsd,

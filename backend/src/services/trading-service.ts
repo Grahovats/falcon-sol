@@ -25,6 +25,7 @@ interface OrderInput {
   missionId: string
   userId: string
   marketId: string
+  acceptHighPriceImpact?: boolean
 }
 
 interface BuyOrderInput extends OrderInput {
@@ -72,6 +73,7 @@ export class TradingService {
     this.validateOrder({ side: OrderSide.BUY, notional })
     const quoteContext = await this.getTradingContext(this.database, input)
     const quote = await this.prices.getBuyQuote(quoteContext.market, notional)
+    assertOrderPriceImpact(quote, input.acceptHighPriceImpact)
     validateExitLevels({ takeProfitPrice: input.takeProfitPrice ?? null, stopLossPrice: input.stopLossPrice ?? null }, quote.referencePrice)
 
     const execution = await this.database.$transaction(async (transaction) => {
@@ -142,6 +144,7 @@ export class TradingService {
     const referencePrice = input.quantity === undefined ? (await this.prices.getPrice(quoteContext.market)).price : null
     const requestedQuantity = input.quantity === undefined ? decimal(input.notional as DecimalInput).div(referencePrice as Decimal) : decimal(input.quantity)
     const quote = await this.prices.getSellQuote(quoteContext.market, requestedQuantity)
+    assertOrderPriceImpact(quote, input.acceptHighPriceImpact)
 
     const execution = await this.database.$transaction(async (transaction) => {
       const context = await this.getTradingContext(transaction, input)
@@ -451,5 +454,16 @@ export function quoteMetadata(quote: ExecutionQuote) {
     routePlan: quote.routePlan as Prisma.InputJsonValue,
     quotedAt: quote.quotedAt,
     quoteExpiresAt: quote.expiresAt,
+  }
+}
+
+// Confirmation covers a fresh quote up to the absolute ceiling, never an unlimited override.
+export function assertOrderPriceImpact(quote: ExecutionQuote, accepted = false) {
+  const impact = quote.priceImpactPercent.abs()
+  if (impact.greaterThan(10)) {
+    throw new AppError('PRICE_IMPACT_TOO_HIGH', `Order blocked: estimated price impact is ${impact.toFixed(2)}%; the limit is 10%. Reduce the order size.`, 422)
+  }
+  if (impact.greaterThanOrEqualTo(5) && !accepted) {
+    throw new AppError('PRICE_IMPACT_CONFIRMATION_REQUIRED', `High price impact: ${impact.toFixed(2)}%. Reduce the order size or confirm to continue with up to 10% impact.`, 422)
   }
 }

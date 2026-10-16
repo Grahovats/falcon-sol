@@ -22,6 +22,7 @@ const tokenQuerySchema = z.object({ query: z.string().trim().min(2).max(100).opt
 const admitTokenSchema = z.object({ mintAddress: z.string().trim().min(32).max(64) })
 const decimalValue = z.number().positive().finite()
 const orderSchema = z.object({
+  acceptHighPriceImpact: z.boolean().optional(),
   marketId: z.string().min(1),
   side: z.enum(['BUY', 'SELL']),
   notional: decimalValue.optional(),
@@ -80,6 +81,16 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
       }
       throw error
     }
+  })
+
+  app.get('/missions/:missionId/market-icons', async (request) => {
+    const { missionId } = paramsSchema.parse(request.params)
+    const mission = await prisma.mission.findUnique({
+      where: { id: missionId },
+      select: { markets: { where: { enabled: true }, select: { mintAddress: true } } },
+    })
+    if (!mission) throw new AppError('MISSION_NOT_FOUND', 'Mission not found.', 404)
+    return { data: await tokenDiscoveryService.getIcons(mission.markets.map(market => market.mintAddress)) }
   })
 
   app.get('/missions/:missionId/markets', async (request) => {
@@ -241,13 +252,13 @@ export const tradingRoutes: FastifyPluginAsync = async (app) => {
     const order = orderSchema.parse(request.body)
     const user = await getAuthenticatedUser(prisma, request)
     const result = order.side === 'BUY'
-      ? await tradingService.placeBuyOrder({ missionId, userId: user.id, marketId: order.marketId, notional: order.notional as number,
+      ? await tradingService.placeBuyOrder({ missionId, userId: user.id, marketId: order.marketId, acceptHighPriceImpact: order.acceptHighPriceImpact ?? false, notional: order.notional as number,
           ...(order.takeProfitPrice === undefined ? {} : { takeProfitPrice: order.takeProfitPrice }),
           ...(order.stopLossPrice === undefined ? {} : { stopLossPrice: order.stopLossPrice }),
         })
       : order.quantity !== undefined
-        ? await tradingService.placeSellOrder({ missionId, userId: user.id, marketId: order.marketId, quantity: order.quantity })
-        : await tradingService.placeSellOrder({ missionId, userId: user.id, marketId: order.marketId, notional: order.notional as number })
+        ? await tradingService.placeSellOrder({ missionId, userId: user.id, marketId: order.marketId, acceptHighPriceImpact: order.acceptHighPriceImpact ?? false, quantity: order.quantity })
+        : await tradingService.placeSellOrder({ missionId, userId: user.id, marketId: order.marketId, acceptHighPriceImpact: order.acceptHighPriceImpact ?? false, notional: order.notional as number })
     return reply.code(201).send({ data: result })
   })
 }

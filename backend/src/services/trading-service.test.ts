@@ -98,3 +98,42 @@ describe('position exit execution', () => {
     expect(sell).not.toHaveBeenCalled()
   })
 })
+
+describe('manual order price-impact confirmation', () => {
+  for (const side of ['BUY', 'SELL'] as const) {
+    function prepare(impact: number) {
+      const context = fixture()
+      if (side === 'BUY') {
+        context.prices.getBuyQuote.mockResolvedValue({ ...context.quote, inputMint: 'USDC', outputMint: 'mint', referencePrice: d(100), priceImpactPercent: d(impact) })
+      } else context.prices.getSellQuote.mockResolvedValue({ ...context.quote, priceImpactPercent: d(impact) })
+      const order = (acceptHighPriceImpact = false) => side === 'BUY'
+        ? context.service.placeBuyOrder({ ...input, notional: 1200, acceptHighPriceImpact })
+        : context.service.placeSellOrder({ ...input, quantity: 10, acceptHighPriceImpact })
+      return { ...context, order }
+    }
+    it(`${side}: executes below 5% without confirmation`, async () => {
+      const { order, database } = prepare(4.99)
+      await order()
+      expect(database.fill.create).toHaveBeenCalledTimes(1)
+    })
+    it.each([5, 5.65, -5.65, 10])(`${side}: requires confirmation at %s%% without changing balances`, async impact => {
+      const { order, database } = prepare(impact)
+      await expect(order()).rejects.toMatchObject({ code: 'PRICE_IMPACT_CONFIRMATION_REQUIRED', statusCode: 422 })
+      expect(database.$transaction).not.toHaveBeenCalled()
+      expect(database.fill.create).not.toHaveBeenCalled()
+      expect(database.missionEntry.update).not.toHaveBeenCalled()
+    })
+    it.each([5.65, 10])(`${side}: confirms %s%% and preserves the quote's execution price`, async impact => {
+      const { order, database } = prepare(impact)
+      await order(true)
+      const fill = database.fill.create.mock.calls[0]?.[0].data
+      expect(fill.executionPrice.toString()).toBe('120')
+      expect(fill.priceImpactPct.toString()).toBe(String(impact))
+    })
+    it(`${side}: blocks a fresh quote above 10% even after confirmation`, async () => {
+      const { order, database } = prepare(10.01)
+      await expect(order(true)).rejects.toMatchObject({ code: 'PRICE_IMPACT_TOO_HIGH' })
+      expect(database.fill.create).not.toHaveBeenCalled()
+    })
+  }
+})

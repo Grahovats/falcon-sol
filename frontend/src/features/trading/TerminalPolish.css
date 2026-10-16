@@ -1,163 +1,502 @@
-/* Detail polish for the existing continuous terminal layout. */
+/* Falcon's spot terminal: quiet rails, an open chart, and a focused execution card. */
 .trading-terminal.terminal-polished {
-  --terminal-separator: color-mix(in srgb, var(--color-ink) 12%, var(--color-surface));
+  --terminal-separator: color-mix(in srgb, var(--color-line) 72%, var(--color-canvas));
+  --terminal-card: color-mix(in srgb, var(--color-surface-raised) 75%, var(--color-canvas));
+  background: var(--color-canvas);
 }
-.trading-terminal.terminal-polished .terminal-overview {
-  padding: 1.25rem;
-  background: linear-gradient(110deg, var(--color-surface-raised), var(--color-surface) 60%);
+.terminal-polished .terminal-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.terminal-polished .terminal-mission-name h1 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.3;
+.terminal-polished .terminal-status-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--color-primary);
 }
-.terminal-polished .terminal-stat {
-  border-color: var(--terminal-separator);
-  padding-left: 1.25rem;
-}
-.terminal-polished .terminal-stat dt {
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  line-height: 1.5;
-}
-.terminal-polished .terminal-stat dd {
-  margin-top: 0.375rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  white-space: nowrap;
-}
+.trading-terminal.terminal-polished .terminal-grid { border-color: var(--terminal-separator); }
+.trading-terminal.terminal-polished .terminal-main-column { background: var(--color-canvas); }
+.trading-terminal.terminal-polished .terminal-watch,
+.trading-terminal.terminal-polished .terminal-side-column { background: var(--color-surface-muted); }
+.trading-terminal.terminal-polished .terminal-main-column,
+.trading-terminal.terminal-polished .terminal-side-column { border-color: var(--terminal-separator); }
 .trading-terminal.terminal-polished .terminal-panel-heading {
-  min-height: 3.25rem;
-  padding-inline: 1.25rem;
-  background: color-mix(in srgb, var(--color-surface-raised) 40%, transparent);
+  min-height: 3.5rem;
+  padding-inline: 1rem;
+  border-color: var(--terminal-separator);
+  background: transparent;
 }
-.terminal-polished .terminal-panel-heading h2 {
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
+.terminal-polished .terminal-panel-heading h2 { color: var(--color-muted); font-size: 0.75rem; font-weight: 500; }
+.trading-terminal.terminal-polished .terminal-market-list { gap: 0; padding: 0; }
 .trading-terminal.terminal-polished .terminal-market-row.app-button {
-  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
   min-height: 4.5rem;
+  padding: 0.75rem;
   font-weight: 400;
+  border: 0;
+  border-bottom: 1px solid var(--terminal-separator);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
 }
-.terminal-polished .terminal-market-row > span:first-child > span:last-child {
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-}
-.terminal-polished .terminal-market-row > span:last-child {
-  margin-top: 0.5rem;
-  font-variant-numeric: tabular-nums;
-}
+.trading-terminal.terminal-polished .terminal-market-row.app-button:hover { background: var(--color-surface-raised); }
 .trading-terminal.terminal-polished .terminal-market-row.app-button[aria-pressed='true'] {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 10%, transparent), color-mix(in srgb, var(--color-primary) 3%, transparent));
-  box-shadow: inset 3px 0 0 var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface-muted));
+  box-shadow: inset 2px 0 var(--color-primary);
 }
-.trading-terminal.terminal-polished .app-button:not(.terminal-market-row) {
-  border-radius: 0.375rem;
-  min-height: 2.75rem;
-  font-weight: 500;
+.terminal-polished .terminal-token-mark {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
-.terminal-polished .app-button:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-.trading-terminal.terminal-polished .terminal-ticket {
-  padding: 1.25rem;
-}
-.terminal-polished .terminal-ticket > div:first-child h2 {
-  font-size: 0.875rem;
-  font-weight: 600;
-}
+.terminal-polished .terminal-market-identity > span:last-child { white-space: nowrap; font-size: 0.625rem; }
+.terminal-polished .terminal-market-price > span { white-space: nowrap; font-size: 0.6875rem; }
+.terminal-polished .terminal-market-identity { display: grid; min-width: 0; gap: 0.25rem; font-size: 0.75rem; }
+.terminal-polished .terminal-market-price { display: grid; min-width: 0; gap: 0.25rem; margin-left: auto; font-size: 0.75rem; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.terminal-polished .terminal-market-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.125rem 1.25rem; }
+.terminal-polished .terminal-market-heading { display: flex; align-items: center; gap: 0.875rem; min-width: 0; }
+.terminal-polished .terminal-market-heading > .terminal-token-mark { width: 2.75rem; height: 2.75rem; font-size: 0.875rem; }
+.terminal-polished .terminal-market-heading h2 { font-size: 1rem; }
+.terminal-polished .terminal-market-heading p { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.04em; overflow-wrap: anywhere; }
+.terminal-polished .terminal-market-metrics { gap: 1.5rem; }
+.terminal-polished .terminal-market-metrics dt { font-size: 0.625rem; letter-spacing: 0.04em; }
+.terminal-polished .terminal-market-metrics dd { font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.terminal-polished .terminal-chart-canvas { height: clamp(22rem, 47dvh, 38rem); }
+.terminal-polished .terminal-chart-toolbar { border-color: var(--terminal-separator); background: var(--color-canvas); }
+.terminal-polished .terminal-chart-toolbar .app-button { min-width: 2.5rem; border: 0; border-radius: 0.375rem; box-shadow: none; }
+.terminal-polished .terminal-chart-toolbar .app-button[aria-pressed='true'] { background: color-mix(in srgb, var(--color-primary) 10%, var(--color-canvas)); color: var(--color-primary); }
+.terminal-polished .terminal-candle-metrics { min-height: 2.75rem; gap: 0.75rem; border-color: var(--terminal-separator); font-size: 0.625rem; }
+.terminal-polished .terminal-history-controls { border-color: var(--terminal-separator); }
+.terminal-polished .terminal-history-controls .app-button { min-height: 2.5rem; border-color: var(--terminal-separator); background: transparent; box-shadow: none; }
+.terminal-polished .terminal-history-controls p { font-size: 0.625rem; }
+.trading-terminal.terminal-polished .terminal-blotter { min-width: 0; border-top: 1px solid var(--terminal-separator); background: var(--color-surface-muted); }
+.terminal-polished .terminal-activity-tabs { display: flex; gap: 1.5rem; padding-inline: 1.25rem; border-bottom: 1px solid var(--terminal-separator); }
+.terminal-polished .terminal-activity-tabs button { display: flex; min-height: 3.25rem; align-items: center; gap: 0.5rem; border-bottom: 2px solid transparent; color: var(--color-muted); font-size: 0.75rem; font-weight: 500; cursor: pointer; }
+.terminal-polished .terminal-activity-tabs button[aria-pressed='true'] { border-color: var(--color-primary); color: var(--color-ink); }
+.terminal-polished .terminal-activity-tabs button span { padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: var(--color-surface-raised); color: var(--color-muted); font-size: 0.625rem; }
+.trading-terminal.terminal-polished #terminal-activity > section { overflow: hidden; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+/* Keep the table's accessible heading without repeating the activity navigation. */
+.terminal-polished #terminal-activity > section > div:first-child { position: absolute; width: 1px; height: 1px; min-height: 0; overflow: hidden; clip-path: inset(50%); padding: 0; white-space: nowrap; }
+.trading-terminal.terminal-polished .app-table th { padding: 0.875rem 1rem; font-size: 0.6875rem; font-weight: 400; text-transform: none; letter-spacing: normal; white-space: nowrap; }
+.trading-terminal.terminal-polished .app-table td { padding: 1rem; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.trading-terminal.terminal-polished .terminal-positions tbody tr { height: 4.25rem; }
+.trading-terminal.terminal-polished .app-table .app-table-action { min-height: 2.5rem; padding-inline: 0.75rem; border: 1px solid var(--color-line); border-radius: 0.375rem; background: transparent; box-shadow: none; font-size: 0.6875rem; }
+.trading-terminal.terminal-polished .terminal-ticket { padding: 1rem; }
+.terminal-polished .terminal-ticket-heading { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.terminal-polished .terminal-ticket-heading h2 { font-size: 0.8125rem; font-weight: 600; }
 .terminal-polished .terminal-side-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.375rem;
   padding: 0.25rem;
-  gap: 0.25rem;
-  border: 1px solid var(--color-line);
-  border-radius: 0.625rem;
+  border: 1px solid var(--terminal-separator);
+  border-radius: 0.75rem;
+  background: var(--color-canvas);
 }
 .trading-terminal.terminal-polished .terminal-side-switch .app-button {
-  border-color: transparent;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0.5rem;
   background: transparent;
+  color: var(--color-muted);
+  box-shadow: none;
   font-size: 0.8125rem;
   font-weight: 600;
 }
-.trading-terminal.terminal-polished .terminal-side-switch .terminal-side-buy[aria-pressed='true'] {
-  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
-  color: var(--color-primary);
+.terminal-polished .terminal-side-buy { --button-accent: var(--color-primary); }
+.terminal-polished .terminal-side-sell { --button-accent: var(--color-danger); }
+.terminal-polished .terminal-side-switch .app-button::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--button-accent);
+  clip-path: circle(0% at 50% 50%);
+  pointer-events: none;
 }
-.trading-terminal.terminal-polished .terminal-side-switch .terminal-side-sell[aria-pressed='true'] {
-  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-surface));
-  color: var(--color-danger);
+.terminal-polished .terminal-side-switch .app-button[aria-pressed='true']::before { clip-path: circle(100% at 50% 50%); }
+.trading-terminal.terminal-polished .terminal-side-switch .app-button:hover { color: var(--color-ink); }
+.trading-terminal.terminal-polished .terminal-side-switch .terminal-side-buy[aria-pressed='true'] { color: var(--color-primary-ink); }
+.trading-terminal.terminal-polished .terminal-side-switch .terminal-side-sell[aria-pressed='true'] { color: var(--color-canvas); }
+@media (prefers-reduced-motion: no-preference) {
+  .terminal-polished .terminal-side-switch .app-button::before { transition: clip-path 400ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .trading-terminal.terminal-polished .terminal-side-switch .app-button { transition: color 150ms ease-out; }
 }
-.terminal-polished .terminal-amount-input {
-  overflow: hidden;
-  border-radius: 0.5rem;
-  border-color: var(--color-line-strong);
-}
-.terminal-polished .terminal-amount-input:focus-within {
-  border-color: var(--color-primary);
-}
-.terminal-polished .terminal-amount-input:has([aria-invalid='true']) {
-  border-color: var(--color-danger);
-}
-.terminal-polished .terminal-amount-input input {
-  min-height: 3.5rem;
-  font-size: 1.5rem;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
+.terminal-polished .terminal-execution-type { display: flex; justify-content: space-between; gap: 0.5rem; padding-block: 1rem; font-size: 0.6875rem; }
+.terminal-polished .terminal-execution-type > span:last-child { color: var(--color-muted); }
+.terminal-polished .terminal-amount-card { padding: 1rem; border: 1px solid var(--color-line); border-radius: 0.875rem; background: var(--terminal-card); }
+.terminal-polished .terminal-amount-card > div:first-child { color: var(--color-muted); font-size: 0.6875rem; }
+.terminal-polished .terminal-amount-card:focus-within { border-color: var(--color-primary); }
+.terminal-polished .terminal-amount-input { display: flex; min-width: 0; align-items: center; gap: 0.5rem; padding-block: 0.75rem; }
+.terminal-polished .terminal-amount-unit { flex-shrink: 0; color: var(--color-muted); font-size: 0.875rem; }
+.terminal-polished .terminal-amount-input input.app-field { width: 100%; min-width: 0; min-height: 3rem; padding: 0.25rem; border: 0; background: transparent; color: var(--color-ink); box-shadow: none; font-size: 2rem; font-weight: 500; letter-spacing: -0.05em; text-align: right; font-variant-numeric: tabular-nums; }
 .terminal-polished .terminal-amount-input input::placeholder { color: var(--color-muted); }
-.terminal-polished .app-field:not(.app-field-embedded) {
-  min-height: 2.75rem;
-  border-radius: 0.375rem;
-  font-variant-numeric: tabular-nums;
-}
-.terminal-polished .app-field:focus-visible { border-color: var(--color-primary); }
-.terminal-polished .terminal-amount-presets .app-button { color: var(--color-muted); font-variant-numeric: tabular-nums; }
-.trading-terminal.terminal-polished .terminal-ticket .app-button[type='submit'] {
-  min-height: 3rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-.trading-terminal.terminal-polished .terminal-rankings li {
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  font-variant-numeric: tabular-nums;
-}
-.terminal-polished .terminal-rankings li > span:first-child { font-weight: 500; }
-.trading-terminal.terminal-polished .app-table th {
-  font-size: 0.75rem;
-  text-transform: none;
-  letter-spacing: normal;
-  white-space: nowrap;
-}
-.terminal-polished .app-table :is(th, td) { font-variant-numeric: tabular-nums; }
-.trading-terminal.terminal-polished .app-table .app-table-action {
-  border: 1px solid var(--color-line-strong);
-  border-radius: 0.375rem;
-  padding-inline: 0.875rem;
-  background: var(--color-surface-raised);
-  font-weight: 600;
-}
-.trading-terminal.terminal-polished .app-table .app-table-action:hover {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
-}
-.trading-terminal.terminal-polished .app-table .app-table-action.text-danger:hover {
-  border-color: var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
-}
+.terminal-polished .terminal-order-help { margin-block: 0.625rem 1rem; color: var(--color-muted); font-size: 0.6875rem; line-height: 1.6; }
+.terminal-polished .terminal-optional-exits { border-block: 1px solid var(--terminal-separator); }
+.terminal-polished .terminal-optional-exits summary,
+.terminal-polished .terminal-position-exits summary { display: flex; min-height: 2.75rem; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.6875rem; cursor: pointer; list-style: none; }
+.terminal-polished summary::-webkit-details-marker { display: none; }
+.terminal-polished summary > span > span { margin-left: 0.375rem; font-size: 0.625rem; }
+.terminal-polished details[open] > summary > svg { transform: rotate(180deg); }
+.terminal-polished .terminal-exits-fields { padding-block: 0.25rem 1rem; }
+.terminal-polished .app-field:not(.app-field-embedded) { min-height: 2.75rem; border-radius: 0.375rem; }
+.terminal-polished .terminal-order-estimate { display: grid; gap: 0.875rem; margin-block: 1rem; padding: 1rem; border: 1px solid var(--terminal-separator); border-radius: 0.75rem; font-size: 0.6875rem; }
+.terminal-polished .terminal-order-estimate > div { display: flex; justify-content: space-between; gap: 0.75rem; }
+.terminal-polished .terminal-order-estimate dt { color: var(--color-muted); }
+.terminal-polished .terminal-order-estimate dd { text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.trading-terminal.terminal-polished .terminal-submit { display: flex; width: 100%; min-height: 3rem; align-items: center; justify-content: center; gap: 0.375rem; border: 0; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; }
+.terminal-polished .terminal-position-exits { margin: 0 1rem 1rem; border: 1px solid var(--terminal-separator); border-radius: 0.75rem; background: var(--terminal-card); }
+.terminal-polished .terminal-position-exits summary { padding-inline: 0.875rem; }
+.terminal-polished .terminal-position-exits > section.app-surface { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.terminal-polished .terminal-performance { padding: 1.25rem; border-top: 1px solid var(--terminal-separator); }
+.terminal-polished .terminal-performance h2 { color: var(--color-muted); font-size: 0.75rem; }
+.terminal-polished .terminal-pnl-value { margin-block: 0.5rem; font-size: clamp(2rem, 2.5vw, 2.75rem); font-weight: 500; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.trading-terminal.terminal-polished .terminal-rankings { border-color: var(--terminal-separator); }
+.trading-terminal.terminal-polished .terminal-rankings li { min-height: 4rem; gap: 0.5rem; padding: 0.875rem 1rem; font-size: 0.75rem; }
+.terminal-polished .terminal-ranking-columns { font-size: 0.6875rem; }
+.terminal-polished .app-button:focus-visible,
+.terminal-polished .focus-ring:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
 .terminal-polished #order-ticket { scroll-margin-top: calc(var(--app-header-height) + 1rem); }
+@media (min-width: 768px) {
+  .trading-terminal.terminal-polished .terminal-grid { grid-template-columns: minmax(0, 1fr) 320px; }
+  .trading-terminal.terminal-polished .terminal-market-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .trading-terminal.terminal-polished .terminal-grid { grid-template-columns: 232px minmax(0, 1fr) 320px; }
+  .trading-terminal.terminal-polished .terminal-market-list { grid-template-columns: minmax(0, 1fr); max-height: 55dvh; }
+}
+@media (min-width: 1600px) {
+  .trading-terminal.terminal-polished .terminal-grid { grid-template-columns: 256px minmax(0, 1fr) 352px; }
+  .terminal-polished .terminal-market-metrics { flex-basis: auto; }
+}
 @media (max-width: 767px) {
-  .terminal-polished .terminal-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 1rem; }
-  .terminal-polished .terminal-mission-name { grid-column: 1 / -1; min-width: 0; }
-  .terminal-polished .terminal-stat { min-width: 0; padding-left: 0.75rem; }
-  .terminal-polished .terminal-stat dd { font-size: 1rem; white-space: normal; overflow-wrap: anywhere; }
+  .trading-terminal.terminal-polished .terminal-market-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trading-terminal.terminal-polished .terminal-market-row.app-button { grid-template-columns: auto minmax(0, 1fr); gap: 0.5rem; padding: 0.75rem; }
+  .terminal-polished .terminal-market-price { grid-column: 1 / -1; width: 100%; grid-template-columns: 1fr auto; text-align: left; }
+  .terminal-polished .terminal-market-metrics { width: 100%; justify-content: space-between; gap: 0.75rem; }
+  .terminal-polished .terminal-market-header { padding: 1rem; gap: 1rem; }
+  .terminal-polished .terminal-chart-canvas { height: 22rem; }
+  /* The activity table belongs immediately below the chart on narrow screens too. */
+  .trading-terminal.terminal-polished .terminal-grid { grid-template-areas: 'watch' 'chart' 'activity' 'order' 'performance' 'rankings'; align-content: start; }
+  .terminal-polished .terminal-blotter { grid-area: activity; }
+  .terminal-polished .terminal-performance { grid-area: performance; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .terminal-polished :is(.terminal-amount-input, .app-field) { transition: border-color 120ms ease-out; }
-  .terminal-polished .app-button:not(.terminal-market-row):not(:disabled):active { transform: translateY(1px); }
+  .terminal-polished .terminal-amount-card,
+  .terminal-polished .terminal-activity-tabs button { transition: border-color 150ms ease; }
+  .terminal-polished summary > svg { transition: transform 150ms ease; }
 }
+
+/* Keep the active workspace within the initial desktop viewport. */
+@media (min-width: 1280px) {
+  .trading-terminal.terminal-polished.app-surface {
+    height: max(32rem, calc(100dvh - var(--terminal-top, var(--app-header-height))));
+    min-height: 0;
+  }
+    .terminal-polished .terminal-eyebrow { margin-bottom: 0.125rem; }
+  .trading-terminal.terminal-polished .terminal-grid { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+  .trading-terminal.terminal-polished .terminal-main-column,
+  .trading-terminal.terminal-polished .terminal-side-column { min-height: 0; }
+  .trading-terminal.terminal-polished .terminal-watch,
+  .trading-terminal.terminal-polished .terminal-side-column { overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; }
+  .trading-terminal.terminal-polished .terminal-chart,
+  .terminal-polished .terminal-market-workspace,
+  .terminal-polished .terminal-candlestick,
+  .terminal-polished .terminal-chart-plot { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+  .terminal-polished .terminal-chart-viewport { flex: 1; min-height: 10rem; }
+  .terminal-polished .terminal-chart-viewport .terminal-chart-canvas { position: absolute; inset: 0; height: 100%; }
+  .terminal-polished .terminal-market-header { flex: 0 0 auto; gap: 0.75rem; padding: 0.625rem 1rem; }
+  .terminal-polished .terminal-market-heading p { font-size: 1.25rem; }
+  .terminal-polished .terminal-market-heading > .terminal-token-mark { width: 2.25rem; height: 2.25rem; font-size: 0.75rem; }
+  .terminal-polished .terminal-market-metrics { gap: 1rem; }
+  .terminal-polished .terminal-chart-toolbar,
+  .terminal-polished .terminal-candle-metrics,
+  .terminal-polished .terminal-history-controls { flex: 0 0 auto; padding-block: 0.25rem; }
+  .terminal-polished .terminal-candle-metrics { gap: 0.5rem; }
+  .terminal-polished .terminal-candle-metrics .app-button { min-height: 2.5rem; padding-inline: 0.5rem; }
+  .terminal-polished .terminal-chart-toolbar > p { font-size: 0.625rem; }
+  .terminal-polished .terminal-history-controls .app-button { min-height: 2.5rem; }
+  .terminal-polished .terminal-candlestick > .chart-loading { flex: 1; height: auto; min-height: 10rem; }
+  .trading-terminal.terminal-polished .terminal-blotter { display: flex; flex: 0 0 auto; max-height: clamp(9rem, 23dvh, 13rem); flex-direction: column; }
+  .terminal-polished .terminal-activity-tabs { flex-shrink: 0; }
+  .terminal-polished .terminal-activity-tabs button { min-height: 2.5rem; }
+  .terminal-polished #terminal-activity { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+  .trading-terminal.terminal-polished .app-table th { padding: 0.5rem 0.75rem; }
+  .trading-terminal.terminal-polished .app-table td { padding: 0.5rem 0.75rem; }
+  .trading-terminal.terminal-polished .terminal-positions tbody tr { height: 3.5rem; }
+  .trading-terminal.terminal-polished .terminal-panel-heading { min-height: 2.5rem; padding-block: 0.5rem; }
+  .trading-terminal.terminal-polished .terminal-market-row.app-button { min-height: 3.75rem; padding-block: 0.5rem; }
+  .trading-terminal.terminal-polished .terminal-ticket { padding: 0.75rem; }
+  .terminal-polished .terminal-ticket-heading { margin-bottom: 0.5rem; }
+  .terminal-polished .terminal-execution-type { padding-block: 0.625rem; }
+  .terminal-polished .terminal-amount-card { padding: 0.75rem; }
+  .terminal-polished .terminal-amount-input { padding-block: 0.25rem; }
+  .terminal-polished .terminal-amount-input input.app-field { min-height: 2.75rem; font-size: 1.75rem; }
+  .terminal-polished .terminal-order-help { margin-block: 0.5rem; }
+  .terminal-polished .terminal-order-estimate { gap: 0.5rem; margin-block: 0.625rem; padding: 0.75rem; }
+  .trading-terminal.terminal-polished .terminal-submit { min-height: 2.75rem; }
+  .terminal-polished .terminal-position-exits { margin: 0 0.75rem 0.625rem; }
+  .terminal-polished .terminal-performance { padding: 0.75rem 1rem; }
+  .terminal-polished .terminal-pnl-value { margin-block: 0.25rem; font-size: 1.75rem; }
+  .trading-terminal.terminal-polished .terminal-rankings li { min-height: 3.5rem; padding-block: 0.625rem; }
+  .trading-terminal.terminal-polished .terminal-ranking-columns { height: 2rem; }
+}
+/* On tablets and phones keep natural scrolling, but reduce the chart's initial footprint. */
+@media (max-width: 1279px) {
+  .terminal-polished .terminal-chart-canvas { height: clamp(16rem, 38dvh, 24rem); }
+  .terminal-polished .terminal-market-header { padding-block: 0.75rem; }
+    .terminal-polished .terminal-history-controls { padding-block: 0.25rem; }
+}
+@media (max-width: 1279px) {
+  .trading-terminal.terminal-polished .terminal-watch { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+  .trading-terminal.terminal-polished .terminal-watch > .terminal-panel-heading { grid-column: 1; grid-row: 1; min-height: 3.5rem; }
+  .terminal-polished .terminal-watch-actions { grid-column: 2; grid-row: 1; padding: 0.5rem 0.75rem; }
+  .trading-terminal.terminal-polished .terminal-watch-actions .app-button { width: auto; min-height: 2.5rem; padding-inline: 0.75rem; }
+  .trading-terminal.terminal-polished .terminal-market-list { display: flex; grid-column: 1 / -1; overflow-x: auto; max-height: none; overscroll-behavior-x: contain; }
+  .trading-terminal.terminal-polished .terminal-market-row.app-button { flex: 0 0 10rem; min-height: 4rem; }
+}
+
+/* Unboxed mission stats align with the market rail above. */
+.terminal-polished .terminal-mission-progress {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.terminal-polished .terminal-mission-clock { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.terminal-polished .terminal-mission-clock > span { display: flex; align-items: center; gap: 0.375rem; color: var(--color-muted); font-size: 0.6875rem; white-space: nowrap; }
+.terminal-polished .terminal-mission-clock strong { font-size: 0.9375rem; font-weight: 500; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+.terminal-polished .terminal-mission-time { display: block; width: 100%; height: 0.1875rem; margin-block: 0.75rem 1.25rem; overflow: hidden; appearance: none; border: 0; border-radius: 1rem; background: var(--color-line); color: var(--color-primary); }
+.terminal-polished .terminal-mission-time::-webkit-progress-bar { border-radius: 1rem; background: var(--color-line); }
+.terminal-polished .terminal-mission-time::-webkit-progress-value { border-radius: 1rem; background: var(--color-primary); }
+.terminal-polished .terminal-mission-time::-moz-progress-bar { border-radius: 1rem; background: var(--color-primary); }
+.terminal-polished .terminal-mission-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.terminal-polished .terminal-mission-stats dt { margin-bottom: 0.375rem; color: var(--color-muted); font-size: 0.6875rem; }
+.terminal-polished .terminal-mission-stats dd { font-size: 0.9375rem; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.terminal-polished .terminal-mission-stats > div:first-child { grid-column: 1 / -1; }
+.terminal-polished .terminal-mission-stats > div:first-child dd { font-size: 1.5rem; letter-spacing: -0.04em; }
+.terminal-polished .terminal-mission-stats > div:nth-child(2) { display: flex; grid-column: 1 / -1; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.terminal-polished .terminal-mission-stats > div:nth-child(2) dt { margin: 0; }
+.terminal-polished .terminal-mission-stats > div:nth-child(n+3) { padding-top: 0.875rem; border-top: 1px solid var(--terminal-separator); }
+@media (max-width: 1279px) {
+  .terminal-polished .terminal-mission-progress { padding: 0.75rem 1rem; }
+  .terminal-polished .terminal-mission-time { margin-block: 0.625rem 0.875rem; }
+  .terminal-polished .terminal-mission-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+  .terminal-polished .terminal-mission-stats > div:first-child,
+  .terminal-polished .terminal-mission-stats > div:nth-child(2) { display: block; grid-column: auto; }
+  .terminal-polished .terminal-mission-stats > div:first-child dd { font-size: 0.9375rem; letter-spacing: normal; }
+  .terminal-polished .terminal-mission-stats > div:nth-child(2) dt { margin-bottom: 0.375rem; }
+  .terminal-polished .terminal-mission-stats > div:nth-child(n+3) { padding: 0; border: 0; }
+}
+
+/* Flat amount entry with a marked allocation slider. */
+.terminal-polished .terminal-order-form { --allocation-color: var(--color-primary); }
+.terminal-polished .terminal-order-form[data-side='SELL'] { --allocation-color: var(--color-danger); }
+.terminal-polished .terminal-order-form .terminal-amount-card {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+}
+.terminal-polished .terminal-order-form .terminal-amount-card:focus-within { border-color: var(--color-line-strong); }
+.terminal-polished .terminal-amount-card > div:first-child > label { color: var(--color-muted); font-size: 0.75rem; }
+.terminal-polished .terminal-currency-chip { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--color-ink); font-size: 0.6875rem; font-weight: 500; }
+.terminal-polished .terminal-currency-chip::before { content: ''; width: 0.3125rem; height: 0.3125rem; border-radius: 50%; background: var(--allocation-color); }
+.terminal-polished .terminal-order-form .terminal-amount-input { align-items: baseline; gap: 0.375rem; padding-block: 0.625rem; }
+.terminal-polished .terminal-order-form .terminal-amount-input input.app-field { min-height: 3rem; padding: 0; font-size: 2.25rem; line-height: 1.2; font-weight: 500; letter-spacing: -0.04em; text-align: left; }
+.terminal-polished .terminal-order-form .terminal-amount-unit { color: var(--color-muted); font-size: 1.25rem; }
+.terminal-polished .terminal-allocation-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--terminal-separator); }
+.terminal-polished .terminal-allocation-heading p { display: flex; flex-wrap: wrap; gap: 0.25rem 0.375rem; min-width: 0; color: var(--color-muted); font-size: 0.6875rem; }
+.terminal-polished .terminal-allocation-heading strong { color: var(--color-ink); font-weight: 400; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.terminal-polished .terminal-allocation-heading output { min-width: 2.75rem; flex-shrink: 0; color: var(--allocation-color); font-size: 0.8125rem; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+.terminal-polished .terminal-allocation-heading output span { margin-left: 0.125rem; font-size: 0.6875rem; }
+.terminal-polished .terminal-allocation-slider { display: block; width: 100%; height: 3rem; margin: 0; padding: 0; appearance: none; background: transparent; cursor: pointer; touch-action: pan-y; }
+.terminal-polished .terminal-allocation-slider::-webkit-slider-runnable-track { height: 0.25rem; border-radius: 1rem; background: transparent; }
+.terminal-polished .terminal-allocation-slider::-moz-range-track { height: 0.25rem; border-radius: 1rem; background: transparent; }
+.terminal-polished .terminal-allocation-slider::-moz-range-progress { height: 0.25rem; border-radius: 1rem; background: transparent; }
+.terminal-polished .terminal-allocation-slider::-webkit-slider-thumb { width: 1.125rem; height: 1.125rem; margin-top: -0.4375rem; appearance: none; border: 2px solid var(--allocation-color); border-radius: 50%; background: var(--color-ink); box-shadow: 0 0 0 3px var(--color-surface); }
+.terminal-polished .terminal-allocation-slider::-moz-range-thumb { width: 0.875rem; height: 0.875rem; border: 2px solid var(--allocation-color); border-radius: 50%; background: var(--color-ink); box-shadow: 0 0 0 3px var(--color-surface); }
+.terminal-polished .terminal-allocation-slider:focus-visible { outline: 2px solid var(--allocation-color) !important; outline-offset: 0; border-radius: 0.375rem; }
+.terminal-polished .terminal-allocation-slider:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.terminal-polished .terminal-allocation-control { position: relative; }
+.terminal-polished .terminal-allocation-control::before { content: ''; position: absolute; top: 50%; right: 0.5625rem; left: 0.5625rem; height: 0.25rem; border-radius: 1rem; background: linear-gradient(to right, var(--allocation-color) 0%, var(--allocation-color) var(--allocation), var(--color-line-strong) var(--allocation), var(--color-line-strong) 100%); transform: translateY(-50%); pointer-events: none; }
+.terminal-polished .terminal-allocation-slider { position: relative; z-index: 1; }
+.terminal-polished .terminal-allocation-checkpoints { position: absolute; top: 50%; right: 0.5625rem; left: 0.5625rem; height: 0; pointer-events: none; }
+.terminal-polished .terminal-allocation-checkpoints > span { position: absolute; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-line-strong); transform: translate(-50%, -50%); }
+.terminal-polished .terminal-allocation-checkpoints > span[data-reached='true'] { background: var(--allocation-color); }
+.terminal-polished .terminal-allocation-labels { position: relative; height: 1.25rem; margin-inline: 0.5625rem; color: var(--color-muted); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.terminal-polished .terminal-allocation-labels > span { position: absolute; transform: translateX(-50%); }
+.terminal-polished .terminal-allocation-labels > span:first-child { transform: none; }
+.terminal-polished .terminal-allocation-labels > span:last-child { transform: translateX(-100%); }
+.terminal-polished .terminal-allocation-labels > span[data-reached='true'] { color: var(--allocation-color); }
+
+.terminal-polished .terminal-token-mark { overflow: hidden; }
+.terminal-polished .terminal-token-mark img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+
+/* Terminal buttons use transparent surfaces in every interaction state. */
+.trading-terminal.terminal-polished button.app-button {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.terminal-polished .terminal-side-switch { background: transparent; }
+.terminal-polished .terminal-side-switch .app-button::before { background: var(--button-accent); }
+.trading-terminal.terminal-polished .terminal-side-switch .terminal-side-buy[aria-pressed='true'] { color: var(--color-primary-ink); }
+.trading-terminal.terminal-polished .terminal-side-switch .terminal-side-sell[aria-pressed='true'] { color: var(--color-canvas); }
+.trading-terminal.terminal-polished .terminal-submit {
+  border: 1px solid color-mix(in srgb, var(--allocation-color) 45%, var(--color-line));
+  color: var(--allocation-color);
+}
+.trading-terminal.terminal-polished .terminal-submit:hover:enabled { border-color: var(--allocation-color); }
+.trading-terminal.terminal-polished .terminal-submit:disabled { border-color: var(--color-line); color: var(--color-muted); }
+.trading-terminal.terminal-polished .terminal-candle-metrics .app-button {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.trading-terminal.terminal-polished .app-table .app-button.app-table-action {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.trading-terminal.terminal-polished .app-table .app-table-action.text-danger:hover:enabled {
+  color: var(--color-ink);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .trading-terminal.terminal-polished .app-table .app-table-action.text-danger {
+    transition: color 150ms ease-out;
+  }
+}
+
+/* Quiet, aligned exit controls with a compact configured-level indicator. */
+.terminal-polished .terminal-optional-exits { border-color: var(--terminal-separator); }
+.terminal-polished .terminal-optional-exits > summary { min-height: 3rem; gap: 0.5rem; padding-block: 0.5rem; color: var(--color-ink); font-size: 0.75rem; }
+.terminal-polished .terminal-exits-title { display: inline-flex; min-width: 0; align-items: center; gap: 0.5rem; }
+.terminal-polished .terminal-exits-title > svg { flex-shrink: 0; color: var(--color-muted); }
+.terminal-polished .terminal-exits-status { margin-left: auto; color: var(--color-muted); font-size: 0.625rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.terminal-polished .terminal-optional-exits > summary > svg { flex-shrink: 0; color: var(--color-muted); }
+.terminal-polished .terminal-optional-exits[open] > summary > svg { color: var(--color-primary); }
+.terminal-polished .terminal-exits-fields { padding-block: 0.25rem 0.875rem; }
+.terminal-polished .terminal-exit-inputs { gap: 0.75rem; }
+.terminal-polished .terminal-exit-inputs label { display: flex; align-items: center; gap: 0.375rem; color: var(--color-muted); font-size: 0.6875rem; }
+.terminal-polished .terminal-exit-inputs label::before { content: ''; width: 0.25rem; height: 0.25rem; flex-shrink: 0; border-radius: 50%; background: var(--color-primary); }
+.terminal-polished .terminal-exit-inputs [data-exit='stopLossPrice'] label::before { background: var(--color-danger); }
+.terminal-polished .terminal-exit-inputs .app-field { margin-top: 0.5rem; min-height: 2.75rem; padding-inline: 0.75rem; border: 1px solid var(--color-line); border-radius: 0.5rem; background: transparent; box-shadow: none; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.terminal-polished .terminal-exit-inputs .app-field:focus { border-color: var(--color-primary); }
+.terminal-polished .terminal-exit-inputs [data-exit='stopLossPrice'] .app-field:focus { border-color: var(--color-danger); }
+.terminal-polished .terminal-exit-inputs .app-field::placeholder { color: var(--color-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .terminal-polished .terminal-optional-exits > summary > svg { transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms ease-out; }
+  .terminal-polished .terminal-exit-inputs .app-field { transition: border-color 150ms ease-out; }
+}
+
+/* Coin search uses open spacing and filled controls instead of outlined boxes. */
+.trading-terminal.terminal-polished .token-search-dialog.app-modal {
+  --coin-search-gutter: 2rem;
+  width: min(55rem, calc(100% - 2rem));
+  max-width: 55rem;
+  border: 0;
+  border-radius: 1.25rem;
+  background: var(--color-surface-muted);
+  background-image: none;
+  box-shadow: 0 1.5rem 5rem color-mix(in srgb, var(--color-canvas) 80%, transparent);
+  backdrop-filter: none;
+}
+.trading-terminal.terminal-polished .token-search-dialog::backdrop { background: color-mix(in srgb, var(--color-canvas) 75%, transparent); backdrop-filter: blur(6px); }
+.terminal-polished .token-search-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.75rem var(--coin-search-gutter) 1.25rem; }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-header h2 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.035em; }
+.trading-terminal.terminal-polished .token-search-dialog .app-button { padding-inline: 0; border: 0; border-radius: 0.75rem; background: transparent; box-shadow: none; }
+.trading-terminal.terminal-polished .token-search-close { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; color: var(--color-muted); }
+.trading-terminal.terminal-polished .token-search-close:hover { color: var(--color-ink); background: var(--color-surface-raised); }
+.terminal-polished .token-search-form { padding: 0 var(--coin-search-gutter) 1.5rem; }
+.terminal-polished .token-search-field { display: flex; min-width: 0; min-height: 3.75rem; align-items: center; gap: 0.875rem; padding: 0.5rem 0.5rem 0.5rem 1rem; border: 0; border-radius: 0.875rem; background: var(--color-surface-raised); color: var(--color-muted); }
+.terminal-polished .token-search-field:has(input:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.terminal-polished .token-search-field input.app-field { flex: 1; width: 0; min-width: 0; min-height: 2.75rem; padding: 0; border: 0; background: transparent; color: var(--color-ink); font-size: 1rem; box-shadow: none; outline: none; }
+.terminal-polished .token-search-field input::placeholder { color: var(--color-muted); }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-submit { display: grid; width: 2.75rem; height: 2.75rem; flex-shrink: 0; place-items: center; background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary); }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-submit:hover:enabled { background: color-mix(in srgb, var(--color-primary) 20%, transparent); }
+.terminal-polished .token-search-submit:disabled { color: var(--color-muted); cursor: wait; }
+.terminal-polished .token-search-results { max-height: 52dvh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+.terminal-polished .token-search-results::-webkit-scrollbar-thumb { background: var(--color-line-strong); }
+.terminal-polished .token-search-results-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--coin-search-gutter) 0.75rem; color: var(--color-muted); font-size: 0.75rem; }
+.terminal-polished .token-search-results-heading > span:last-child { padding: 0.125rem 0.5rem; border-radius: 0.375rem; background: var(--color-surface-raised); font-variant-numeric: tabular-nums; }
+.terminal-polished .token-search-result { display: grid; grid-template-columns: minmax(0, 1fr) minmax(17rem, 1.1fr) 2.75rem; gap: 0.75rem 1.5rem; align-items: center; padding: 1.25rem var(--coin-search-gutter); }
+.terminal-polished .token-search-result:hover { background: color-mix(in srgb, var(--color-surface-raised) 45%, transparent); }
+.terminal-polished .token-search-identity { display: flex; min-width: 0; align-items: center; gap: 0.875rem; }
+.terminal-polished .token-search-identity > .terminal-token-mark { width: 2.75rem; height: 2.75rem; border: 0; font-size: 0.75rem; }
+.terminal-polished .token-search-identity h3 { display: flex; align-items: center; gap: 0.375rem; color: var(--color-ink); font-size: 0.9375rem; font-weight: 600; }
+.terminal-polished .token-search-identity p { margin-top: 0.25rem; color: var(--color-muted); font-size: 0.8125rem; }
+.terminal-polished .token-search-mint { display: block; margin-top: 0.25rem; color: var(--color-muted); font-size: 0.75rem; }
+.terminal-polished .token-search-stats { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.8fr); gap: 1rem; text-align: right; }
+.terminal-polished .token-search-stats dt { margin-bottom: 0.5rem; color: var(--color-muted); font-size: 0.75rem; }
+.terminal-polished .token-search-stats dd { font-size: 0.8125rem; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-add { display: grid; width: 2.75rem; min-height: 2.75rem; place-items: center; background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-add:hover:enabled { background: color-mix(in srgb, var(--color-primary) 20%, transparent); }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-add:disabled { background: var(--color-surface-raised); color: var(--color-muted); cursor: not-allowed; }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-add.is-added { background: transparent; color: var(--color-primary); }
+.terminal-polished .token-search-warning { display: flex; grid-column: 1 / -1; align-items: flex-start; gap: 0.375rem; padding-left: 3.625rem; font-size: 0.75rem; line-height: 1.6; }
+.terminal-polished .token-search-warning > svg { margin-top: 0.125rem; }
+.terminal-polished .token-search-message { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.875rem var(--coin-search-gutter); font-size: 0.8125rem; }
+.trading-terminal.terminal-polished .token-search-dialog .token-search-retry { min-height: 2.75rem; padding-inline: 0.75rem; background: var(--color-surface-raised); color: var(--color-ink); font-size: 0.8125rem; }
+.terminal-polished .token-search-empty { display: grid; gap: 0.75rem; justify-items: center; padding: 2rem var(--coin-search-gutter) 2.5rem; color: var(--color-muted); text-align: center; }
+.terminal-polished .token-search-empty p { color: var(--color-ink); font-size: 0.9375rem; }
+.terminal-polished .token-search-empty > span { font-size: 0.8125rem; }
+.terminal-polished .token-search-footer { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem var(--coin-search-gutter); color: var(--color-muted); font-size: 0.75rem; }
+.terminal-polished .token-search-footer > span { display: inline-flex; align-items: center; gap: 0.5rem; }
+.terminal-polished .token-search-footer kbd { padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: var(--color-surface-raised); font: inherit; }
+.terminal-polished .token-search-network { width: 0.375rem; height: 0.375rem; border-radius: 50%; background: var(--color-primary); }
+.terminal-polished .token-search-skeleton { display: flex; align-items: center; gap: 0.875rem; min-height: 7rem; padding: 1.25rem var(--coin-search-gutter); }
+.terminal-polished .token-search-skeleton > span { width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--color-surface-raised); }
+.terminal-polished .token-search-skeleton > div { display: grid; gap: 0.5rem; }
+.terminal-polished .token-search-skeleton > div > span { width: 8rem; height: 0.75rem; border-radius: 0.25rem; background: var(--color-surface-raised); }
+.terminal-polished .token-search-skeleton > div > span:last-child { width: 5rem; }
+.terminal-polished .token-search-spinner { width: 1rem; height: 1rem; border: 2px solid var(--color-line); border-top-color: var(--color-primary); border-radius: 50%; }
+@media (max-width: 639px) {
+  .trading-terminal.terminal-polished .token-search-dialog.app-modal { --coin-search-gutter: 1.25rem; }
+  .terminal-polished .token-search-header { padding-top: 1.25rem; }
+  .terminal-polished .token-search-result { grid-template-columns: minmax(0, 1fr) 2.75rem; gap: 1rem; }
+  .terminal-polished .token-search-stats { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+  .terminal-polished .token-search-add { grid-column: 2; grid-row: 1; }
+  .terminal-polished .token-search-warning { padding-left: 0; }
+  .terminal-polished .token-search-field { gap: 0.5rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .terminal-polished .token-search-dialog[open] { animation: token-search-enter 200ms cubic-bezier(0, 0, 0.2, 1); }
+  .terminal-polished .token-search-result { transition: background-color 150ms ease-out; }
+  .terminal-polished .token-search-spinner { animation: token-search-spin 800ms linear infinite; }
+}
+@keyframes token-search-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes token-search-spin { to { transform: rotate(360deg); } }
+
+.terminal-polished .terminal-impact-warning { display: grid; gap: 0.75rem; margin-block: 1rem; padding: 1rem; border-radius: 0.75rem; background: color-mix(in srgb, var(--color-warning) 8%, transparent); color: var(--color-warning); font-size: 0.8125rem; line-height: 1.6; }
+.trading-terminal.terminal-polished .terminal-impact-warning .app-button { justify-self: start; min-height: 2.75rem; border: 0; background: transparent; box-shadow: none; color: var(--color-ink); }

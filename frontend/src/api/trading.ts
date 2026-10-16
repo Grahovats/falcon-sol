@@ -10,6 +10,10 @@ export function getMarkets(missionId: string, signal?: AbortSignal) {
   return apiGet<ApiEnvelope<MarketPrice[]>>(`/missions/${encodeURIComponent(missionId)}/markets`, signal)
 }
 
+export function getMarketIcons(missionId: string, signal?: AbortSignal) {
+  return apiGet<ApiEnvelope<Record<string, string | null>>>(`/missions/${encodeURIComponent(missionId)}/market-icons`, signal)
+}
+
 export function discoverTokens(missionId: string, input: { query: string } | { feed: 'recent' }, signal?: AbortSignal) {
   const params = new URLSearchParams(input)
   return apiGet<ApiEnvelope<TokenCandidate[]>>(`/missions/${encodeURIComponent(missionId)}/token-discovery?${params.toString()}`, signal)

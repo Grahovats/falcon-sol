@@ -5,7 +5,7 @@ import { formatPrice } from '../../lib/format'
 import type { Portfolio, Position } from '../../types/trading'
 
 export function ExitPriceInputs({ levels, onChange, disabled = false, prefix = 'buy', placeholder = '' }: { levels: { takeProfitPrice: string; stopLossPrice: string }; onChange: (levels: { takeProfitPrice: string; stopLossPrice: string }) => void; disabled?: boolean; prefix?: string; placeholder?: string }) {
-  return <div className="grid grid-cols-2 gap-3">{(['takeProfitPrice', 'stopLossPrice'] as const).map((key) => <div key={key}>
+  return <div className="terminal-exit-inputs grid grid-cols-2 gap-3">{(['takeProfitPrice', 'stopLossPrice'] as const).map((key) => <div key={key} data-exit={key}>
     <label htmlFor={`${prefix}-${key}`} className="text-xs text-muted">{key === 'takeProfitPrice' ? 'Take profit (USD)' : 'Stop loss (USD)'}</label>
     <input id={`${prefix}-${key}`} type="text" inputMode="decimal" autoComplete="off" value={levels[key]} onChange={(event) => onChange({ ...levels, [key]: event.target.value })} disabled={disabled} placeholder={placeholder} className="app-field focus-ring mt-2 min-h-10 w-full min-w-0 rounded-sm border border-line bg-canvas px-3 text-sm text-ink disabled:opacity-50" />
   </div>)}</div>
@@ -50,6 +50,5 @@ export function PositionExitControls({ missionId, position, enabled, onPortfolio
       {saved && <p className="mt-3 text-xs text-primary" role="status">Exits saved.</p>}
       <button type="submit" disabled={saving || !enabled} aria-busy={saving} className="app-button focus-ring mt-3 min-h-10 w-full rounded-sm border border-primary/30 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 disabled:opacity-50">{saving ? 'Saving…' : 'Save exits'}</button>
     </form>
-    <p className="mt-3 text-xs leading-5 text-muted">Automatically sells your remaining position when a price level is reached. Final fill may vary.</p>
   </section>
 }

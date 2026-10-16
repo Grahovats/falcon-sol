@@ -30,6 +30,7 @@ export interface MarketPrice {
 export interface PricePoint { timestamp: string; price: string }
 
 export interface TokenCandidate {
+  iconUrl?: string | null
   mintAddress: string
   name: string
   symbol: string
@@ -118,6 +119,7 @@ export interface OrderHistoryItem {
 }
 
 export interface OrderRequest {
+  acceptHighPriceImpact?: boolean
   marketId: string
   side: OrderSide
   notional?: number

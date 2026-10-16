@@ -1,5 +1,4 @@
 import { ArrowLeft, Clock3, ShieldX } from 'lucide-react'
-import { AuthenticationRequired } from '../components/AuthenticationRequired'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { CashEntryInput } from '../types/mission'
@@ -53,9 +52,14 @@ export function MissionDetailPage() {
     return <div><PrizePanel mission={mission} /><ResultsView mission={mission} portfolio={trading.portfolio.status === 'success' ? trading.portfolio.data : undefined} rows={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []} loading={trading.leaderboard.status === 'loading'} error={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined} /></div>
   }
   if (trading.portfolio.status === 'loading') return <TerminalSkeleton />
-  if (trading.portfolio.status === 'authentication-required') return <div><BackLink /><AuthenticationRequired title="Authenticate before deployment" /></div>
-  if (trading.portfolio.status === 'not-joined') {
-    return <div><BackLink /><MissionBrief mission={mission} deploying={deploying} error={deployError} onDeploy={input => void deploy(input)} /></div>
+  if (trading.portfolio.status === 'authentication-required' || trading.portfolio.status === 'not-joined') {
+    return <div><BackLink /><MissionBrief mission={mission} deploying={deploying} error={deployError} onDeploy={input => void deploy(input)}
+      requiresAuthentication={trading.portfolio.status === 'authentication-required'}
+      leaderboard={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []}
+      leaderboardLoading={trading.leaderboard.status === 'loading'}
+      leaderboardError={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined}
+      leaderboardHidden={trading.leaderboard.status === 'success' && trading.leaderboard.data.meta.hidden}
+    /></div>
   }
   if (trading.portfolio.status === 'error') {
     return <ErrorPanel title="Portfolio unavailable" message={trading.portfolio.message} onRetry={() => void trading.refreshPortfolio()} />
@@ -66,7 +70,7 @@ export function MissionDetailPage() {
   }
 
   return (
-    <><PrizePanel mission={mission} />
+    <>{mission.rewards && <PrizePanel mission={mission} />}
     {mission.rewards && <p className="border-x border-line bg-surface px-4 py-3 text-sm text-muted">Eligibility: {cashStatus.toLowerCase()}{cashStatus !== 'APPROVED' ? ' · Trading stays locked until the organizer approves your identity and location.' : ' · Approved for this mission.'}</p>}
     <TradingTerminal
       cashEligibilityApproved={!mission.rewards || cashStatus === 'APPROVED'}

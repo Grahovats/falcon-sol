@@ -104,8 +104,8 @@ function CandleChart({ missionId, marketId, symbol, position, onExitChange }: Ca
   }
 
   return (
-    <div className="border-t border-line bg-canvas/40">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-2">
+    <div className="terminal-candlestick border-t border-line bg-canvas/40">
+      <div className="terminal-chart-toolbar flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-2">
         <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Chart timeframe">
           {timeframes.map((value) => (
             <button
@@ -119,7 +119,7 @@ function CandleChart({ missionId, marketId, symbol, position, onExitChange }: Ca
             </button>
           ))}
         </div>
-        <p className="font-mono text-xs uppercase tracking-wider text-muted">USD · Candlesticks</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-muted">USD</p>
       </div>
 
       {state.status === 'loading' && <ChartLoading symbol={symbol} />}
@@ -135,12 +135,12 @@ function CandleChart({ missionId, marketId, symbol, position, onExitChange }: Ca
       )}
       {state.status === 'success' && state.stale && <p className="border-b border-line px-4 py-2 text-xs text-muted" role="status">Showing saved chart data from {new Date(state.fetchedAt).toLocaleTimeString()}. New candles are temporarily unavailable.</p>}
       {state.status === 'success' && <ChartCanvas key={`${marketId}:${timeframe}`} candles={state.candles} symbol={symbol} timeframe={timeframe} position={position} onExitChange={onExitChange} />}
-      {state.status === 'success' && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-2">
+      {state.status === 'success' && <div className="terminal-history-controls flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-2">
         <button type="button" aria-busy={loadingOlder} disabled={loadingOlder || historyEnded || historyRetrySeconds > 0} onClick={() => void loadOlder()} className="app-button focus-ring inline-flex min-h-10 items-center gap-2 border border-line px-3 text-xs text-ink hover:border-primary disabled:cursor-default disabled:opacity-50">
           {loadingOlder && <LoaderCircle className="size-3.5 motion-safe:animate-spin" aria-hidden="true" />}
           {loadingOlder ? 'Loading history…' : historyEnded ? 'No older history available' : historyRetrySeconds ? `Retry in ${historyRetrySeconds}s` : 'Load older'}
         </button>
-        <p className="text-xs text-muted">{new Date(state.candles[0].time * 1000).toLocaleDateString()} – {new Date(state.candles.at(-1)!.time * 1000).toLocaleDateString()} · Drag to explore · Scroll to zoom</p>
+        <p className="text-xs text-muted">{new Date(state.candles[0].time * 1000).toLocaleDateString()} – {new Date(state.candles.at(-1)!.time * 1000).toLocaleDateString()}</p>
       </div>}
       {historyError && <p className="px-4 py-3 text-sm text-danger" role="alert">{historyError}</p>}
     </div>
@@ -164,11 +164,12 @@ function ChartCanvas({ candles, symbol, timeframe, position, onExitChange }: { c
     if (!container) return undefined
     const styles = getComputedStyle(document.documentElement)
     const color = (name: string) => styles.getPropertyValue(name).trim()
+    const gridColor = color('--color-line') + '70'
     const chart = createChart(container, {
       width: container.clientWidth,
       height: container.clientHeight,
       layout: { background: { type: ColorType.Solid, color: color('--color-canvas') }, textColor: color('--color-muted'), fontFamily: styles.fontFamily },
-      grid: { vertLines: { color: color('--color-line') }, horzLines: { color: color('--color-line') } },
+      grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
       rightPriceScale: { borderColor: color('--color-line'), scaleMargins: { top: 0.08, bottom: 0.24 } },
       timeScale: { borderColor: color('--color-line'), timeVisible: true, secondsVisible: false, rightOffset: 3, barSpacing: 8, minBarSpacing: 3 },
       crosshair: { mode: CrosshairMode.Normal, vertLine: { color: color('--color-muted'), labelBackgroundColor: color('--color-surface') }, horzLine: { color: color('--color-muted'), labelBackgroundColor: color('--color-surface') } },
@@ -235,8 +236,8 @@ function ChartCanvas({ candles, symbol, timeframe, position, onExitChange }: { c
   useEffect(() => { positionLinesRef.current?.update(position, onExitChange) }, [position, onExitChange, renderChart])
 
   return (
-    <div>
-      <div className="flex min-h-12 flex-wrap items-center gap-x-5 gap-y-1 border-b border-line px-4 py-2 font-mono text-xs" aria-live="polite">
+    <div className="terminal-chart-plot">
+      <div className="terminal-candle-metrics flex min-h-12 flex-wrap items-center gap-x-5 gap-y-1 border-b border-line px-4 py-2 font-mono text-xs" aria-live="polite">
         <span className="font-semibold text-ink">{symbol} · {timeframe}</span>
         <CandleMetric label="O" value={active.open} />
         <CandleMetric label="H" value={active.high} />
@@ -250,11 +251,10 @@ function ChartCanvas({ candles, symbol, timeframe, position, onExitChange }: { c
         </div>
       </div>
       {exitError && <p className="border-b border-line px-4 py-3 text-sm text-danger" role="alert">{exitError}</p>}
-      <div className="relative isolate">
+      <div className="terminal-chart-viewport relative isolate">
         <div ref={containerRef} className="terminal-chart-canvas w-full" aria-label={`${symbol} ${timeframe} candlestick chart with ${candles.length} candles`} />
         <div ref={overlayRef} className="pointer-events-none absolute inset-0 z-10 overflow-hidden" />
       </div>
-      {position && <p className="border-t border-line px-4 py-2 text-xs text-muted">Entry marks your average fill.{onExitChange && ' Drag TP/SL labels to adjust, or edit prices in Position exits.'}</p>}
       <p className="sr-only">Latest {symbol} candle opened at {formatPrice(latest.open)}, reached a high of {formatPrice(latest.high)}, a low of {formatPrice(latest.low)}, and closed at {formatPrice(latest.close)}.</p>
     </div>
   )

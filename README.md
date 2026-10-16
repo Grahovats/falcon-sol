@@ -61,7 +61,7 @@ JUPITER_API_KEY=
 JUPITER_API_BASE_URL=https://api.jup.ag
 JUPITER_USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
 JUPITER_REQUEST_TIMEOUT_MS=5000
-JUPITER_MAX_PRICE_IMPACT_PERCENT=5
+JUPITER_MAX_PRICE_IMPACT_PERCENT=10
 JUPITER_PRICE_CACHE_TTL_MS=10000
 JUPITER_STALE_PRICE_MAX_AGE_MS=300000
 JUPITER_MIN_TOKEN_LIQUIDITY_USD=10000
@@ -71,6 +71,8 @@ GECKOTERMINAL_CACHE_TTL_MS=60000
 HELIUS_API_KEY=
 SOLANA_RPC_URL=
 ```
+
+Manual orders with 5–10% estimated price impact require explicit confirmation. Orders above 10% are blocked; `JUPITER_MAX_PRICE_IMPACT_PERCENT` can set a stricter provider ceiling. Confirmation rechecks a fresh Jupiter quote and never bypasses that ceiling.
 
 Set `ADMIN_WALLET_ADDRESSES` to a comma-separated list of public Solana wallet addresses. A wallet receives admin access only when it is both allowlisted and stored with the `ADMIN` database role; Falcon synchronizes that role during session verification. Never enter a private key or seed phrase. Restart the backend after changing the allowlist.
 

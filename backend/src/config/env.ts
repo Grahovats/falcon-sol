@@ -22,7 +22,7 @@ const environmentSchema = z.object({
   JUPITER_API_BASE_URL: z.string().url().default('https://api.jup.ag'),
   JUPITER_USDC_MINT: z.string().min(32).default('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
   JUPITER_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(500).max(30_000).default(5_000),
-  JUPITER_MAX_PRICE_IMPACT_PERCENT: z.coerce.number().positive().max(100).default(5),
+  JUPITER_MAX_PRICE_IMPACT_PERCENT: z.coerce.number().positive().max(10).default(10),
   JUPITER_PRICE_CACHE_TTL_MS: z.coerce.number().int().min(1_000).max(60_000).default(10_000),
   JUPITER_STALE_PRICE_MAX_AGE_MS: z.coerce.number().int().min(10_000).max(900_000).default(300_000),
   JUPITER_MIN_TOKEN_LIQUIDITY_USD: z.coerce.number().nonnegative().max(1_000_000_000).default(10_000),

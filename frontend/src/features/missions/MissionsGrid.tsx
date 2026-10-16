@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { Mission } from "../../types/mission";
 import { resetGlassSheen, updateSurfaceSheen } from "../../lib/glass-hover";
 import { MissionCard } from "./MissionCard";
+import { FeaturedMission, FeaturedMissionSkeleton } from "./FeaturedMission";
 import { useMissions } from "./useMissions";
 
 type Filter = "ALL" | "LIVE" | "UPCOMING" | "COMPLETED";
@@ -30,7 +31,7 @@ const COMPLETED_STATUSES = [
   "CANCELLED",
 ] as const;
 
-export function MissionsGrid() {
+export function MissionsGrid({ singleMission = false }: { singleMission?: boolean }) {
   const { state, retry } = useMissions();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [query, setQuery] = useState("");
@@ -38,14 +39,14 @@ export function MissionsGrid() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("ASC");
   const searchRef = useRef<HTMLInputElement>(null);
 
-  if (state.status === "loading") return <MissionsSkeleton />;
+  if (state.status === "loading") return singleMission ? <FeaturedMissionSkeleton /> : <MissionsSkeleton />;
   if (state.status === "error") {
     return (
       <div className="rounded-xl border border-danger/40 bg-danger/5 p-6" role="alert">
         <AlertTriangle className="size-5 text-danger" aria-hidden="true" />
         <h2 className="mt-4 text-lg font-semibold text-ink">Mission feed unavailable</h2>
         <p className="mt-2 text-sm text-muted">
-          {state.message} Check that the API and database are running.
+          {singleMission ? "The featured mission could not load. Try again in a moment." : `${state.message} Check that the API and database are running.`}
         </p>
         <button
           type="button"
@@ -62,7 +63,7 @@ export function MissionsGrid() {
   }
 
   const normalizedQuery = query.trim().toLowerCase();
-  const missions = [...state.missions]
+  const matchingMissions = [...state.missions]
     .filter((mission) => matchesFilter(mission, filter))
     .filter((mission) => {
       if (!normalizedQuery) return true;
@@ -79,9 +80,10 @@ export function MissionsGrid() {
         : new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime();
       return livePriority || comparison * (sortOrder === "ASC" ? 1 : -1);
     });
+  const missions = singleMission ? matchingMissions.slice(0, 1) : matchingMissions;
   return (
     <div>
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+      {!singleMission && <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
         <div className="mission-filter-scroll min-w-0 overflow-x-auto">
           <div className="grain-surface mission-filter-group" role="group" aria-label="Filter missions">
             {filters.map((item) => (
@@ -150,7 +152,7 @@ export function MissionsGrid() {
             </button>
           </div>
         </div>
-      </div>
+      </div>}
 
       {missions.length === 0 ? (
         <MissionEmptyState
@@ -161,6 +163,8 @@ export function MissionsGrid() {
             setFilter("ALL");
           }}
         />
+      ) : singleMission ? (
+        <FeaturedMission key={missions[0]!.id} mission={missions[0]!} />
       ) : (
         <div key={filter} className="state-content mt-6 space-y-7">
           {filter === 'ALL' && !normalizedQuery && !state.missions.some(mission => mission.rewards) && (
