@@ -23,7 +23,7 @@ const shootingStars = [
 })[];
 
 /** A live CSS planet horizon, kept decorative so the hero stays accessible. */
-export function HeroPlanetHorizon() {
+export function HeroPlanetHorizon({ showHorizon = true }: { showHorizon?: boolean }) {
   const { ref, active } = useAmbientActivity();
   const [skyStars, setSkyStars] = useState(stars);
 
@@ -42,8 +42,10 @@ export function HeroPlanetHorizon() {
         ))}
       </div>
       <div className="hero-planet-atmosphere" />
-      <div className="hero-planet-surface" />
-      <div className="hero-planet-rim" />
+      {showHorizon && <>
+        <div className="hero-planet-surface" />
+        <div className="hero-planet-rim" />
+      </>}
       <div className="hero-shooting-stars">
         {shootingStars.map((style, index) => (
           <span key={index} className="hero-shooting-star" style={style} />

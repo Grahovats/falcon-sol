@@ -1763,6 +1763,12 @@ select {
   background-size: 128px 128px;
   background-image: none;
 }
+/* Match the mission card's fine grain on the four process cards. */
+.journey-copy::before {
+  opacity: 1;
+  background-size: 160px 160px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='grain' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='.12'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Cpath fill='white' filter='url(%23grain)' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+}
 .journey-copy::after,
 .falcon-glass::after {
   content: "";
@@ -2010,11 +2016,6 @@ select {
   padding-right: 0;
   letter-spacing: 0.06em;
 }
-.home-final-panel .falcon-glass {
-  align-items: center;
-  padding: 3rem 1.5rem;
-  text-align: center;
-}
 @media (min-width: 768px) {
   .home-integrity-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2031,17 +2032,11 @@ select {
     min-height: 20rem;
     padding: 1.75rem;
   }
-  .home-final-panel .falcon-glass {
-    padding: 4rem 3rem;
-  }
 }
 @media (min-width: 1280px) {
   .home-integrity-card .falcon-glass {
     min-height: 19rem;
     padding: 2rem;
-  }
-  .home-final-panel .falcon-glass {
-    padding-block: 5rem;
   }
 }
 

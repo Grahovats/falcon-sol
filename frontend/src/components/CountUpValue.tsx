@@ -3,9 +3,12 @@ import { formatCurrency, formatPercent } from '../lib/format'
 
 // After the entrance delay -> count from zero -> reach the exact value in 2500 ms.
 const TIMING = { duration: 2500 }
-type NumberFormat = 'count' | 'percent' | 'rate' | 'currency' | 'rank'
+type NumberFormat = 'count' | 'percent' | 'rate' | 'currency' | 'rank' | 'grouped' | 'decimal'
+const groupedFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 
 function formatValue(value: number, format: NumberFormat) {
+  if (format === 'grouped') return groupedFormatter.format(value)
+  if (format === 'decimal') return value.toFixed(2)
   if (format === 'currency') return formatCurrency(value)
   if (format === 'rank') return `#${Math.max(1, Math.round(value))}`
   if (format === 'percent') return formatPercent(value)
@@ -13,7 +16,7 @@ function formatValue(value: number, format: NumberFormat) {
   return String(Math.round(value))
 }
 
-export function CountUpValue({ value, format = 'count', delayMs = 0, durationMs = TIMING.duration }: { value: number | null; format?: NumberFormat; delayMs?: number; durationMs?: number }) {
+export function CountUpValue({ value, format = 'count', delayMs = 0, durationMs = TIMING.duration, reserveWidth = false }: { value: number | null; format?: NumberFormat; delayMs?: number; durationMs?: number; reserveWidth?: boolean }) {
   const [progress, setProgress] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 0)
 
   useEffect(() => {
@@ -43,6 +46,12 @@ export function CountUpValue({ value, format = 'count', delayMs = 0, durationMs 
   }, [delayMs, durationMs])
 
   if (value === null || !Number.isFinite(value)) return <>N/A</>
+
+  if (reserveWidth) return <span style={{ display: 'inline-grid' }}>
+    <span aria-hidden="true" style={{ gridArea: '1 / 1', visibility: 'hidden' }}>{formatValue(value, format)}</span>
+    <span aria-hidden="true" style={{ gridArea: '1 / 1' }}>{formatValue(value * progress, format)}</span>
+    <span className="sr-only">{formatValue(value, format)}</span>
+  </span>
 
   return <>
     <span aria-hidden="true">{formatValue(value * progress, format)}</span>

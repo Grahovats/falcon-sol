@@ -1,85 +1,136 @@
-/* Mission board: quiet infrastructure, expressive type, one focused action. */
+/* Competition board: compact navigation, a single mission sheet, quiet surfaces. */
 .missions-experience {
-  --mission-grid-line: color-mix(in srgb, var(--color-muted) 4%, transparent);
-  --mission-muted-fill: color-mix(in srgb, var(--color-surface-raised) 80%, var(--color-canvas));
-  --mission-hairline: color-mix(in srgb, var(--color-muted) 16%, transparent);
-  --mission-inset: clamp(1.5rem, 6vw, 6rem);
-  font-family: var(--font-sans);
-  font-optical-sizing: auto;
+  --mission-inset: clamp(1rem, 4vw, 4rem);
+  --mission-hairline: var(--color-line);
+  --mission-card-accent: var(--color-primary);
+  --mission-card-secondary: var(--color-muted);
   position: relative;
   isolation: isolate;
   overflow: clip;
   min-height: calc(100svh - var(--app-header-height));
   margin-inline: calc(-1 * var(--app-page-gutter));
-  background: radial-gradient(ellipse at 85% 18%, color-mix(in srgb, var(--color-primary) 4%, transparent), transparent 60%), var(--color-canvas);
-}
-.missions-experience::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 80% 25%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 55%), radial-gradient(ellipse at 15% 85%, color-mix(in srgb, var(--color-primary) 4%, transparent), transparent 55%);
-  opacity: 0.7;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .missions-experience::after { animation: missions-green-drift 18s ease-in-out infinite alternate; }
-}
-@keyframes missions-green-drift {
-  from { transform: translate(-3%, -2%) scale(1); opacity: 0.55; }
-  to { transform: translate(3%, 2%) scale(1.08); opacity: 0.9; }
+  background: var(--color-canvas);
+  font-family: var(--font-sans);
 }
 .app-page-content:has(> .missions-page) { padding-block: 0; }
-.missions-experience::before { content: ''; position: absolute; z-index: -1; inset: 0; pointer-events: none; background-image: linear-gradient(var(--mission-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--mission-grid-line) 1px, transparent 1px); background-size: 4rem 4rem; mask-image: linear-gradient(110deg, black, transparent 90%); }
-.missions-landing { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(24rem, 28rem); grid-template-rows: minmax(0, 1fr) auto; align-items: center; gap: clamp(2rem, 6vh, 5rem) clamp(2rem, 5vw, 6rem); min-height: calc(100svh - var(--app-header-height)); padding: clamp(2rem, 6vh, 5rem) var(--mission-inset) 0; }
-.missions-landing-copy { min-width: 0; padding-block: 0.75rem 1.5rem; }
-.missions-landing h1 { width: fit-content; color: var(--color-ink); font-size: clamp(3rem, 5.7vw, 6rem); font-weight: 650; letter-spacing: -0.065em; line-height: 1.04; }
-.missions-landing h1 > span { color: var(--color-primary); }
-.missions-landing-copy > p { max-width: 31rem; margin-top: 1.75rem; color: var(--color-muted); font-size: 1rem; line-height: 1.9; text-wrap: pretty; }
-.missions-landing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem; margin-top: 2rem; }
-.missions-page .app-button.missions-explore-button, .missions-page .app-button.missions-spotlight-button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 1.75rem; min-height: 3.125rem; padding: 0.875rem 1.5rem; border: 0; border-radius: 0.625rem; background: var(--color-primary); color: var(--color-primary-ink); box-shadow: none; font-size: 0.8125rem; font-weight: 650; }
-.missions-page .app-button.missions-explore-button:hover, .missions-page .app-button.missions-spotlight-button:hover { background: var(--color-primary-strong); }
-.missions-guide-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 0.625rem; min-height: 2.75rem; padding: 0.5rem 0.25rem; color: var(--color-muted); font-size: 0.8125rem; cursor: pointer; border-radius: 0.375rem; }
-.missions-guide-trigger:hover, .missions-guide-trigger[aria-expanded='true'] { color: var(--color-ink); }
-/* Reference card proportions with a restrained green tint. */
-.missions-spotlight {
-  --mission-card-accent: #b9fa46;
-  --mission-card-base: #30322f;
-  --mission-card-tint: color-mix(in srgb, var(--color-primary) 12%, var(--mission-card-base));
-  --mission-card-line: #50514f;
-  --mission-card-secondary: #afb0af;
-  position: relative;
-  width: 100%;
-  min-width: 0;
-  max-width: 28rem;
-  min-height: 25rem;
-  justify-self: end;
-  padding: 2rem;
-  border: 1px solid color-mix(in srgb, var(--mission-card-line) 70%, transparent);
-  border-radius: 1.25rem;
-  background: radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--mission-card-tint) 65%, transparent), transparent 80%), color-mix(in srgb, var(--mission-card-base) 72%, transparent);
-  box-shadow: 0 1rem 2.5rem color-mix(in srgb, var(--color-canvas) 20%, transparent);
+.missions-experience > .hero-planet-field {
+  --hero-motion-scale: 1.6;
+  z-index: -1;
+  inset: 0;
+  background: none;
 }
-.missions-spotlight-label { display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--mission-card-accent); font-size: 0.8125rem; font-weight: 750; letter-spacing: 0.1em; line-height: 1rem; text-transform: uppercase; }
-.missions-spotlight-label > svg { width: 0.875rem; height: 0.875rem; stroke-width: 1.5; }
-.missions-spotlight-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; margin-top: 1rem; color: var(--color-ink); font-size: clamp(3rem, 4vw, 3.5rem); font-weight: 650; line-height: 1.05; letter-spacing: -0.065em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.missions-spotlight-value > span { color: var(--mission-card-accent); font-size: 1.25rem; font-weight: 600; letter-spacing: -0.035em; }
-.missions-capital-caption { min-height: 1.125rem; margin-top: 0.375rem; color: var(--mission-card-secondary); font-size: 0.875rem; line-height: 1.6; }
-.missions-spotlight-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-block: 1.75rem 1.5rem; padding-block: 1.25rem; border-block: 1px solid color-mix(in srgb, var(--mission-card-secondary) 20%, transparent); }
-.missions-spotlight-stats > div + div { padding-left: 1.375rem; border-left: 1px solid color-mix(in srgb, var(--mission-card-secondary) 20%, transparent); }
-.missions-spotlight-stats dt { color: var(--mission-card-secondary); font-size: 0.75rem; font-weight: 700; line-height: 1rem; text-transform: uppercase; letter-spacing: 0.1em; }
-.missions-spotlight-stats dd { margin-top: 0.375rem; color: var(--color-ink); font-size: 1.125rem; line-height: 1.5rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.missions-experience .hero-planet-atmosphere { display: none; }
+.missions-landing { max-width: 100rem; margin-inline: auto; padding: 2.5rem var(--mission-inset); }
+.missions-board-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+.missions-board-eyebrow { color: var(--color-muted); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em; line-height: 1.5; text-transform: uppercase; }
+.missions-board-heading h1 { margin-top: 0.375rem; color: var(--color-ink); font-size: 2rem; font-weight: 650; letter-spacing: -0.04em; line-height: 1.2; }
+.missions-guide-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 0.625rem; min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1px solid var(--color-line); border-radius: 0.375rem; color: var(--color-muted); font-size: 0.8125rem; cursor: pointer; }
+.missions-guide-trigger:hover, .missions-guide-trigger[aria-expanded='true'] { color: var(--color-ink); background: var(--color-surface); }
+.missions-spotlight {
+  --mission-card-accent: var(--color-primary);
+  --mission-card-secondary: var(--color-muted);
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
+  grid-template-areas: 'rail ticket';
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
+  align-items: stretch;
+}
+.missions-info-rail { grid-area: rail; display: flex; min-width: 0; flex-direction: column; gap: 0.75rem; }
+.missions-board-mission { grid-area: brief; display: flex; flex-direction: column; align-items: start; gap: 0.75rem; padding: 0; }
+.missions-board-mission h2 { margin-top: 0; color: var(--color-ink); font-size: 1.75rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.04em; overflow-wrap: anywhere; }
+.missions-board-status { display: inline-flex; align-items: center; gap: 0.5rem; flex-shrink: 0; color: var(--color-ink); font-size: 0.75rem; }
+.missions-board-status::before { content: ''; width: 0.375rem; height: 0.375rem; border-radius: 50%; background: currentColor; opacity: 0.7; }
+
+.missions-schedule { grid-area: schedule; padding-top: 1.5rem; border-top: 1px solid var(--color-line); }
+.missions-board-dates { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-top: 1.25rem; }
+.missions-board-dates::before { content: ''; position: absolute; top: 0.25rem; left: 0.25rem; right: 0.25rem; border-top: 1px dashed color-mix(in srgb, var(--color-muted) 45%, transparent); }
+.missions-board-dates > div { position: relative; min-width: 0; padding-top: 1.25rem; }
+.missions-board-dates > div::before { content: ''; position: absolute; top: 0; left: 0; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-primary); outline: 0.25rem solid var(--color-canvas); }
+.missions-board-dates > div:last-child { text-align: right; }
+.missions-board-dates > div:last-child::before { left: auto; right: 0; background: var(--color-ink); }
+.missions-board-dates dt { color: var(--color-muted); font-size: 0.6875rem; }
+.missions-board-dates dd { margin-top: 0.375rem; color: var(--color-ink); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.missions-board-pool { display: grid; grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem); }
+.missions-pool-ticket { grid-area: ticket; align-self: stretch; min-width: 0; margin: 0; border-radius: 0.75rem; isolation: isolate; overflow: clip; }
+.missions-pool-ticket .missions-board-reward { color: var(--color-primary-ink); background-color: var(--color-primary); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='grain' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='.045'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Cpath fill='white' filter='url(%23grain)' d='M0 0h160v160H0z'/%3E%3C/svg%3E"); }
+.missions-pool-ticket .missions-spotlight-value { color: var(--color-primary-ink); }
+.missions-pool-ticket .missions-spotlight-label,
+.missions-pool-ticket .missions-spotlight-value > .missions-pool-currency,
+.missions-pool-ticket .missions-capital-caption { color: color-mix(in srgb, var(--color-primary-ink) 80%, transparent); }
+.missions-pool-ticket .missions-board-entry { margin: 0; border-radius: 0; }
+.missions-pool-ticket .missions-board-reward { position: relative; overflow: clip; isolation: isolate; }
+.missions-pool-ticket .missions-board-reward > * { position: relative; z-index: 1; }
+.missions-pool-ticket .missions-board-reward::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.12) 18%, rgb(255 255 255 / 0.015) 48%, rgb(255 255 255 / 0.06) 74%, rgb(0 0 0 / 0.12));
+  opacity: 0;
+}
+@media (min-width: 768px) {
+  .missions-pool-ticket .missions-board-reward {
+    mask-image: radial-gradient(circle 8px at 100% 0, transparent 7.5px, black 8px), radial-gradient(circle 8px at 100% 100%, transparent 7.5px, black 8px);
+    mask-composite: intersect;
+  }
+}
+.missions-board-reward { display: flex; flex-direction: column; justify-content: center; padding: 2.5rem 2rem; }
+.missions-spotlight-label { color: var(--color-muted); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.missions-spotlight-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.625rem; margin-top: 0.875rem; color: var(--color-ink); font-size: clamp(2.5rem, 4.5vw, 4rem); font-weight: 650; line-height: 1.05; letter-spacing: -0.055em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.missions-spotlight-value > .missions-pool-currency { color: var(--color-muted); font-size: 1rem; font-weight: 600; letter-spacing: 0; }
+.missions-capital-caption { margin-top: 0.75rem; color: var(--color-muted); font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.missions-board-entry { position: relative; min-width: 0; margin: 1.5rem; }
+.missions-entry-ticket {
+  --ticket-paper-back: color-mix(in srgb, white 65%, var(--color-primary));
+  isolation: isolate;
+  overflow: clip;
+  border-radius: 0.75rem;
+  background: var(--color-primary);
+  color: var(--color-primary-ink);
+  display: grid;
+  align-content: center;
+}
+.missions-ticket-content { position: relative; z-index: 1; padding: 1.75rem; }
+.missions-entry-label { color: var(--color-primary-ink); font-size: 0.625rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.missions-ticket-title { margin-top: 1rem; margin-bottom: 1.5rem; font-size: 2.25rem; font-weight: 650; letter-spacing: -0.055em; line-height: 1.05; }
+.missions-entry-ticket .missions-spotlight-stats { padding-block: 1.125rem; margin-bottom: 1.25rem; border-block: 1px solid color-mix(in srgb, var(--color-primary-ink) 22%, transparent); }
+.missions-entry-ticket .missions-spotlight-stats > div + div { border-color: color-mix(in srgb, var(--color-primary-ink) 22%, transparent); }
+.missions-entry-ticket .missions-spotlight-stats dt { color: color-mix(in srgb, var(--color-primary-ink) 75%, transparent); font-size: 0.625rem; }
+.missions-entry-ticket .missions-spotlight-stats dd { color: var(--color-primary-ink); }
+.missions-page .missions-entry-ticket .app-button.missions-spotlight-button { justify-content: space-between; min-height: 3.25rem; border-radius: 0.375rem; background: var(--color-primary-ink); color: var(--color-primary); font-size: 0.8125rem; }
+.missions-page .missions-entry-ticket .app-button.missions-spotlight-button:hover { background: var(--color-primary-ink); color: var(--color-ink); }
+.missions-page .missions-entry-ticket .app-button.missions-spotlight-button:focus-visible { outline: 2px solid var(--color-primary-ink); outline-offset: 3px; }
+.missions-entry-ticket .missions-spotlight-footnote { color: color-mix(in srgb, var(--color-primary-ink) 80%, transparent); font-size: 0.6875rem; line-height: 1.6; text-align: left; }
+.missions-ticket-bottom { display: flex; align-items: end; justify-content: space-between; gap: 0.75rem; margin-top: 1.5rem; color: #000; }
+.missions-ticket-bottom > span:first-child { background: transparent; white-space: nowrap; font-size: 0.5625rem; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.5; }
+.missions-ticket-barcode { width: 4.5rem; height: 1.25rem; opacity: 1; background: repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 3px, currentColor 3px 5px, transparent 5px 6px, currentColor 6px 7px, transparent 7px 10px, currentColor 10px 13px, transparent 13px 15px); }
+@media (min-width: 768px) {
+  .missions-entry-ticket { background: transparent; }
+}
+@media (min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .missions-ticket-content { transform: translateX(calc(var(--ticket-pull, 0) * 4px)); }
+  /* Printed lettering follows the lifted top of the stub and clears its curled edge. */
+  .missions-entry-label > span { display: inline-block; transform-origin: right center; transform: translateX(calc(var(--ticket-pull, 0) * 9px)) skewY(calc(var(--ticket-pull, 0) * -0.4deg)) scaleX(calc(1 - var(--ticket-pull, 0) * 0.015)); }
+  .missions-pool-ticket .missions-board-reward::after { transition: opacity 350ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .missions-pool-ticket:has(.missions-entry-ticket:is(:hover, :focus-within)) .missions-board-reward::after { opacity: 1; transition: opacity 1s cubic-bezier(0.35, 0, 0.2, 1); }
+}
+.missions-spotlight-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.missions-spotlight-stats > div + div { padding-left: 1.375rem; border-left: 1px solid var(--color-line); }
+.missions-spotlight-stats dt { color: var(--color-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.missions-spotlight-stats dd { margin-top: 0.5rem; color: var(--color-ink); font-size: 1.125rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .missions-page .app-button.missions-spotlight-button { display: flex; width: 100%; min-height: 3.5rem; justify-content: center; align-items: center; gap: 0.625rem; padding: 0.75rem 1rem; border: 0; border-radius: 0.75rem; background: var(--mission-card-accent); color: var(--color-primary-ink); box-shadow: none; font-size: 0.875rem; font-weight: 650; }
 .missions-page .app-button.missions-spotlight-button > svg { width: 1rem; height: 1rem; }
 .missions-page .app-button.missions-spotlight-button:hover { background: var(--color-primary-strong); }
-.missions-spotlight-footnote { margin-top: 0.625rem; color: var(--mission-card-secondary); font-size: 0.75rem; text-align: center; line-height: 1.5; }
-.missions-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-column: 1 / -1; gap: 1.5rem; align-items: center; align-self: end; padding-block: 1.5rem; border-top: 1px solid var(--mission-hairline); }
-.missions-facts > div { display: flex; align-items: center; gap: 0.75rem; }
-.missions-facts > div > svg { width: 1.125rem; height: 1.125rem; color: var(--color-muted); flex-shrink: 0; }
-.missions-facts > div > span { display: grid; gap: 0.375rem; font-size: 0.75rem; color: var(--color-muted); }
-.missions-facts strong { font-size: 0.8125rem; font-weight: 500; color: var(--color-ink); }
-.missions-facts .missions-facts-tag { padding: 0.625rem 0.875rem; border-radius: 2rem; background: color-mix(in srgb, var(--color-primary) 5%, transparent); }
-.missions-facts .missions-facts-tag > svg, .missions-facts .missions-facts-tag > span { color: var(--color-primary); font-size: 0.75rem; }
+.missions-spotlight-footnote { margin-top: 0.75rem; color: var(--color-muted); font-size: 0.75rem; line-height: 1.6; text-align: center; }
+.missions-facts { grid-area: facts; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; align-self: center; padding: 0; }
+.missions-facts > div { display: flex; align-items: center; gap: 0.75rem; min-width: 0; padding: 0; }
+.missions-facts > div > svg { display: none; width: 1.125rem; height: 1.125rem; color: var(--color-muted); flex-shrink: 0; }
+.missions-facts > div > span { display: grid; gap: 0.5rem; font-size: 0.75rem; color: var(--color-muted); }
+.missions-facts strong { color: var(--color-ink); font-size: 0.8125rem; font-weight: 600; }
+.missions-board-footer { grid-area: footer; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.5rem; padding: 0; color: var(--color-muted); font-size: 0.75rem; }
+.missions-board-footer a { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; color: var(--color-primary); border-radius: 0.25rem; }
 .missions-quick-guide { padding: 2.5rem var(--mission-inset) 2rem; background: transparent; }
 .missions-guide-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
 .missions-guide-heading > div > p { margin-bottom: 0.5rem; color: var(--color-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
@@ -93,56 +144,146 @@
 .missions-guide-steps p { max-width: 24rem; margin-top: 0.625rem; color: var(--color-muted); font-size: 0.8125rem; line-height: 1.8; }
 .missions-guide-close { display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; margin-top: 1.5rem; color: var(--color-muted); font-size: 0.75rem; cursor: pointer; }
 .missions-guide-close > svg { transform: rotate(180deg); }
-.missions-page .mission-featured-loading { min-height: 43rem; margin-inline: calc(-1 * var(--app-page-gutter)); border: 0; border-radius: 0; background: var(--color-surface); }
+
+.missions-quick-guide { max-width: 100rem; margin-inline: auto; padding: 0 var(--mission-inset) 2.5rem; }
+.missions-loading-layout { display: grid; gap: 2rem; }
+.missions-loading-copy { display: grid; gap: 0.75rem; }
+.missions-loading-copy > span, .missions-loading-card > span { display: block; height: 1rem; border-radius: 0.25rem; background: var(--color-surface-raised); }
+.missions-loading-copy > span:nth-child(1) { width: 8rem; }
+.missions-loading-copy > span:nth-child(2) { width: 12rem; height: 2rem; }
+.missions-loading-copy > span:nth-child(n+3) { display: none; }
+.missions-loading-card { display: grid; gap: 2rem; min-height: 24rem; padding: 2rem; border: 1px solid var(--color-line); border-radius: 0.75rem; background: var(--color-surface); }
+.missions-loading-card > span:nth-child(1) { width: 40%; }
+.missions-loading-card > span:nth-child(2) { width: 60%; height: 4rem; }
+.missions-loading-card > span:nth-child(3) { width: 100%; height: 3rem; }
 @media (prefers-reduced-motion: no-preference) {
   .missions-guide-trigger > svg { transition: transform 150ms ease-out; }
-  .missions-explore-button > svg, .missions-spotlight-button > svg { transition: transform 150ms ease-out; }
-  .missions-page .app-button.missions-explore-button, .missions-page .app-button.missions-spotlight-button { transition: transform 150ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out; }
-  .missions-page .app-button.missions-explore-button:active, .missions-page .app-button.missions-spotlight-button:active { transform: scale(0.985); }
+  .missions-page .app-button.missions-spotlight-button { transition: background-color 150ms ease-out; }
 }
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .missions-page .app-button.missions-explore-button:hover, .missions-page .app-button.missions-spotlight-button:hover { transform: translateY(-2px); box-shadow: 0 0.5rem 1.75rem color-mix(in srgb, var(--color-primary) 12%, transparent); }
-  .missions-explore-button:hover > svg { transform: translate(2px, -2px); }
-}
-@media (max-width: 1199px) {
-  .missions-landing { --mission-inset: 2rem; grid-template-columns: minmax(0, 1fr) 24rem; gap: 2.5rem; }
-  .missions-landing h1 { font-size: clamp(2.75rem, 5.25vw, 4rem); }
-  .missions-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .missions-facts .missions-facts-tag { display: none; }
-}
-@media (max-width: 979px) {
-  .missions-experience { --mission-inset: 1.5rem; }
-  .missions-landing { --mission-inset: 1.5rem; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; min-height: calc(100svh - var(--app-header-height)); padding-top: 3rem; gap: 2rem; }
-  .missions-landing-copy { padding: 0; }
-  .missions-landing h1 { font-size: clamp(2.5rem, 8.4vw, 4rem); }
-  .missions-landing-copy > p { max-width: 30rem; margin-top: 1.25rem; font-size: 0.875rem; }
-  .missions-landing-actions { gap: 1rem; margin-top: 1.5rem; }
-  .missions-page .app-button.missions-explore-button { gap: 1rem; padding-inline: 1.25rem; }
-  .missions-spotlight { justify-self: center; }
-  .missions-facts { gap: 1rem; padding-block: 1.25rem; }
-  .missions-facts > div { align-items: start; gap: 0.5rem; }
-  .missions-facts > div > svg { width: 0.875rem; height: 0.875rem; }
-  .missions-facts > div > span { font-size: 0.75rem; }
-  .missions-facts strong { font-size: 0.75rem; line-height: 1.6; }
+@media (max-width: 767px) {
+  .missions-landing { padding-block: 1.5rem; }
+  .missions-board-heading { margin-bottom: 1.5rem; }
+  .missions-board-pool { grid-template-columns: minmax(0, 1fr); }
+  .missions-pool-ticket { margin: 0; }
+  .missions-pool-ticket .missions-board-entry { margin: 0; border-top: 1px dashed color-mix(in srgb, var(--color-primary-ink) 35%, transparent); }
+  .missions-pool-ticket .missions-board-reward { mask-image: radial-gradient(circle 8px at 0 100%, transparent 7.5px, black 8px), radial-gradient(circle 8px at 100% 100%, transparent 7.5px, black 8px); mask-composite: intersect; }
+  .missions-pool-ticket .missions-board-entry::before, .missions-pool-ticket .missions-board-entry::after { content: ''; position: absolute; z-index: 2; top: -0.5rem; width: 1rem; height: 1rem; border-radius: 50%; background: var(--color-canvas); pointer-events: none; }
+  .missions-pool-ticket .missions-board-entry::before { left: -0.5rem; }
+  .missions-pool-ticket .missions-board-entry::after { right: -0.5rem; }
+
+  .missions-board-mission { align-items: start; flex-direction: column; }
+  .missions-board-mission { padding: 0; }
+  .missions-board-reward { padding: 1.5rem; }
+  .missions-board-entry { margin: 0 1rem 1.5rem; }
+  .missions-facts { gap: 1rem; padding: 0; }
+  .missions-facts > div { align-items: start; }
+  .missions-facts > div > svg { display: none; }
+  .missions-board-footer { padding-inline: 0; }
   .missions-guide-steps { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
 }
-@media (max-width: 389px) {
-  .missions-facts > div > svg { display: none; }
+@media (max-width: 479px) {
+  .missions-board-mission { align-items: start; flex-direction: column; gap: 1rem; }
+  .missions-facts > div > span { font-size: 0.6875rem; }
+  .missions-facts strong { font-size: 0.75rem; line-height: 1.5; }
 }
 
-.missions-loading-layout { padding-bottom: 3rem; }
-.missions-loading-copy { display: grid; gap: 1rem; }
-.missions-loading-copy > span, .missions-loading-card > span { display: block; border-radius: 0.5rem; background: var(--color-surface-raised); }
-.missions-loading-copy > span:nth-child(1) { width: 35%; height: 1rem; }
-.missions-loading-copy > span:nth-child(2) { width: 90%; height: 4.5rem; margin-top: 1rem; }
-.missions-loading-copy > span:nth-child(3) { width: 80%; height: 4.5rem; }
-.missions-loading-copy > span:nth-child(4) { width: 70%; height: 2.5rem; margin-top: 1rem; }
-.missions-loading-card { display: grid; align-content: start; gap: 2rem; min-height: 29rem; padding: 2rem; border: 1px solid var(--mission-hairline); border-radius: 1.25rem; background: var(--color-surface); }
-.missions-loading-card > span:nth-child(1) { width: 65%; height: 1.25rem; }
-.missions-loading-card > span:nth-child(2) { width: 80%; height: 5rem; }
-.missions-loading-card > span:nth-child(3) { width: 100%; height: 3rem; margin-top: 6rem; }
 
+@media (max-width: 979px) {
+  .missions-spotlight { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'ticket' 'rail'; gap: 1.5rem; }
+  .missions-board-mission { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.5rem 1rem; }
+  .missions-board-mission > .missions-board-eyebrow { grid-column: 1; }
+  .missions-board-mission h2 { grid-column: 1; }
+  .missions-board-mission > .missions-board-status { grid-column: 2; grid-row: 1 / 3; }
+}
 @media (max-width: 479px) {
-  .missions-spotlight { padding: 1.5rem; min-height: 24rem; }
-  .missions-spotlight-value { font-size: 3rem; }
+  .missions-board-mission h2 { font-size: 1.375rem; }
+  .missions-board-status { font-size: 0.6875rem; }
+  .missions-board-dates dd { font-size: 0.75rem; }
+}
+
+/* Mission instruments: a nameplate, numbered rules, and a live timing panel. */
+.missions-board-mission {
+  position: relative;
+  overflow: clip;
+  min-width: 0;
+  align-self: stretch;
+  padding: 1.5rem;
+  border: 1px solid var(--color-line);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0.5rem;
+  background: linear-gradient(115deg, color-mix(in srgb, var(--color-primary) 4%, transparent), transparent 65%), color-mix(in srgb, var(--color-surface) 70%, transparent);
+}
+.missions-board-mission > .missions-board-eyebrow { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; width: 100%; }
+.missions-brief-index { color: var(--color-primary); font-size: 0.8125rem; letter-spacing: -0.04em; }
+.missions-board-mission .missions-board-status { width: fit-content; padding: 0.375rem 0.625rem; border: 1px solid var(--color-line); border-radius: 0.25rem; font-size: 0.6875rem; }
+.missions-facts { gap: 0.75rem; align-self: stretch; }
+.missions-facts > div {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.125rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-surface) 75%, transparent);
+}
+.missions-fact-index { color: var(--color-muted); font-size: 0.5625rem; letter-spacing: 0.09em; }
+.missions-facts > div > svg { display: block; position: absolute; top: 2.5rem; right: 1rem; width: 1.75rem; height: 1.75rem; color: color-mix(in srgb, var(--color-primary) 65%, var(--color-muted)); stroke-width: 1.25; opacity: 0.55; }
+.missions-facts > div > span { position: relative; gap: 0.375rem; font-size: 0.6875rem; }
+.missions-facts strong { font-size: 1rem; letter-spacing: -0.025em; line-height: 1.4; }
+.missions-schedule { padding: 1.5rem; border: 1px solid var(--color-line); border-radius: 0.5rem; background: color-mix(in srgb, var(--color-surface) 55%, transparent); }
+.missions-window-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.missions-window-counter { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem; margin-top: 0.75rem; }
+.missions-window-counter strong { color: var(--color-ink); font-size: 2rem; font-weight: 600; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+.missions-window-counter > span, .missions-window-elapsed { color: var(--color-muted); font-size: 0.6875rem; }
+.missions-window-elapsed { flex-shrink: 0; }
+.missions-window-track { height: 0.25rem; margin-top: 1.5rem; border-radius: 1rem; background: var(--color-line); }
+.missions-window-track > span { position: relative; display: block; width: 100%; height: 100%; transform-origin: left center; border-radius: inherit; background: var(--color-primary); }
+.missions-window-track > span::after { content: ''; position: absolute; top: -0.125rem; right: -0.25rem; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-primary); }
+.missions-schedule .missions-board-dates { margin-top: 0.875rem; }
+.missions-schedule .missions-board-dates::before, .missions-schedule .missions-board-dates > div::before { display: none; }
+.missions-schedule .missions-board-dates > div { padding-top: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .missions-window-track > span { transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .missions-facts > div { transition: border-color 180ms ease-out, background-color 180ms ease-out; }
+  .missions-facts > div:hover { border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-line)); background-color: color-mix(in srgb, var(--color-primary) 3%, var(--color-surface)); }
+}
+@media (max-width: 979px) {
+  .missions-board-mission { display: flex; flex-direction: column; align-items: start; padding: 1.25rem; }
+  .missions-facts > div { min-height: 10rem; }
+}
+@media (max-width: 479px) {
+  .missions-facts { gap: 0.5rem; }
+  .missions-facts > div { padding: 0.75rem; gap: 3rem; }
+  .missions-fact-index { font-size: 0.5rem; letter-spacing: 0.02em; }
+  .missions-facts > div > svg { right: 0.75rem; width: 1.25rem; height: 1.25rem; }
+  .missions-facts strong { font-size: 0.8125rem; }
+  .missions-schedule { padding: 1.25rem; }
+  .missions-window-counter strong { font-size: 1.75rem; }
+  .missions-window-counter { gap: 0.5rem; }
+}
+
+/* Desktop split: compact mission rail beside one dominant admission ticket. */
+@media (min-width: 980px) {
+  .missions-pool-ticket { min-height: 100%; }
+  .missions-info-rail .missions-board-mission { padding: 1.25rem; }
+  .missions-info-rail .missions-board-mission h2 { font-size: 1.5rem; }
+  .missions-info-rail .missions-facts { grid-template-columns: minmax(0, 1fr); }
+  .missions-info-rail .missions-facts > div {
+    min-height: 5.75rem;
+    justify-content: end;
+    gap: 1.25rem;
+    padding: 1rem;
+  }
+  .missions-info-rail .missions-facts > div > svg { top: 1rem; right: 1rem; width: 1.375rem; height: 1.375rem; }
+  .missions-info-rail .missions-facts > div > span { padding-right: 2.25rem; }
+  .missions-info-rail .missions-facts strong { font-size: 0.875rem; }
+  .missions-info-rail .missions-schedule { padding: 1.25rem; }
+  .missions-info-rail .missions-window-heading { align-items: start; }
+  .missions-info-rail .missions-window-counter { display: grid; gap: 0.375rem; }
+  .missions-info-rail .missions-window-counter strong { font-size: 1.75rem; }
+  .missions-info-rail .missions-window-elapsed { margin-top: 0.125rem; }
+  .missions-info-rail .missions-board-footer { margin-top: auto; }
 }

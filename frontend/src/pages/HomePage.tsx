@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CSSProperties } from "react";
+import { ArenaTicket } from "../components/ArenaTicket";
 import { GlassPanel } from "../components/GlassPanel";
 import { HowItWorks } from "../components/HowItWorks";
 import { HeroPlanetHorizon } from "../components/HeroPlanetHorizon";
@@ -88,25 +89,7 @@ export function HomePage() {
 
         <ScrollReveal direction="up" edge={false} stagger className="home-scroll-reveal">
           <section className="home-final-section pb-6 pt-12 sm:pb-8 sm:pt-16" aria-labelledby="final-cta-title">
-            <GlassPanel className="home-final-panel" interactive={false}>
-              <p data-scroll-reveal-item="1" className="home-section-eyebrow">Your record starts here</p>
-              <h2 data-scroll-reveal-item="2" id="final-cta-title" className="mt-6 text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-5xl lg:text-6xl">
-                Your next move.<br /><span className="text-primary">Your first mission.</span>
-              </h2>
-              <p data-scroll-reveal-item="3" className="mx-auto mt-6 max-w-xl text-base leading-8 text-muted sm:text-lg">
-                Put your strategy where the scoreboard can see it.
-                Connect a wallet, choose your mission, and trade with virtual capital.
-              </p>
-              <div data-scroll-reveal-item="4" className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-10 sm:gap-5">
-                <Link to="/missions" className="directional-action focus-ring inline-flex min-h-14 items-center gap-3 rounded-sm bg-primary px-8 text-base font-semibold text-primary-ink motion-safe:transition-colors motion-safe:duration-100 hover:bg-primary-strong">
-                  Enter the arena<ArrowRight className="action-icon size-5" aria-hidden="true" />
-                </Link>
-                <Link to="/rankings" className="focus-ring inline-flex min-h-14 items-center gap-2 rounded-sm px-6 text-base font-semibold text-muted motion-safe:transition-colors motion-safe:duration-100 hover:text-primary">
-                  View rankings<ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </div>
-              <p data-scroll-reveal-item="5" className="mt-8 text-sm text-muted">Equal virtual capital. No deposits. No real swaps.</p>
-            </GlassPanel>
+            <ArenaTicket />
           </section>
         </ScrollReveal>
       </div>
