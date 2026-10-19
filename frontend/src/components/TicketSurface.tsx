@@ -58,7 +58,7 @@ function paperGeometry(width: number, height: number, progress: number) {
   return { paper, edge: `M${cut.join(' L')}`, curl: `M${cut.join(' L')} L${curlInner.join(' L')} Z`, tip, pull, top: point(edge(0), lift(0)) }
 }
 
-export function TicketSurface({ active: controlledActive, enabled: controlledEnabled, className, children }: { active?: boolean; enabled?: boolean; className: string; children: ReactNode }) {
+export function TicketSurface({ active: controlledActive, enabled: controlledEnabled, shading = true, className, children }: { active?: boolean; enabled?: boolean; shading?: boolean; className: string; children: ReactNode }) {
   const motionEnabled = useSyncExternalStore(subscribeMotion, getMotion, noMotion)
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -129,13 +129,13 @@ export function TicketSurface({ active: controlledActive, enabled: controlledEna
           <feGaussianBlur stdDeviation="2" />
         </filter>
       </defs>
-      <path d={shape.edge} fill="none" stroke="var(--color-primary-ink)" strokeWidth={5 * shape.pull} opacity=".3" filter={`url(#${id}-shadow)`} />
+      {shading && <path d={shape.edge} fill="none" stroke="var(--color-primary-ink)" strokeWidth={5 * shape.pull} opacity=".3" filter={`url(#${id}-shadow)`} />}
       <g mask={`url(#${id}-mask)`}>
         <path d={shape.paper} fill="var(--color-primary)" />
-        <path d={shape.paper} fill={`url(#${id}-bend)`} opacity={shape.pull} />
+        {shading && <path d={shape.paper} fill={`url(#${id}-bend)`} opacity={shape.pull} />}
         <rect width={w} height={h} filter={`url(#${id}-grain)`} opacity=".045" />
-        <path d={shape.curl} fill={`url(#${id}-back)`} opacity={shape.pull} />
-        <path d={shape.edge} fill="none" stroke="var(--ticket-paper-back)" strokeWidth=".8" opacity={shape.pull * 0.9} />
+        <path d={shape.curl} fill={shading ? `url(#${id}-back)` : 'var(--color-primary)'} opacity={shape.pull} />
+        <path d={shape.edge} fill="none" stroke={shading ? 'var(--ticket-paper-back)' : 'var(--color-primary)'} strokeWidth=".8" opacity={shape.pull * 0.9} />
         <path d={`M.6,${Math.max(8, shape.tip)} V${h - 8}`} fill="none" stroke="var(--color-primary-ink)" strokeOpacity=".35" strokeWidth="1" strokeDasharray="3 5" />
       </g>
     </svg>

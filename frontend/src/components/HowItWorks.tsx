@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, BarChart3, ShieldCheck, Swords, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ProcessSignalField } from './ProcessSignalField'
 import { resetGlassSheen, updateGlassSheen } from '../lib/glass-hover'
 
 const steps = [
-  { number: '01', label: 'Choose your mission', title: 'Find your arena.', description: 'Pick a mission that fits your strategy. Review the assets, rules, and time window before you enter.', icon: Swords, href: '/missions', action: 'Explore missions' },
-  { number: '02', label: 'Deploy virtual capital', title: 'Same start. Your edge.', description: 'Enter with the same virtual starting balance as every operator. No deposits or real swaps. Just your decisions.', icon: Wallet, href: null, action: null },
-  { number: '03', label: 'Execute your strategy', title: 'Make every move count.', description: 'Read live charts, size your positions, and set take-profit and stop-loss exits. Trade with a plan until the clock runs out.', icon: BarChart3, href: null, action: null },
-  { number: '04', label: 'See your standing', title: 'Let the result speak.', description: 'The mission closes on a shared price snapshot. Your final equity locks in your rank and a record you can compare.', icon: ShieldCheck, href: '/rankings', action: 'View rankings' },
+  { number: '01', label: 'Choose your mission', title: 'Find your arena.', description: 'Pick a mission that fits your strategy. Review the assets, rules, and time window before you enter.', href: '/missions', action: 'Explore missions' },
+  { number: '02', label: 'Deploy virtual capital', title: 'Same start. Your edge.', description: 'Enter with the same virtual starting balance as every operator. No deposits or real swaps. Just your decisions.', href: null, action: null },
+  { number: '03', label: 'Execute your strategy', title: 'Make every move count.', description: 'Read live charts, size your positions, and set take-profit and stop-loss exits. Trade with a plan until the clock runs out.', href: null, action: null },
+  { number: '04', label: 'See your standing', title: 'Let the result speak.', description: 'The mission closes on a shared price snapshot. Your final equity locks in your rank and a record you can compare.', href: '/rankings', action: 'View rankings' },
 ] as const
 
 /* Reveal storyboard (relative to each card entering the viewport):
@@ -61,15 +60,15 @@ export function HowItWorks() {
 
     <div ref={stepsRef} className="journey-steps relative mt-12 sm:mt-16">
       <ProcessSignalField revealedSteps={stage} />
-      {steps.map(({ number, label, title, description, icon: Icon, href, action }) => <article key={number} className={`journey-step${stage >= Number(number) ? ' journey-step-visible' : ''}`} data-process-step={number}>
-        <span className="journey-node journey-node-mobile" data-process-node aria-hidden="true"><Icon className="size-3.5" strokeWidth={1.5} /></span>
+      {steps.map(({ number, label, title, description, href, action }) => <article key={number} className={`journey-step${stage >= Number(number) ? ' journey-step-visible' : ''}`} data-process-step={number}>
+        <span className="journey-node journey-node-mobile" data-process-node aria-hidden="true" style={{ visibility: 'hidden' }}></span>
         <div className="journey-copy" onPointerEnter={updateGlassSheen} onPointerMove={updateGlassSheen} onPointerLeave={resetGlassSheen}>
           <span className="journey-sheen" aria-hidden="true" />
-          <span className="journey-node journey-node-desktop" data-process-node aria-hidden="true"><Icon className="size-3.5" strokeWidth={1.5} /></span>
+          <span className="journey-node journey-node-desktop" data-process-node aria-hidden="true" style={{ visibility: 'hidden' }}></span>
           <p className="journey-eyebrow"><span className="journey-number">{number}</span><span>{label}</span></p>
           <h3 className="mt-5 text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-3xl">{title}</h3>
           <p className="mt-4 max-w-lg text-base leading-7 text-muted">{description}</p>
-          {href && <Link to={href} className="focus-ring mt-4 inline-flex min-h-10 items-center gap-2 rounded-sm text-sm font-medium text-ink hover:text-primary">{action}<ArrowRight className="size-4" aria-hidden="true" /></Link>}
+          {href && <Link to={href} className="focus-ring mt-4 inline-flex min-h-10 items-center gap-2 rounded-sm text-sm font-medium text-ink hover:text-primary">{action}</Link>}
         </div>
       </article>)}
     </div>

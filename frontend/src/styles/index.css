@@ -8,6 +8,16 @@
   font-display: swap;
 }
 
+/* Display numerals for the operational integrity section. */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/SpaceGroteskVariable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+
 @theme {
   --color-canvas: #080b0c;
   --color-surface: #0e1314;
@@ -1110,21 +1120,7 @@ select {
     transform: translate3d(0, 0, 0);
     transition-delay: var(--reveal-item-delay, 0ms);
   }
-  .home-final-panel [data-scroll-reveal-item="1"] {
-    --reveal-item-delay: 80ms;
-  }
-  .home-final-panel [data-scroll-reveal-item="2"] {
-    --reveal-item-delay: 160ms;
-  }
-  .home-final-panel [data-scroll-reveal-item="3"] {
-    --reveal-item-delay: 240ms;
-  }
-  .home-final-panel [data-scroll-reveal-item="4"] {
-    --reveal-item-delay: 320ms;
-  }
-  .home-final-panel [data-scroll-reveal-item="5"] {
-    --reveal-item-delay: 400ms;
-  }
+
 }
 
 @keyframes scroll-reveal-edge {
@@ -2008,36 +2004,27 @@ select {
 .falcon-glass a {
   cursor: pointer;
 }
-.home-integrity-card .falcon-glass {
-  min-height: 17rem;
-  padding: 2rem;
+/* Three principles on one continuous green surface. */
+.home-integrity-grid {
+  --color-ink: var(--color-primary-ink);
+  --color-muted: color-mix(in srgb, var(--color-primary-ink) 78%, transparent);
+  --color-line: color-mix(in srgb, var(--color-primary-ink) 22%, transparent);
+  --color-line-strong: color-mix(in srgb, var(--color-primary-ink) 35%, transparent);
+  --color-surface-muted: var(--color-primary);
+  gap: 0;
+  border-block: 1px solid var(--color-line-strong);
+  background: var(--color-primary);
 }
-.home-integrity-card .journey-eyebrow {
-  padding-right: 0;
-  letter-spacing: 0.06em;
-}
+.home-integrity-card { min-width: 0; }
+.home-integrity-card + .home-integrity-card { border-top: 1px solid var(--color-line); }
+.integrity-instrument { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 1rem; height: 100%; padding: 2.5rem clamp(1.5rem, 3vw, 3rem); text-align: left; }
+.integrity-instrument-number { position: absolute; z-index: -1; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--color-primary-ink); opacity: 0.065; font-family: 'Space Grotesk', var(--font-sans); font-size: clamp(7rem, 10vw, 11rem); font-weight: 700; line-height: 1; letter-spacing: -0.065em; font-variant-numeric: lining-nums tabular-nums; pointer-events: none; user-select: none; }
+.integrity-instrument-copy { min-width: 0; flex: 1; }
+.integrity-instrument-copy h3 { color: var(--color-ink); font-size: clamp(1.75rem, 2.3vw, 2.5rem); font-weight: 500; line-height: 1.1; letter-spacing: -0.055em; }
+.integrity-instrument-copy p { max-width: 38ch; margin-top: 1rem; color: var(--color-muted); font-size: 0.875rem; line-height: 1.8; }
 @media (min-width: 768px) {
-  .home-integrity-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
-    gap: 2rem;
-  }
-  .home-integrity-card:nth-child(2) {
-    margin-top: 1.5rem;
-  }
-  .home-integrity-card:nth-child(3) {
-    margin-top: 3rem;
-  }
-  .home-integrity-card .falcon-glass {
-    min-height: 20rem;
-    padding: 1.75rem;
-  }
-}
-@media (min-width: 1280px) {
-  .home-integrity-card .falcon-glass {
-    min-height: 19rem;
-    padding: 2rem;
-  }
+  .home-integrity-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+  .home-integrity-card + .home-integrity-card { border-top: 0; border-left: 1px solid var(--color-line); }
 }
 
 @media (min-width: 640px) {

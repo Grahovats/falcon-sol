@@ -1,13 +1,9 @@
 import {
   ArrowRight,
-  Crosshair,
-  Radio,
-  Trophy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { ArenaTicket } from "../components/ArenaTicket";
-import { GlassPanel } from "../components/GlassPanel";
 import { HowItWorks } from "../components/HowItWorks";
 import { HeroPlanetHorizon } from "../components/HeroPlanetHorizon";
 import { HomeAtmosphere } from "../components/HomeAtmosphere";
@@ -81,13 +77,13 @@ export function HomePage() {
             <h2 id="integrity-title" className="home-section-eyebrow">Operational integrity</h2>
           </ScrollReveal>
           <div className="home-integrity-grid mt-10 sm:mt-14">
-            <PlatformStat number="01" icon={<Radio />} label="Live operations" value="Time boxed" detail="Every mission has a defined market and finish line. You always know the clock you're trading against." />
-            <PlatformStat number="02" icon={<Crosshair />} label="Execution" value="Market aware" detail="Paper fills follow current pricing and route conditions. Every decision meets the same market." />
-            <PlatformStat number="03" icon={<Trophy />} label="Performance" value="Verifiable" detail="Final equity determines the command board. Your rank reflects the result you earned." />
+            <PlatformStat number="01" value="Time boxed" detail="Every mission has a defined market and finish line. You always know the clock you're trading against." />
+            <PlatformStat number="02" value="Market aware" detail="Paper fills follow current pricing and route conditions. Every decision meets the same market." />
+            <PlatformStat number="03" value="Verifiable" detail="Final equity determines the command board. Your rank reflects the result you earned." />
           </div>
         </section>
 
-        <ScrollReveal direction="up" edge={false} stagger className="home-scroll-reveal">
+        <ScrollReveal direction="up" edge={false} className="home-scroll-reveal">
           <section className="home-final-section pb-6 pt-12 sm:pb-8 sm:pt-16" aria-labelledby="final-cta-title">
             <ArenaTicket />
           </section>
@@ -112,27 +108,22 @@ function HeroMetric({ label, value }: { label: string; value: string }) {
 
 function PlatformStat({
   number,
-  icon,
-  label,
   value,
   detail,
 }: {
   number: string;
-  icon: React.ReactNode;
-  label: string;
   value: string;
   detail: string;
 }) {
   return (
     <ScrollReveal edge={false} className="home-integrity-card home-scroll-reveal" delayMs={(Number(number) - 1) * CLOSING_REVEAL_TIMING.cardStaggerMs}>
-      <GlassPanel>
-        <div className="flex items-start justify-between gap-4">
-          <p className="journey-eyebrow"><span className="journey-number">{number}</span>{label}</p>
-          <span className="shrink-0 text-primary [&>svg]:size-5 [&>svg]:stroke-[1.5]" aria-hidden="true">{icon}</span>
+      <article className="integrity-instrument">
+        <span className="integrity-instrument-number" aria-hidden="true">{number}</span>
+        <div className="integrity-instrument-copy">
+          <h3>{value}</h3>
+          <p>{detail}</p>
         </div>
-        <h3 className="mt-8 text-3xl font-semibold tracking-tight text-ink md:text-2xl xl:text-3xl">{value}</h3>
-        <p className="mt-4 max-w-sm text-base leading-7 text-muted">{detail}</p>
-      </GlassPanel>
+      </article>
     </ScrollReveal>
   );
 }
