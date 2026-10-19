@@ -1,4 +1,5 @@
 import {
+  ArrowDown,
   ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -17,15 +18,12 @@ const CLOSING_REVEAL_TIMING = { cardStaggerMs: 90 } as const;
 /* HERO ENTRANCE
  *   0ms  first headline lifts into view; actions stay usable
  *  160ms second headline follows
- *  320ms supporting copy settles; the horizon begins drawing
- *  512ms metrics arrive from left to right (112ms intervals)
+ *  320ms the horizon begins drawing
  */
-const HERO_TIMING = { headlineMs: 160, descriptionMs: 320, metricsMs: 512, metricStaggerMs: 112 } as const;
+const HERO_TIMING = { headlineMs: 160, descriptionMs: 320 } as const;
 const heroEntranceStyle = {
   "--hero-headline-delay": `${HERO_TIMING.headlineMs}ms`,
   "--hero-description-delay": `${HERO_TIMING.descriptionMs}ms`,
-  "--hero-metrics-delay": `${HERO_TIMING.metricsMs}ms`,
-  "--hero-metric-stagger": `${HERO_TIMING.metricStaggerMs}ms`,
 } as CSSProperties;
 
 export function HomePage() {
@@ -34,43 +32,46 @@ export function HomePage() {
       <section className="falcon-hero" style={heroEntranceStyle}>
         <HeroPlanetHorizon />
         <div className="falcon-hero-copy relative z-10">
-          <h1 className="flex flex-col gap-[0.1em] text-[clamp(2.5rem,5vw,5rem)] font-semibold leading-none tracking-[-0.055em] text-ink">
+          <h1 className="falcon-hero-title text-ink">
             <span className="hero-title-line block"><span className="hero-title-reveal block">The market moves.</span></span>
             <span className="hero-title-line block text-primary"><span className="hero-title-reveal block">Make your mark.</span></span>
           </h1>
-          <p className="hero-description mx-auto mt-8 max-w-2xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
-            Trade live Solana markets with $10,000 in virtual capital.
-            Compete in timed missions, climb the leaderboard, and earn rewards in prize missions.
-          </p>
-          <div className="hero-actions mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="hero-actions">
             <Link
               to="/missions"
-              className="directional-action focus-ring inline-flex min-h-14 items-center gap-3 rounded-sm bg-primary px-8 text-base font-semibold text-primary-ink motion-safe:transition-colors motion-safe:duration-100 hover:bg-primary-strong active:translate-y-px"
+              className="hero-enter-action directional-action focus-ring"
             >
-              Explore missions{" "}
+              <span>Find your mission</span>
               <ArrowRight className="action-icon size-5" aria-hidden="true" />
             </Link>
-            <Link
-              to="/rankings"
-              className="focus-ring inline-flex min-h-14 items-center gap-3 rounded-sm px-6 text-base font-semibold text-muted motion-safe:transition-colors motion-safe:duration-100 hover:text-primary"
+            <a
+              href="#how-falcon-works"
+              className="hero-learn-action focus-ring"
+              onClick={(event) => {
+                const section = document.getElementById("how-falcon-works");
+                if (!section) return;
+                event.preventDefault();
+                section.scrollIntoView({
+                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+                  block: "start",
+                });
+              }}
             >
-              View rankings
-            </Link>
+              Learn more <ArrowDown size={16} aria-hidden="true" />
+            </a>
           </div>
         </div>
-        <dl className="hero-metrics z-10 grid grid-cols-3 divide-x divide-line py-5">
-          <HeroMetric label="Same clock" value="One deadline" />
-          <HeroMetric label="Same capital" value="$10,000 each" />
-          <HeroMetric label="Prove your skill" value="Compete for cash prizes" />
-        </dl>
+        <p className="hero-horizon-caption">Virtual capital. Live markets. Cash prizes.</p>
       </section>
 
       <ScrollChargeDivider />
       <div className="home-below-hero">
         <HomeAtmosphere />
-        <ScrollReveal direction="up" edge={false}>
-          <HowItWorks />
-        </ScrollReveal>
+        <div id="how-falcon-works" className="home-learn-target">
+          <ScrollReveal direction="up" edge={false}>
+            <HowItWorks />
+          </ScrollReveal>
+        </div>
 
         <section className="home-integrity-section py-16 sm:py-20" aria-labelledby="integrity-title">
           <ScrollReveal edge={false} className="home-section-heading home-scroll-reveal">
@@ -89,19 +90,6 @@ export function HomePage() {
           </section>
         </ScrollReveal>
       </div>
-    </div>
-  );
-}
-
-function HeroMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="px-2 text-center sm:px-4">
-      <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted sm:text-xs">
-        {label}
-      </dt>
-      <dd className="mt-3 font-mono text-base tabular-nums text-ink sm:text-xl">
-        {value}
-      </dd>
     </div>
   );
 }

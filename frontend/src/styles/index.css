@@ -605,8 +605,26 @@ select {
 .falcon-hero-copy {
   width: 100%;
   min-width: 0;
-  max-width: 64rem;
-  text-align: center;
+  max-width: 90rem;
+  text-align: left;
+}
+.falcon-hero-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.16em;
+  margin: 0;
+  font-size: clamp(2.5rem, 7.4vw, 8rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+.falcon-hero-title .hero-title-line {
+  text-wrap: balance;
+}
+.falcon-hero-copy .hero-actions {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  justify-content: flex-start;
 }
 
 /* A clipped headline lift and short signal sweep introduce the hero once. */
@@ -622,26 +640,8 @@ select {
   .hero-title-line:nth-child(2) .hero-title-reveal {
     animation-delay: var(--hero-headline-delay);
   }
-  .hero-description {
-    animation: hero-content-in calc(600ms * var(--hero-motion-scale, 1)) cubic-bezier(0.16, 1, 0.3, 1)
-      var(--hero-description-delay) both;
-  }
   .hero-actions {
     animation: hero-actions-in calc(650ms * var(--hero-motion-scale, 1)) cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  .hero-metrics > * {
-    animation: hero-content-in calc(550ms * var(--hero-motion-scale, 1)) cubic-bezier(0.16, 1, 0.3, 1)
-      var(--hero-metrics-delay) both;
-  }
-  .hero-metrics > :nth-child(2) {
-    animation-delay: calc(
-      var(--hero-metrics-delay) + var(--hero-metric-stagger)
-    );
-  }
-  .hero-metrics > :nth-child(3) {
-    animation-delay: calc(
-      var(--hero-metrics-delay) + var(--hero-metric-stagger) * 2
-    );
   }
   .hero-signal-route {
     stroke-dasharray: 1;
