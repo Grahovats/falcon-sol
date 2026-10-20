@@ -115,7 +115,7 @@
   letter-spacing: 0.025em;
   color: var(--color-muted);
 }
-/* Oversized ellipses form a planet rim without a raster background.
+/* An SVG ellipse forms a planet rim without a raster background.
  * The horizon scales with the content so it stays below the actions. */
 .hero-planet-field {
   position: absolute;
@@ -124,7 +124,7 @@
   overflow: hidden;
   pointer-events: none;
   color: var(--color-primary);
-  background: radial-gradient(ellipse at 50% 62%, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 58%);
+  background: transparent;
 }
 .hero-planet-stars {
   position: absolute;
@@ -139,16 +139,6 @@
   box-shadow: 0 0 6px color-mix(in srgb, var(--color-primary) 45%, transparent);
   opacity: 0.45;
 }
-.hero-planet-atmosphere {
-  position: absolute;
-  top: 44%;
-  left: 50%;
-  width: 110%;
-  height: 53%;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--color-primary) 24%, transparent), color-mix(in srgb, var(--color-primary) 6%, transparent) 42%, transparent 70%);
-}
-.hero-planet-surface,
 .hero-planet-rim {
   position: absolute;
   top: var(--hero-horizon-top);
@@ -156,39 +146,15 @@
   width: 140%;
   height: 110%;
   transform: translateX(-50%);
-  border-radius: 50%;
+  overflow: visible;
 }
-.hero-planet-surface {
-  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-primary) 8%, var(--color-canvas)), var(--color-canvas) 48%);
+.hero-planet-glow {
+  opacity: 0.55;
 }
-.hero-planet-rim {
-  border-top: 2px solid color-mix(in srgb, var(--color-primary) 65%, var(--color-ink));
-  box-shadow:
-    0 -2px 8px color-mix(in srgb, var(--color-primary) 50%, transparent),
-    0 -10px 36px color-mix(in srgb, var(--color-primary) 16%, transparent),
-    inset 0 10px 28px color-mix(in srgb, var(--color-primary) 6%, transparent);
+.hero-planet-edge {
+  color: color-mix(in srgb, white 15%, var(--color-primary));
 }
-.hero-planet-rim::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  border-top: 2px solid var(--color-primary);
-  box-shadow:
-    0 -3px 12px color-mix(in srgb, var(--color-primary) 55%, transparent),
-    0 -10px 36px color-mix(in srgb, var(--color-primary) 22%, transparent);
-  opacity: 0.3;
-}
-.hero-planet-rim::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  border-top: 2px solid var(--color-ink);
-  box-shadow: 0 -2px 7px color-mix(in srgb, var(--color-primary) 65%, transparent);
-  mask-image: linear-gradient(to right, transparent 40%, black 48%, black 52%, transparent 60%);
-  mask-size: 300% 100%;
-  mask-repeat: no-repeat;
+.hero-arc-flow {
   opacity: 0;
 }
 .hero-planet-vignette {
@@ -231,16 +197,36 @@
   .hero-planet-field { inset-inline: -2rem; }
 }
 @media (min-width: 640px) and (max-width: 1023px) {
-  .hero-planet-surface,
   .hero-planet-rim { width: 180%; height: 100%; }
 }
 @media (max-width: 639px) {
   .falcon-hero:has(.hero-planet-field) { --hero-horizon-top: 72%; }
-  .hero-planet-surface,
   .hero-planet-rim { width: 200%; height: 80%; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* Headline, actions, then a feathered reveal from the horizon's center. */
+  .falcon-hero .hero-actions { animation: none; }
+  .hero-enter-action,
+  .hero-learn-action {
+    animation: hero-action-arrive 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-enter-action { animation-delay: 280ms; }
+  .hero-learn-action { animation-delay: 400ms; }
+  .hero-horizon-reveal {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hero-horizon-expand 1800ms cubic-bezier(0.22, 1, 0.36, 1) var(--hero-description-delay, 320ms) both;
+  }
+  .falcon-hero .hero-planet-stars {
+    animation: hero-sky-arrive 1400ms ease-out 200ms both;
+  }
+  .hero-horizon-caption {
+    animation: hero-action-arrive 1000ms cubic-bezier(0.22, 1, 0.36, 1) 1000ms both;
+  }
+  .hero-planet-glow {
+    animation: hero-planet-glow-pulse 7s ease-in-out infinite;
+  }
   .hero-shooting-star {
     /* A brief pass followed by a long pause keeps the sky quiet. */
     animation: hero-shooting-star-pass calc(var(--shooting-duration) * var(--hero-motion-scale)) linear calc(var(--shooting-delay) * var(--hero-motion-scale)) infinite both;
@@ -248,27 +234,22 @@
   .hero-planet-star {
     animation: hero-star-twinkle calc(var(--star-duration) * var(--hero-motion-scale)) cubic-bezier(0.4, 0, 0.2, 1) var(--star-delay) infinite;
   }
-  .hero-planet-rim {
-    animation: hero-horizon-reveal calc(1600ms * var(--hero-motion-scale)) cubic-bezier(0.16, 1, 0.3, 1) calc(200ms * var(--hero-motion-scale)) both;
-  }
-  .hero-planet-rim::before {
-    animation: hero-arc-glow calc(4s * var(--hero-motion-scale)) cubic-bezier(0.4, 0, 0.2, 1) calc(1800ms * var(--hero-motion-scale)) infinite both;
-  }
-  .hero-planet-rim::after {
-    animation: hero-arc-highlight calc(5s * var(--hero-motion-scale)) linear calc(1800ms * var(--hero-motion-scale)) infinite both;
-  }
-  .hero-planet-atmosphere {
-    animation: hero-atmosphere-reveal calc(1800ms * var(--hero-motion-scale)) cubic-bezier(0, 0, 0.2, 1) both;
-  }
 }
-@keyframes hero-arc-glow {
-  0%, 100% { opacity: 0.16; }
-  50% { opacity: 0.55; }
+@keyframes hero-action-arrive {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
 }
-@keyframes hero-arc-highlight {
-  0% { mask-position: 100% 0; opacity: 0; }
-  8%, 92% { opacity: 0.9; }
-  100% { mask-position: 0% 0; opacity: 0; }
+@keyframes hero-horizon-expand {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+@keyframes hero-sky-arrive {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes hero-planet-glow-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.7; }
 }
 @keyframes hero-shooting-star-pass {
   0% { opacity: 0; transform: translate(0, 0) rotate(-35deg); }
@@ -280,13 +261,5 @@
   0%, 18%, 82%, 100% { opacity: 0; }
   45% { opacity: 0.75; }
   60% { opacity: 0.35; }
-}
-@keyframes hero-horizon-reveal {
-  from { clip-path: inset(0 50% 0 50%); opacity: 0; }
-  to { clip-path: inset(-20% -5% 0 -5%); opacity: 1; }
-}
-@keyframes hero-atmosphere-reveal {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 

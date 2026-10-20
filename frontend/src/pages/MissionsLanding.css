@@ -18,7 +18,6 @@
   inset: 0;
   background: none;
 }
-.missions-experience .hero-planet-atmosphere { display: none; }
 .missions-landing { max-width: 100rem; margin-inline: auto; padding: 0 var(--mission-inset) 2.5rem; }
 .missions-board-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.5rem var(--app-page-gutter); }
 .missions-board-heading .missions-board-eyebrow { margin-bottom: 0.5rem; font-size: 0.75rem; }

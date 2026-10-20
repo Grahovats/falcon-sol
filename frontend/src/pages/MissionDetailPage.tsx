@@ -49,7 +49,7 @@ export function MissionDetailPage() {
   if (mission.status === 'CANCELLED') return <div><PrizePanel mission={mission} /><LifecyclePanel icon={<ShieldX />} title="Operation stood down" description="Trading is closed and no final ranking will be awarded for this mission." /></div>
   const completed = ['FINALIZED', 'CLOSED'].includes(mission.status)
   if (completed) {
-    return <div><PrizePanel mission={mission} /><ResultsView mission={mission} portfolio={trading.portfolio.status === 'success' ? trading.portfolio.data : undefined} rows={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []} loading={trading.leaderboard.status === 'loading'} error={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined} /></div>
+    return <div>{mission.rewards && <PrizePanel mission={mission} />}<ResultsView mission={mission} portfolio={trading.portfolio.status === 'success' ? trading.portfolio.data : undefined} portfolioLoading={trading.portfolio.status === 'loading'} portfolioError={trading.portfolio.status === 'error' ? trading.portfolio.message : undefined} onRetry={() => { void trading.refreshPortfolio(); void trading.refreshLeaderboard() }} rows={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []} loading={trading.leaderboard.status === 'loading'} error={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined} /></div>
   }
   if (trading.portfolio.status === 'loading') return <TerminalSkeleton />
   if (trading.portfolio.status === 'authentication-required' || trading.portfolio.status === 'not-joined') {

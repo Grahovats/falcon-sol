@@ -265,7 +265,6 @@ export function DashboardPage() {
     <div className="dashboard-workspace">
       <DashboardHeader username={profile.data.username} />
       <div className="dashboard-record-heading">
-        <h2>Your record</h2>
         <div
           className="dashboard-record-tabs"
           role="group"

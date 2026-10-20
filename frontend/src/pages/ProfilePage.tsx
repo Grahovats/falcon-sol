@@ -19,6 +19,7 @@ import { AuthenticationRequired } from "../components/AuthenticationRequired";
 import { SolanaAccountIcon } from "../components/SolanaAccountIcon";
 import { formatCurrency, formatPercent } from "../lib/format";
 import { useAuth } from "../providers/auth-context";
+import "./RecordPages.css";
 
 type State =
   | { status: "loading" }
@@ -69,7 +70,7 @@ export function ProfilePage() {
   if (auth.status === "loading" || auth.status === "signing")
     return <ProfileSkeleton />;
   if (auth.status !== "authenticated")
-    return <AuthenticationRequired title="Authenticate to view your dossier" />;
+    return <AuthenticationRequired title="View your profile" />;
   if (state.status === "loading") return <ProfileSkeleton />;
   if (state.status === "error")
     return <ProfileError message={state.message} retry={() => void load()} />;
@@ -83,86 +84,47 @@ export function ProfilePage() {
     : null;
 
   return (
-    <div className="state-content w-full pb-8">
-      <header className="app-page-heading">
-        <h1 className="text-3xl font-semibold tracking-[-0.055em] text-ink sm:text-4xl">
-          History &amp; Profile
-        </h1>
-        <p className="mt-3 text-sm text-muted">
-          Your decisions. Your performance. Your track record.
-        </p>
-      </header>
-
-      <section
-        className="app-surface mt-9 overflow-hidden rounded-[10px] border border-line bg-surface"
-        aria-label="Operator profile"
-      >
-        <div className="flex flex-col gap-7 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-center gap-5 sm:gap-6">
-            <SolanaAccountIcon
-              address={profile.wallet ?? profile.userId}
-              size="xl"
-            />
-            <div className="min-w-0">
-              <h2 className="truncate text-2xl font-semibold tracking-[-0.035em] text-ink">
-                {profile.username}
-              </h2>
-              <p className="mt-2 flex items-center gap-2 truncate font-mono text-xs text-muted">
-                <WalletCards className="size-3.5 shrink-0" aria-hidden="true" />
-                {compactWallet(profile.wallet)}
-              </p>
-              <p className="mt-3 text-xs text-muted">
-                On the radar since{" "}
-                {monthYearFormatter.format(new Date(profile.memberSince))}
-              </p>
+    <div className="record-workspace profile-workspace state-content">
+      <div className="dossier-layout">
+        <aside className="dossier-identity" aria-label="Operator profile">
+          <div className="dossier-avatar"><SolanaAccountIcon address={profile.wallet ?? profile.userId} size="xl" /></div>
+          <p className="record-eyebrow">Falcon operator</p>
+          <h2>{profile.username}</h2>
+          <p className="dossier-wallet"><WalletCards className="size-3.5" aria-hidden="true" />{compactWallet(profile.wallet)}</p>
+          <button type="button" onClick={() => setEditing(true)} className="record-action focus-ring">Edit profile <ArrowUpRight className="size-4" aria-hidden="true" /></button>
+          <dl className="dossier-details">
+            <div><dt>Member since</dt><dd>{monthYearFormatter.format(new Date(profile.memberSince))}</dd></div>
+            <div><dt>Missions entered</dt><dd>{profile.missionsEntered}</dd></div>
+            <div><dt>Podium finishes</dt><dd>{profile.topThreeFinishes}</dd></div>
+          </dl>
+          <Link to="/missions" className="dossier-next focus-ring"><span>Build your track record<strong>Find your next mission</strong></span><ArrowUpRight className="size-5" aria-hidden="true" /></Link>
+        </aside>
+        <div className="dossier-main">
+          <section className="dossier-performance" aria-labelledby="performance-title">
+            <div className="record-section-title"><h2 id="performance-title">Performance overview</h2><span>Career record</span></div>
+            <div className="dossier-performance-grid">
+              <div className="dossier-return"><p>Average return</p><strong className={Number(profile.averageReturn) >= 0 ? "text-primary" : "text-danger"}>{formatPercent(profile.averageReturn)}</strong><span>Across your mission record</span></div>
+              <dl className="dossier-stats">
+                <ProfileMetric label="Wins" value={String(profile.wins)} />
+                <ProfileMetric label="Win rate" value={formatPercent(winRate)} />
+                <ProfileMetric label="Best return" value={bestReturn === null ? "—" : formatPercent(bestReturn)} positive={bestReturn !== null && bestReturn >= 0} />
+              </dl>
             </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="app-button focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-3 self-start rounded-md border border-line-strong px-5 text-xs font-semibold text-ink hover:border-primary hover:text-primary"
-          >
-            Edit profile <ArrowUpRight className="size-4" aria-hidden="true" />
-          </button>
-        </div>
-        <dl className="grid border-t border-line sm:grid-cols-2 lg:grid-cols-5">
-          <ProfileMetric
-            label="Missions"
-            value={String(profile.missionsEntered)}
-          />
-          <ProfileMetric label="Wins" value={String(profile.wins)} />
-          <ProfileMetric label="Win rate" value={formatPercent(winRate)} />
-          <ProfileMetric
-            label="Best return"
-            value={bestReturn === null ? "N/A" : formatPercent(bestReturn)}
-            positive={bestReturn !== null && bestReturn >= 0}
-          />
-          <ProfileMetric
-            label="Avg return"
-            value={formatPercent(profile.averageReturn)}
-            positive={Number(profile.averageReturn) >= 0}
-          />
-        </dl>
-      </section>
-
-      <div className="mt-8 border-b border-line sm:mt-10">
-        <span className="inline-flex min-h-12 items-center gap-2 border-b-2 border-primary text-sm font-semibold text-primary">
-          Mission history{" "}
-          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px]">
-            {profile.results.length}
-          </span>
-        </span>
-      </div>
-
+          </section>
+          <section className="dossier-highlight" aria-label="Personal best">
+            <div className="dossier-best-place"><span>Best finish</span><strong>{profile.bestResult?.rank ? `#${profile.bestResult.rank}` : "—"}</strong></div>
+            <div className="dossier-best-details"><p className="record-eyebrow">Personal best</p><h2>{profile.bestResult?.missionName ?? "Your first result starts here"}</h2><p>{profile.bestResult ? missionDateFormatter.format(new Date(profile.bestResult.missionDate)) : "Enter a mission to establish your record."}</p></div>
+            <div className="dossier-best-result"><span>Return</span><strong className={bestReturn !== null && bestReturn < 0 ? "text-danger" : "text-primary"}>{bestReturn === null ? "—" : formatPercent(bestReturn)}</strong><Link to={profile.bestResult ? `/missions/${profile.bestResult.missionId}` : "/missions"} className="dossier-best-link focus-ring">{profile.bestResult ? "View mission" : "Explore missions"}<ArrowUpRight className="size-4" aria-hidden="true" /></Link></div>
+          </section>
       <section
-        className="app-surface mt-6 overflow-hidden rounded-[10px] border border-line bg-surface"
+        className="record-panel dossier-history overflow-hidden"
         aria-labelledby="records-title"
       >
         <div className="flex min-h-14 items-center justify-between gap-4 border-b border-line px-5 sm:px-6">
           <h2 id="records-title" className="text-sm font-semibold text-ink">
             Mission history
           </h2>
-          <p className="text-xs text-muted">Most recent first</p>
+          <p className="text-xs text-muted">{profile.results.length} records · Most recent first</p>
         </div>
         {profile.results.length === 0 ? (
           <div className="px-6 py-14 text-center">
@@ -218,6 +180,9 @@ export function ProfilePage() {
         Historical records reflect your completed and active paper-trading
         missions. No real assets are used.
       </p>
+
+        </div>
+      </div>
 
       <EditProfileDialog
         open={editing}
@@ -330,7 +295,7 @@ function ProfileMetric({
   positive?: boolean;
 }) {
   return (
-    <div className="px-6 py-5 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:border-line lg:border-l lg:border-line lg:first:border-l-0">
+    <div className="record-metric">
       <dt className="text-xs text-muted">{label}</dt>
       <dd
         className={`mt-2 font-mono text-2xl font-semibold tabular-nums ${positive ? "text-primary" : "text-ink"}`}
@@ -429,7 +394,7 @@ function EditProfileDialog({
       onClose={onClose}
       onCancel={onClose}
       aria-labelledby="edit-profile-title"
-      className="app-surface app-modal wallet-dialog m-auto w-[min(92vw,30rem)] rounded-[10px] border border-line bg-surface p-0 text-ink backdrop:bg-black/80"
+      className="profile-edit-dialog app-modal wallet-dialog m-auto w-[min(92vw,30rem)] p-0 text-ink"
     >
       <form onSubmit={submit} className="p-6">
         <div className="flex items-center justify-between gap-4">
@@ -461,7 +426,7 @@ function EditProfileDialog({
           autoComplete="username"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          className="app-field focus-ring mt-2 min-h-11 w-full rounded-md border border-line-strong bg-canvas px-3 text-sm text-ink"
+          className="app-field focus-ring mt-2 min-h-11 w-full rounded-md px-3 text-sm text-ink"
         />
         {error && (
           <p className="mt-2 text-xs text-danger" role="alert">
@@ -472,7 +437,7 @@ function EditProfileDialog({
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            className="app-button focus-ring min-h-11 rounded-md border border-line px-4 text-sm font-semibold text-ink hover:border-line-strong"
+            className="app-button focus-ring min-h-11 rounded-md px-4 text-sm font-semibold text-ink"
           >
             Cancel
           </button>
@@ -504,13 +469,13 @@ function getFinish(rank: number | null): "Winner" | "Podium" | "Completed" {
 function ProfileSkeleton() {
   return (
     <div
-      className="w-full space-y-6"
+      className="record-workspace space-y-6 py-6"
       aria-busy="true"
       aria-label="Loading profile"
     >
-      <div className="app-subtle-surface h-20 animate-pulse bg-surface" />
-      <div className="app-surface h-72 animate-pulse rounded-[10px] border border-line bg-surface" />
-      <div className="app-surface h-80 animate-pulse rounded-[10px] border border-line bg-surface" />
+      <div className="app-subtle-surface h-20 motion-safe:animate-pulse bg-surface" />
+      <div className="app-surface h-72 motion-safe:animate-pulse rounded-[10px] border border-line bg-surface" />
+      <div className="app-surface h-80 motion-safe:animate-pulse rounded-[10px] border border-line bg-surface" />
     </div>
   );
 }

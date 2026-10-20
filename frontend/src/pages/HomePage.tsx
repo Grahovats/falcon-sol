@@ -16,9 +16,11 @@ import { ScrollReveal } from "../components/ScrollReveal";
 const CLOSING_REVEAL_TIMING = { cardStaggerMs: 90 } as const;
 
 /* HERO ENTRANCE
- *   0ms  first headline lifts into view; actions stay usable
+ *   0ms  first headline lifts into view
  *  160ms second headline follows
- *  320ms the horizon begins drawing
+ *  280ms primary action fades upward; secondary follows at 400ms
+ *  320ms the horizon expands from its center
+ * 1000ms caption fades into view
  */
 const HERO_TIMING = { headlineMs: 160, descriptionMs: 320 } as const;
 const heroEntranceStyle = {

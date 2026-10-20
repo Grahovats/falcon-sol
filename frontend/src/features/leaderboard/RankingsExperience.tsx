@@ -1,8 +1,8 @@
-import { Activity, Award, ChevronRight, Crosshair, Medal, RotateCw, Trophy, Users } from 'lucide-react'
+import { Award, ChevronRight, Crosshair, Search, RotateCw } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getRankings, type MissionRanking, type RankingRow, type RankingsMeta, type RankingsPayload } from '../../api/rankings'
-import { PageHeader } from '../../components/PageHeader'
+import '../../pages/RecordPages.css'
 import { SolanaAccountIcon } from '../../components/SolanaAccountIcon'
 import { formatCurrency, formatDate, formatPercent } from '../../lib/format'
 import { StatusBadge } from '../missions/StatusBadge'
@@ -40,18 +40,13 @@ export function RankingsExperience() {
     setParams(nextParams, { replace: true })
   }
 
-  return <div>
-    <PageHeader title="Rankings" eyebrow="Command board" description="A clear record of every operator’s performance. Compare results, follow live missions, and find your place." />
+  return <div className="record-workspace rankings-workspace">
+    <h1 className="sr-only">Rankings</h1>
     {state.status === 'loading' && <RankingsLoading />}
     {state.status === 'error' && <ErrorState message={state.message} retry={() => void load()} />}
     {state.status === 'success' && <>
-      <dl className="app-metrics mt-10 grid gap-px bg-line sm:grid-cols-3">
-        <Metric icon={<Users />} label="Ranked participants" value={String(state.meta.rankedOperatorCount)} />
-        <Metric icon={<Trophy />} label="Finalized missions" value={String(state.meta.finalizedMissionCount)} />
-        <Metric icon={<Activity />} label="Live missions" value={String(state.data.liveMissions.length)} />
-      </dl>
-      <div className="mission-filter-scroll mt-8 min-w-0 overflow-x-auto">
-        <div className="grain-surface mission-filter-group" role="tablist" aria-label="Ranking views">
+      <div className="record-filters min-w-0 overflow-x-auto">
+        <div className="record-tabs" role="tablist" aria-label="Ranking views">
           {views.map((item, index) => <button
             key={item.id}
             id={`ranking-tab-${item.id}`}
@@ -72,7 +67,7 @@ export function RankingsExperience() {
               selectView(views[nextIndex].id)
               document.getElementById(`ranking-tab-${views[nextIndex].id}`)?.focus()
             }}
-            className="app-button mission-filter-button focus-ring shrink-0 px-3 text-xs font-semibold"
+            className="focus-ring shrink-0"
           >{item.label}</button>)}
         </div>
       </div>
@@ -87,30 +82,41 @@ export function RankingsExperience() {
 }
 
 function OverallRankings({ rows }: { rows: RankingRow[] }) {
+  const [query, setQuery] = useState('')
+  const filteredRows = rows.filter((row) => `${row.displayName} ${row.wallet ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()))
   if (rows.length === 0) return <EmptyState title="No career rankings yet" description="Overall standings activate when the first mission is finalized." />
   return <section aria-labelledby="overall-rankings-title">
-    <h2 id="overall-rankings-title" className="sr-only">Overall participant rankings</h2>
-    <div className="app-surface hidden overflow-x-auto border border-line bg-surface md:block">
+    <div className="record-section-title"><h2 id="overall-rankings-title">Setting the pace</h2><span>The leading three</span></div>
+    <div className="rankings-leaders" aria-label="Leading operators">
+      {rows.slice(0, 3).map((row) => <article key={row.userId} className={`record-leader ${row.rank === 1 ? 'is-first' : ''}`}>
+        <span className="leader-place" aria-hidden="true">{String(row.rank).padStart(2, '0')}</span><div className="record-leader-heading"><span>{row.rank === 1 ? 'Leading operator' : `Rank ${row.rank}`}</span></div>
+        <OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} />
+        <div className="record-leader-return"><strong className={Number(row.averageReturn) >= 0 ? 'text-primary' : 'text-danger'}>{formatPercent(row.averageReturn)}</strong><span>Average return</span></div>
+        <p>{row.missionsPlayed} missions <span aria-hidden="true">·</span> {row.wins} wins</p>
+      </article>)}
+    </div>
+    <div className="standings-toolbar"><div><h3>All operators</h3><p aria-live="polite">{filteredRows.length} of {rows.length} operators</p></div><label className="standings-search"><Search className="size-4" aria-hidden="true" /><span className="sr-only">Search operators by name or wallet</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name or wallet" /></label></div>
+    {filteredRows.length === 0 && <div className="standings-no-results"><p>No operators match “{query}”.</p><button type="button" className="record-action focus-ring" onClick={() => setQuery('')}>Clear search</button></div>}
+    <div className="record-panel hidden overflow-x-auto border border-line bg-surface md:block">
       <table className="app-table w-full min-w-[850px] text-left text-sm">
         <thead className="border-b border-line font-mono text-[11px] uppercase tracking-wider text-muted"><tr><th className="px-5 py-3 font-normal">Rank</th><th className="px-5 py-3 font-normal">Participant</th><th className="px-5 py-3 text-right font-normal">Missions</th><th className="px-5 py-3 text-right font-normal">Wins</th><th className="px-5 py-3 text-right font-normal">Podiums</th><th className="px-5 py-3 text-right font-normal">Avg return</th><th className="px-5 py-3 text-right font-normal">Best</th><th className="px-5 py-3 text-right font-normal">Total P&amp;L</th></tr></thead>
-        <tbody className="divide-y divide-line">{rows.map((row) => <tr key={row.userId} className="hover:bg-canvas/60"><td className="px-5 py-4"><Rank rank={row.rank} /></td><td className="px-5 py-4"><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /></td><td className="px-5 py-4 text-right font-mono text-muted">{row.missionsPlayed}</td><td className="px-5 py-4 text-right font-mono text-ink">{row.wins}</td><td className="px-5 py-4 text-right font-mono text-ink">{row.podiums}</td><ReturnCell value={row.averageReturn} /><ReturnCell value={row.bestReturn} /><CurrencyCell value={row.totalPnl} /></tr>)}</tbody>
+        <tbody className="divide-y divide-line">{filteredRows.map((row) => <tr key={row.userId} className="hover:bg-canvas/60"><td className="px-5 py-4"><Rank rank={row.rank} /></td><td className="px-5 py-4"><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /></td><td className="px-5 py-4 text-right font-mono text-muted">{row.missionsPlayed}</td><td className="px-5 py-4 text-right font-mono text-ink">{row.wins}</td><td className="px-5 py-4 text-right font-mono text-ink">{row.podiums}</td><ReturnCell value={row.averageReturn} /><ReturnCell value={row.bestReturn} /><CurrencyCell value={row.totalPnl} /></tr>)}</tbody>
       </table>
     </div>
-    <div className="grid gap-3 md:hidden">{rows.map((row) => <article key={row.userId} className="app-surface border border-line bg-surface p-4"><div className="flex items-center gap-3"><Rank rank={row.rank} /><div className="min-w-0 flex-1"><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /></div></div><dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4"><CompactMetric label="Average return" value={formatPercent(row.averageReturn)} positive={Number(row.averageReturn) >= 0} /><CompactMetric label="Total P&L" value={formatCurrency(row.totalPnl)} positive={Number(row.totalPnl) >= 0} /><CompactMetric label="Missions" value={String(row.missionsPlayed)} /><CompactMetric label="Wins / podiums" value={`${row.wins} / ${row.podiums}`} /></dl></article>)}</div>
+    <div className="grid gap-3 md:hidden">{filteredRows.map((row) => <article key={row.userId} className="record-panel rankings-operator-card border border-line bg-surface p-4"><div className="flex items-center gap-3"><Rank rank={row.rank} /><div className="min-w-0 flex-1"><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /></div></div><dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 pt-4"><CompactMetric label="Average return" value={formatPercent(row.averageReturn)} positive={Number(row.averageReturn) >= 0} /><CompactMetric label="Total P&L" value={formatCurrency(row.totalPnl)} positive={Number(row.totalPnl) >= 0} /><CompactMetric label="Missions" value={String(row.missionsPlayed)} /><CompactMetric label="Wins / podiums" value={`${row.wins} / ${row.podiums}`} /></dl></article>)}</div>
   </section>
 }
 
 function MissionRankings({ missions, kind }: { missions: MissionRanking[]; kind: 'live' | 'finalized' }) {
   if (missions.length === 0) return <EmptyState title={kind === 'live' ? 'No missions are live' : 'No finalized missions'} description={kind === 'live' ? 'Open or scheduled operations are available on the mission board.' : 'Completed operation results will appear here permanently.'} />
-  return <div className="grid gap-5">{missions.map((mission) => <section key={mission.id} className="app-surface border border-line bg-surface" aria-labelledby={`mission-ranking-${mission.id}`}><header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-3"><h2 id={`mission-ranking-${mission.id}`} className="font-semibold text-ink">{mission.name}</h2><StatusBadge status={mission.status} /></div><p className="mt-2 font-mono text-xs text-muted">{mission.operatorCount} participants · {kind === 'live' ? `Ends ${formatDate(mission.endsAt)}` : `Finalized ${formatDate(mission.endsAt)}`}</p></div><Link to={`/missions/${mission.id}`} className="app-button app-table-action app-button-plain focus-ring inline-flex min-h-11 items-center gap-2 self-start px-1 text-sm font-semibold text-primary">Open mission <ChevronRight className="size-4" /></Link></header>{mission.hidden ? <div className="p-8 text-center"><Crosshair className="mx-auto size-6 text-primary" /><p className="mt-3 font-semibold text-ink">Standings under blackout</p><p className="mt-2 text-sm text-muted">Ranks are concealed until settlement to protect the final trading window.</p></div> : mission.rows.length === 0 ? <p className="p-8 text-center text-sm text-muted">No participants have established a ranking in this mission.</p> : <div className="divide-y divide-line">{mission.rows.map((row) => <div key={row.userId} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-5"><Rank rank={row.rank} /><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /><div className="text-right"><p className={`font-mono text-sm ${Number(row.returnPercent) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatPercent(row.returnPercent)}</p><p className="mt-1 font-mono text-xs text-muted">{formatCurrency(row.equity)}</p></div></div>)}</div>}</section>)}</div>
+  return <div className="grid gap-5">{missions.map((mission) => <section key={mission.id} className="record-panel border border-line bg-surface" aria-labelledby={`mission-ranking-${mission.id}`}><header className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-3"><h2 id={`mission-ranking-${mission.id}`} className="font-semibold text-ink">{mission.name}</h2><StatusBadge status={mission.status} /></div><p className="mt-2 font-mono text-xs text-muted">{mission.operatorCount} participants · {kind === 'live' ? `Ends ${formatDate(mission.endsAt)}` : `Finalized ${formatDate(mission.endsAt)}`}</p></div><Link to={`/missions/${mission.id}`} className="app-button app-table-action app-button-plain focus-ring inline-flex min-h-11 items-center gap-2 self-start px-1 text-sm font-semibold text-primary">Open mission <ChevronRight className="size-4" /></Link></header>{mission.hidden ? <div className="p-8 text-center"><Crosshair className="mx-auto size-6 text-primary" /><p className="mt-3 font-semibold text-ink">Standings under blackout</p><p className="mt-2 text-sm text-muted">Ranks are concealed until settlement to protect the final trading window.</p></div> : mission.rows.length === 0 ? <p className="p-8 text-center text-sm text-muted">No participants have established a ranking in this mission.</p> : <div className="divide-y divide-line">{mission.rows.map((row) => <div key={row.userId} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-5"><Rank rank={row.rank} /><OperatorLink userId={row.userId} name={row.displayName} wallet={row.wallet} /><div className="text-right"><p className={`font-mono text-sm ${Number(row.returnPercent) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatPercent(row.returnPercent)}</p><p className="mt-1 font-mono text-xs text-muted">{formatCurrency(row.equity)}</p></div></div>)}</div>}</section>)}</div>
 }
 
 function OperatorLink({ userId, name, wallet }: { userId: string; name: string; wallet: string | null }) { return <Link to={`/operators/${userId}`} className="app-button app-button-plain focus-ring flex min-h-10 min-w-0 items-center gap-3 rounded-sm hover:text-primary"><SolanaAccountIcon address={wallet ?? userId} size="sm" /><span className="min-w-0"><span className="block truncate font-semibold text-ink">{name}</span>{wallet && <span className="mt-0.5 block font-mono text-[11px] text-muted">{wallet.slice(0, 4)}…{wallet.slice(-4)}</span>}</span></Link> }
-function Rank({ rank }: { rank: number }) { const Icon = rank === 1 ? Trophy : rank <= 3 ? Medal : null; return <span className={`inline-flex size-9 items-center justify-center font-mono text-sm ${rank <= 3 ? 'border border-primary/50 bg-primary/10 text-primary' : 'text-muted'}`}>{Icon ? <Icon className="size-4" aria-label={`Rank ${rank}`} /> : `#${rank}`}</span> }
+function Rank({ rank }: { rank: number }) { return <span className={`ranking-rank ${rank === 1 ? 'is-first' : rank <= 3 ? 'is-podium' : ''}`} aria-label={`Rank ${rank}`}>{String(rank).padStart(2, '0')}</span> }
 function ReturnCell({ value }: { value: string }) { return <td className={`px-5 py-4 text-right font-mono ${Number(value) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatPercent(value)}</td> }
 function CurrencyCell({ value }: { value: string }) { return <td className={`px-5 py-4 text-right font-mono ${Number(value) >= 0 ? 'text-primary' : 'text-danger'}`}>{formatCurrency(value)}</td> }
-function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <div className="app-subtle-surface bg-surface p-5"><dt className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted"><span className="[&>svg]:size-4">{icon}</span>{label}</dt><dd className="mt-3 font-mono text-2xl text-ink">{value}</dd></div> }
 function CompactMetric({ label, value, positive }: { label: string; value: string; positive?: boolean }) { return <div><dt className="text-[11px] uppercase tracking-wider text-muted">{label}</dt><dd className={`mt-1 font-mono text-sm ${positive === undefined ? 'text-ink' : positive ? 'text-primary' : 'text-danger'}`}>{value}</dd></div> }
-function EmptyState({ title, description }: { title: string; description: string }) { return <div className="app-surface border border-dashed border-line bg-surface p-10 text-center"><Award className="mx-auto size-7 text-muted" /><h2 className="mt-4 font-semibold text-ink">{title}</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">{description}</p><Link to="/missions" className="app-button focus-ring mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary">View mission board <ChevronRight className="ml-2 size-4" /></Link></div> }
-function RankingsLoading() { return <div className="mt-10" aria-busy="true" aria-label="Loading rankings"><div className="app-metrics grid gap-px bg-line sm:grid-cols-3">{[0, 1, 2].map((item) => <div key={item} className="app-subtle-surface h-28 animate-pulse bg-surface" />)}</div><div className="app-subtle-surface mt-8 h-12 animate-pulse bg-surface" /><div className="app-surface mt-6 h-96 animate-pulse border border-line bg-surface" /></div> }
-function ErrorState({ message, retry }: { message: string; retry: () => void }) { return <div className="app-surface mt-10 border border-danger/40 bg-surface p-8"><h2 className="font-semibold text-ink">Rankings unavailable</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{message}</p><button type="button" onClick={retry} className="app-button focus-ring mt-5 inline-flex min-h-11 items-center gap-2 border border-line px-4 text-sm font-semibold text-ink hover:border-primary"><RotateCw className="size-4" /> Retry</button></div> }
+function EmptyState({ title, description }: { title: string; description: string }) { return <div className="record-panel border border-dashed border-line bg-surface p-10 text-center"><Award className="mx-auto size-7 text-muted" /><h2 className="mt-4 font-semibold text-ink">{title}</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">{description}</p><Link to="/missions" className="app-button focus-ring mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary">View mission board <ChevronRight className="ml-2 size-4" /></Link></div> }
+function RankingsLoading() { return <div className="mt-10" aria-busy="true" aria-label="Loading rankings"><div className="app-metrics grid gap-px bg-line sm:grid-cols-3">{[0, 1, 2].map((item) => <div key={item} className="app-subtle-surface h-28 motion-safe:animate-pulse bg-surface" />)}</div><div className="app-subtle-surface mt-8 h-12 motion-safe:animate-pulse bg-surface" /><div className="record-panel mt-6 h-96 motion-safe:animate-pulse border border-line bg-surface" /></div> }
+function ErrorState({ message, retry }: { message: string; retry: () => void }) { return <div className="record-panel mt-10 border border-danger/40 bg-surface p-8"><h2 className="font-semibold text-ink">Rankings unavailable</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{message}</p><button type="button" onClick={retry} className="app-button focus-ring mt-5 inline-flex min-h-11 items-center gap-2 border border-line px-4 text-sm font-semibold text-ink hover:border-primary"><RotateCw className="size-4" /> Retry</button></div> }
