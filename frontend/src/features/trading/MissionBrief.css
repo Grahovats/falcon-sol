@@ -1,0 +1,43 @@
+.mission-brief { max-width: 1100px; margin: 0 auto; padding: 24px 0 48px; }
+.mission-brief-header { padding-bottom: 32px; border-bottom: 1px solid var(--color-line); }
+.mission-brief-kicker { display: flex; align-items: center; gap: 16px; color: var(--color-muted); font-size: 12px; }
+.mission-brief-header h1 { margin: 20px 0 12px; color: var(--color-ink); font-size: clamp(32px, 4vw, 48px); font-weight: 600; letter-spacing: -.04em; line-height: 1.1; }
+.mission-brief-header > p { color: var(--color-muted); font-size: 15px; line-height: 1.7; max-width: 560px; }
+.mission-brief-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 48px; padding-top: 32px; }
+.mission-brief-main { min-width: 0; }
+.mission-brief-stats { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; padding-bottom: 28px; }
+.mission-brief-stats dt { display: flex; align-items: center; gap: 8px; color: var(--color-muted); font-size: 12px; }
+.mission-brief-stats dd { margin-top: 12px; color: var(--color-ink); font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.mission-brief-markets, .mission-brief-standings { border-top: 1px solid var(--color-line); padding: 24px 0; }
+.mission-brief .mission-section-heading h2 { font-size: 14px; font-weight: 500; }
+.mission-brief .mission-section-heading > span { font-size: 11px; }
+.mission-brief-tokens { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-top: 20px; }
+.mission-brief-tokens > span { display: inline-flex; align-items: center; gap: 8px; color: var(--color-ink); font-size: 12px; font-weight: 500; }
+.mission-brief-tokens .terminal-token-mark { display: inline-grid; place-items: center; width: 24px; height: 24px; overflow: hidden; border-radius: 50%; background: var(--color-surface-raised); font-size: 9px; }
+.mission-brief-tokens img { width: 24px; height: 24px; object-fit: cover; }
+.mission-brief .mission-panel-message { margin: 16px 0 0; padding: 0; font-size: 13px; line-height: 1.7; }
+.mission-brief-entry { align-self: start; background: var(--color-surface); border: 1px solid var(--color-line); border-top: 2px solid var(--color-primary); border-radius: 4px; padding: 28px; }
+.mission-brief-entry h2 { margin: 20px 0 16px; color: var(--color-ink); font-size: 40px; font-weight: 500; letter-spacing: -.04em; line-height: 1.1; }
+.mission-brief-entry h2 > span { display: block; margin-top: 8px; color: var(--color-muted); font-size: 12px; letter-spacing: 0; font-weight: 400; }
+.mission-brief-entry-copy { color: var(--color-muted); font-size: 13px; line-height: 1.7; margin-bottom: 24px; }
+.mission-brief-entry .mission-entry-auth { margin-top: 24px; }
+.mission-brief-entry .mission-entry-auth > p { display: none; }
+.mission-brief-entry .mission-entry-auth button { width: 100%; justify-content: center; }
+.mission-brief-disclaimer { display: flex; align-items: center; gap: 8px; margin-top: 20px; color: var(--color-muted); font-size: 11px; line-height: 1.7; }
+.mission-brief-rules { border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.mission-brief-rules summary { display: flex; justify-content: space-between; align-items: center; min-height: 56px; cursor: pointer; color: var(--color-muted); font-size: 13px; list-style: none; }
+.mission-brief-rules summary::-webkit-details-marker { display: none; }
+.mission-brief-rules[open] summary svg { transform: rotate(180deg); }
+.mission-brief-rules > div { padding: 0 0 24px; color: var(--color-muted); font-size: 13px; line-height: 1.8; }
+.mission-brief-rules dl { display: grid; gap: 12px; margin: 16px 0; }
+.mission-brief-rules dl > div { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.mission-brief-rules dt { min-width: 40px; }
+.mission-brief-rules dd { color: var(--color-ink); }
+@media (max-width: 767px) {
+  .mission-brief { padding-top: 12px; }
+  .mission-brief-header { padding-bottom: 24px; }
+  .mission-brief-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 24px; }
+  .mission-brief-entry { grid-row: 1; padding: 24px; }
+  .mission-brief-entry h2 { font-size: 36px; }
+  .mission-brief .mission-section-heading { flex-wrap: wrap; gap: 8px; }
+}
