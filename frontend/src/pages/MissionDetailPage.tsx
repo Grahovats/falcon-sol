@@ -1,8 +1,9 @@
-import { ArrowLeft, Clock3, ShieldX } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { CashEntryInput } from '../types/mission'
 import { apiGet } from '../api/client'
+import { MissionLifecycle } from '../features/missions/MissionLifecycle'
 import { PrizePanel } from '../features/missions/PrizePanel'
 import { joinMission } from '../api/trading'
 import { MissionBrief } from '../features/trading/MissionBrief'
@@ -45,8 +46,7 @@ export function MissionDetailPage() {
   if (missionState.status === 'error') return <ErrorPanel title="Mission unavailable" message={missionState.message} />
 
   const { mission } = missionState
-  if (mission.status === 'SETTLING') return <div><PrizePanel mission={mission} /><LifecyclePanel icon={<Clock3 />} title="Locking final results" description="Falcon is capturing one final price per market and calculating immutable standings. This page updates automatically." /></div>
-  if (mission.status === 'CANCELLED') return <div><PrizePanel mission={mission} /><LifecyclePanel icon={<ShieldX />} title="Operation stood down" description="Trading is closed and no final ranking will be awarded for this mission." /></div>
+  if (mission.status === 'SETTLING' || mission.status === 'CANCELLED') return <MissionLifecycle mission={mission} />
   const completed = ['FINALIZED', 'CLOSED'].includes(mission.status)
   if (completed) {
     return <div>{mission.rewards && <PrizePanel mission={mission} />}<ResultsView mission={mission} portfolio={trading.portfolio.status === 'success' ? trading.portfolio.data : undefined} portfolioLoading={trading.portfolio.status === 'loading'} portfolioError={trading.portfolio.status === 'error' ? trading.portfolio.message : undefined} onRetry={() => { void trading.refreshPortfolio(); void trading.refreshLeaderboard() }} rows={trading.leaderboard.status === 'success' ? trading.leaderboard.data.data : []} loading={trading.leaderboard.status === 'loading'} error={trading.leaderboard.status === 'error' ? trading.leaderboard.message : undefined} /></div>
@@ -106,8 +106,4 @@ function ErrorPanel({ title, message, onRetry }: { title: string; message: strin
 
 function TerminalSkeleton() {
   return <div className="trading-terminal app-surface" aria-busy="true" aria-label="Loading trading terminal"><section className="app-surface h-24 animate-pulse" /><div className="terminal-grid"><div className="app-surface terminal-watch min-h-40 animate-pulse xl:min-h-96" /><div className="app-surface terminal-chart min-w-0"><div className="h-40 animate-pulse border-b border-line" /><div className="terminal-chart-canvas animate-pulse" /></div><div className="app-surface terminal-order min-h-96 animate-pulse" /></div></div>
-}
-
-function LifecyclePanel({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return <div><BackLink /><section className="app-surface panel-cut border border-line bg-surface p-6 sm:p-10"><div className="flex size-11 items-center justify-center border border-primary/30 bg-primary/5 text-primary [&>svg]:size-5">{icon}</div><h1 className="mt-6 text-3xl font-semibold text-ink">{title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{description}</p></section></div>
 }
