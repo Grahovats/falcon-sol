@@ -21,9 +21,12 @@ const retryChartModules = import.meta.glob<typeof import('./CandlestickChart')['
   './CandlestickChart.tsx', { query: '?retry', import: 'CandlestickChart' },
 )
 function loadCandlestickChart(retry = false) {
+  const retryImport = () => retryChartModules['./CandlestickChart.tsx']().then((Chart) => ({ default: Chart }))
   return lazy(() => retry
-    ? retryChartModules['./CandlestickChart.tsx']().then((Chart) => ({ default: Chart }))
-    : import('./CandlestickChart').then((module) => ({ default: module.CandlestickChart })))
+    ? retryImport()
+    : import('./CandlestickChart')
+      .then((module) => ({ default: module.CandlestickChart }))
+      .catch(retryImport))
 }
 const POSITION_LIMIT_PERCENT = 30
 
@@ -241,11 +244,11 @@ function MarketWorkspace({ missionId, market, iconUrl, quantity, averageEntryPri
   )
 }
 
-class ChartErrorBoundary extends Component<{ missionId: string; marketId: string; symbol: string; position?: Position; onExitChange?: (levels: ExitLevels) => Promise<void> }, { failed: boolean; Chart: ReturnType<typeof loadCandlestickChart> }> {
-  state = { failed: false, Chart: loadCandlestickChart() }
+class ChartErrorBoundary extends Component<{ missionId: string; marketId: string; symbol: string; position?: Position; onExitChange?: (levels: ExitLevels) => Promise<void> }, { failed: boolean; message: string; Chart: ReturnType<typeof loadCandlestickChart> }> {
+  state = { failed: false, message: '', Chart: loadCandlestickChart() }
 
-  static getDerivedStateFromError() {
-    return { failed: true }
+  static getDerivedStateFromError(error: unknown) {
+    return { failed: true, message: error instanceof Error ? error.message : String(error) }
   }
 
   render() {
@@ -253,7 +256,8 @@ class ChartErrorBoundary extends Component<{ missionId: string; marketId: string
       return <div className="flex min-h-80 flex-col items-center justify-center gap-3 border-t border-line px-6 text-center" role="alert">
         <p className="text-sm font-medium text-ink">Chart unavailable</p>
         <p className="max-w-md text-sm text-muted">The chart could not start. Retry to reconnect without leaving the terminal.</p>
-        <button type="button" onClick={() => this.setState({ failed: false, Chart: loadCandlestickChart(true) })} className="app-button focus-ring min-h-10 border border-line px-4 text-sm text-ink hover:border-primary">Retry chart</button>
+        {import.meta.env.DEV && <p className="max-w-md break-words text-xs text-danger">{this.state.message}</p>}
+        <button type="button" onClick={() => this.setState({ failed: false, message: '', Chart: loadCandlestickChart(true) })} className="app-button focus-ring min-h-10 border border-line px-4 text-sm text-ink hover:border-primary">Retry chart</button>
       </div>
     }
     const { Chart } = this.state
