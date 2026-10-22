@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { z } from 'zod'
 import { resolveSolanaRpcUrl } from './solana-rpc.js'
+import { trustedAuthOrigins } from './auth-origins.js'
 
 const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -39,6 +40,6 @@ if (!result.success) {
 }
 
 export const env = { ...result.data, SOLANA_RPC_URL: resolveSolanaRpcUrl(result.data.SOLANA_RPC_URL, result.data.HELIUS_API_KEY) }
-export const corsOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+export const corsOrigins = trustedAuthOrigins(env.AUTH_URI, env.CORS_ORIGIN, [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL])
 
 export const adminWalletAddresses = new Set(env.ADMIN_WALLET_ADDRESSES.split(',').map((address) => address.trim()).filter(Boolean))

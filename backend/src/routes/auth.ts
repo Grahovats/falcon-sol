@@ -2,6 +2,7 @@ import { Prisma, UserRole } from '@prisma/client'
 import type { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
 import { adminWalletAddresses, corsOrigins, env } from '../config/env.js'
+import { resolveAuthOrigin } from '../config/auth-origins.js'
 import { AppError } from '../errors/app-error.js'
 import { prisma } from '../lib/prisma.js'
 import {
@@ -29,7 +30,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const expiresAt = new Date(now.getTime() + env.AUTH_CHALLENGE_TTL_SECONDS * 1_000)
     const nonce = createAuthNonce()
     const requestOrigin = request.headers.origin
-    const authUri = requestOrigin && corsOrigins.includes(requestOrigin) ? requestOrigin : env.AUTH_URI
+    const authUri = resolveAuthOrigin(requestOrigin, corsOrigins, env.AUTH_URI)
     const message = createAuthMessage(walletAddress, nonce, now, expiresAt, authUri)
     await prisma.authChallenge.deleteMany({ where: { expiresAt: { lt: now } } })
     const challenge = await prisma.authChallenge.create({ data: { walletAddress, message, expiresAt } })

@@ -25,12 +25,12 @@ import {
 } from "../api/profile";
 import { getLeaderboard, getPortfolio } from "../api/trading";
 import { CountUpValue } from "../components/CountUpValue";
-import { AuthenticationRequired } from "../components/AuthenticationRequired";
 import { useMissions } from "../features/missions/useMissions";
 import { useCountdown } from "../hooks/useCountdown";
 import { useClock } from "../hooks/useClock";
 import { formatCurrency, formatPercent } from "../lib/format";
 import { useAuth } from "../providers/auth-context";
+import { useWallet } from "../providers/wallet-context";
 import type { Mission } from "../types/mission";
 import type { Portfolio } from "../types/trading";
 import "./DashboardPage.css";
@@ -50,19 +50,38 @@ const liveStatuses = new Set(["ACTIVE", "BLACKOUT"]);
 /* On mount: green segments charge to their data value, then stay settled.
  * Countdown updates reuse the same nodes so the entrance does not replay. */
 const DASHBOARD_ENTRY_TIMING = { tickStaggerMs: 14, barStaggerMs: 60 } as const;
+const guestProfile: ProfileSummary = {
+  userId: "", username: "Guest", wallet: null, memberSince: "",
+  missionsEntered: 0, bestResult: null, averageReturn: "0", wins: 0,
+  topThreeFinishes: 0, results: [],
+};
+
 export function DashboardPage() {
   const auth = useAuth();
+  const { account } = useWallet();
+  // Remount account data on identity changes so another wallet never sees stale results.
+  return <DashboardContent key={account && account.address === auth.user?.wallet ? auth.user.userId : "guest"} />;
+}
+
+function DashboardContent() {
+  const auth = useAuth();
+  const { account } = useWallet();
+  const isGuest = auth.status !== "authenticated" || !account || account.address !== auth.user?.wallet;
   const missions = useMissions();
-  const [profile, setProfile] = useState<Resource<ProfileSummary>>({
+  const [profileState, setProfile] = useState<Resource<ProfileSummary>>({
     status: "loading",
   });
-  const [enrollment, setEnrollment] = useState<Resource<EnrolledMission[]>>({
+  const [enrollmentState, setEnrollment] = useState<Resource<EnrolledMission[]>>({
     status: "loading",
   });
   const [selectedMissionId, setSelectedMissionId] = useState("");
   const [recordMode, setRecordMode] = useState<RecordMode>("practice");
   const [enrollmentRetry, setEnrollmentRetry] = useState(0);
   const missionState = missions.state;
+  const profile = useMemo<Resource<ProfileSummary>>(() => isGuest
+    ? { status: "success", data: guestProfile } : profileState, [isGuest, profileState]);
+  const enrollment: Resource<EnrolledMission[]> = isGuest
+    ? { status: "success", data: [] } : enrollmentState;
 
   const loadProfile = useCallback(async (signal?: AbortSignal) => {
     setProfile({ status: "loading" });
@@ -82,7 +101,7 @@ export function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (auth.status !== "authenticated") return;
+    if (isGuest) return;
     const controller = new AbortController();
     const timer = window.setTimeout(
       () => void loadProfile(controller.signal),
@@ -92,11 +111,11 @@ export function DashboardPage() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [auth.status, auth.user?.userId, loadProfile]);
+  }, [isGuest, auth.user?.userId, loadProfile]);
 
   useEffect(() => {
     if (
-      auth.status !== "authenticated" ||
+      isGuest ||
       missionState.status !== "success" ||
       profile.status !== "success"
     )
@@ -138,12 +157,8 @@ export function DashboardPage() {
           });
       });
     return () => controller.abort();
-  }, [auth.status, auth.user?.userId, missionState, profile, enrollmentRetry]);
+  }, [isGuest, auth.user?.userId, missionState, profile, enrollmentRetry]);
 
-  if (auth.status === "loading" || auth.status === "signing")
-    return <DashboardSkeleton />;
-  if (auth.status !== "authenticated")
-    return <AuthenticationRequired title="Sign in to view your dashboard" />;
   if (profile.status === "loading") return <DashboardSkeleton />;
   if (profile.status === "error")
     return (
@@ -203,17 +218,17 @@ export function DashboardPage() {
         (total, result) => total + Number(result.returnPercent),
         0,
       ) / completed.length
-    : null;
+    : isGuest ? 0 : null;
   const ranks = completed.flatMap((result) =>
     result.rank === null ? [] : [result.rank],
   );
-  const bestFinish = ranks.length ? Math.min(...ranks) : null;
+  const bestFinish = ranks.length ? Math.min(...ranks) : isGuest ? 0 : null;
   const wins = completed.filter((result) => result.rank === 1).length;
   const positiveFinishes = completed.filter(
     (result) => Number(result.returnPercent) > 0,
   ).length;
   const podiums = ranks.filter((rank) => rank <= 3).length;
-  const historyReady = missionState.status === "success";
+  const historyReady = isGuest || missionState.status === "success";
 
   const missionHeading = (
     <div className="dashboard-section-heading">
@@ -312,7 +327,7 @@ export function DashboardPage() {
           icon={Medal}
           detail={`${podiums} top-three ${podiums === 1 ? "finish" : "finishes"}`}
           value={bestFinish}
-          format="rank"
+          format={isGuest ? "count" : "rank"}
         />
         <RecordMetric
           key={`${recordMode}-wins`}
@@ -517,7 +532,7 @@ function DashboardHeader({ username }: { username: string }) {
   return (
     <header className="dashboard-header">
       <div>
-        <p>Welcome back, {username}</p>
+        <p>{username === "Guest" ? "Explore your trading dashboard" : `Welcome back, ${username}`}</p>
         <h1>Dashboard</h1>
       </div>
       <Link to="/missions" className="dashboard-outline-action focus-ring">

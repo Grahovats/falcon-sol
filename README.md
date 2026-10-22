@@ -193,6 +193,11 @@ Configure these environment variables in Vercel before building:
   For `jupiter`, also configure `JUPITER_API_KEY` on the backend.
 
 Use each deployment environment's actual origin for auth settings, including previews.
+`AUTH_URI` and the comma-separated `CORS_ORIGIN` list must include the exact browser origin
+(scheme, hostname, and port). Vercel's `VERCEL_URL` and
+`VERCEL_PROJECT_PRODUCTION_URL` are also trusted when supplied by the deployment. Add custom
+domains explicitly to `CORS_ORIGIN`, then redeploy. Unrecognized origins are rejected before
+requesting a wallet signature; they never fall back to a different sign-in domain.
 Do not upload local `.env` files. Prisma Client is generated during the backend build;
 database migrations and seeding are deliberately separate from preview builds. With the
 target database configured in your shell, apply committed migrations once per release:

@@ -38,6 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const walletAddress = account.address
       const challenge = await createChallenge(walletAddress)
+      const expectedHeading = `${window.location.host} wants you to sign in with your Solana account:`
+      if (challenge.data.message.split('\n')[0] !== expectedHeading ||
+          !challenge.data.message.split('\n').includes(`URI: ${window.location.origin}`)) {
+        throw new Error('Sign-in is configured for a different website address. Open the main Falcon site or ask the operator to enable this domain.')
+      }
       const signature = await signMessage(new TextEncoder().encode(challenge.data.message))
       const verified = await verifyChallenge(challenge.data.challengeId, walletAddress, signature)
       setUser(verified.data)
