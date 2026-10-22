@@ -25,6 +25,7 @@ import {
 } from "../api/profile";
 import { getLeaderboard, getPortfolio } from "../api/trading";
 import { CountUpValue } from "../components/CountUpValue";
+import { AuthenticationRequired } from "../components/AuthenticationRequired";
 import { useMissions } from "../features/missions/useMissions";
 import { useCountdown } from "../hooks/useCountdown";
 import { useClock } from "../hooks/useClock";
@@ -59,14 +60,20 @@ const guestProfile: ProfileSummary = {
 export function DashboardPage() {
   const auth = useAuth();
   const { account } = useWallet();
-  // Remount account data on identity changes so another wallet never sees stale results.
-  return <DashboardContent key={account && account.address === auth.user?.wallet ? auth.user.userId : "guest"} />;
+  if (account) {
+    if (auth.status === "loading" || auth.status === "signing") return <DashboardSkeleton />;
+    if (auth.status !== "authenticated" || account.address !== auth.user?.wallet) {
+      return <AuthenticationRequired title="Sign in to view this wallet's dashboard" />;
+    }
+  }
+  // Remount on wallet changes so another wallet never sees stale results.
+  return <DashboardContent key={account ? `${account.address}:${auth.user?.userId}` : "guest"} />;
 }
 
 function DashboardContent() {
   const auth = useAuth();
   const { account } = useWallet();
-  const isGuest = auth.status !== "authenticated" || !account || account.address !== auth.user?.wallet;
+  const isGuest = !account;
   const missions = useMissions();
   const [profileState, setProfile] = useState<Resource<ProfileSummary>>({
     status: "loading",
