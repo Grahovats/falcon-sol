@@ -45,7 +45,7 @@ export async function getCandles(missionId: string, marketId: string, timeframe:
   if (!request) {
     // Share in-flight requests across remounts; aborting a view must not cancel
     // the same request another view is awaiting.
-    request = apiGet<CandleResponse>(path).then(response => {
+    request = apiGet<CandleResponse>(path, AbortSignal.timeout(25_000)).then(response => {
       if (candleCache.size >= 100) candleCache.delete(candleCache.keys().next().value!)
       candleCache.set(path, { response, cachedAt: Date.now() })
       return response

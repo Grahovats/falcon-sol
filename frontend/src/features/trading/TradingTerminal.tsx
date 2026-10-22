@@ -1,3 +1,4 @@
+import defaultTokenIcons from './default-token-icons.json'
 import { ArrowDownLeft, ArrowUpRight, ChevronDown, Clock3, Plus, SlidersHorizontal, TrendingUp, X } from 'lucide-react'
 import { Component, lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { ApiError } from '../../api/client'
@@ -215,7 +216,9 @@ function useMarketIcons(missionId: string, markets: MarketPrice[]) {
     }).catch(() => { /* The letter badge remains available when metadata is offline. */ })
     return () => controller.abort()
   }, [missionId, mintKey, key])
-  return state?.key === key ? state.icons : {}
+  const remoteIcons = state?.key === key ? state.icons : {}
+  const defaults: Record<string, string> = defaultTokenIcons
+  return Object.fromEntries(markets.map(market => [market.mintAddress, defaults[market.mintAddress] ?? remoteIcons[market.mintAddress] ?? null]))
 }
 
 

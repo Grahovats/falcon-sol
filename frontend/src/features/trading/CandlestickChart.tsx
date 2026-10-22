@@ -60,7 +60,9 @@ function CandleChart({ missionId, marketId, symbol, position, onExitChange }: Ca
       .then(({ data, meta }) => { if (!controller.signal.aborted) { autoRetries.current = 0; setRetryAt(0); setState(data.length ? { status: 'success', candles: data, stale: meta.stale, fetchedAt: meta.fetchedAt } : { status: 'error', message: 'No candles are available for this market yet.' }) } })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
-        if (error instanceof ApiError && error.status === 429) setRetryAt(Date.now() + (error.retryAfterSeconds ?? 60) * 1000)
+        if (error instanceof ApiError && [0, 429, 502, 503, 504].includes(error.status) && autoRetries.current < 2) {
+          setRetryAt(Date.now() + (error.retryAfterSeconds ?? (error.status === 429 ? 60 : 5 * (autoRetries.current + 1))) * 1000)
+        }
         setState({ status: 'error', message: error instanceof Error ? error.message : 'Candle history could not be loaded.' })
       }) }, 250)
     return () => { window.clearTimeout(timer); controller.abort(); olderRequest.current?.abort(); olderRequest.current = null }
