@@ -60,20 +60,31 @@ const guestProfile: ProfileSummary = {
 export function DashboardPage() {
   const auth = useAuth();
   const { account } = useWallet();
+  if (auth.status === "loading" || auth.status === "signing") return <DashboardSkeleton />;
+  if (auth.status === "error" && !account) {
+    return (
+      <div className="dashboard-workspace">
+        <DashboardNotice
+          title="Dashboard unavailable"
+          message={auth.error ?? "Your session could not be verified."}
+          retry={() => void auth.refresh()}
+        />
+      </div>
+    );
+  }
   if (account) {
-    if (auth.status === "loading" || auth.status === "signing") return <DashboardSkeleton />;
     if (auth.status !== "authenticated" || account.address !== auth.user?.wallet) {
       return <AuthenticationRequired title="Sign in to view this wallet's dashboard" />;
     }
   }
-  // Remount on wallet changes so another wallet never sees stale results.
-  return <DashboardContent key={account ? `${account.address}:${auth.user?.userId}` : "guest"} />;
+  // A saved session remains valid when the wallet extension is not connected.
+  // Remount on identity changes so another account never sees stale results.
+  const userId = auth.status === "authenticated" ? auth.user?.userId : undefined;
+  return <DashboardContent key={userId ?? "guest"} isGuest={!userId} />;
 }
 
-function DashboardContent() {
+function DashboardContent({ isGuest }: { isGuest: boolean }) {
   const auth = useAuth();
-  const { account } = useWallet();
-  const isGuest = !account;
   const missions = useMissions();
   const [profileState, setProfile] = useState<Resource<ProfileSummary>>({
     status: "loading",
